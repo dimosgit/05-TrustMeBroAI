@@ -1,0 +1,14 @@
+# Node
+node_modules
+npm-debug.log*
+
+# Build outputs
+frontend/dist
+
+# Env files
+.env
+frontend/.env
+backend/.env
+
+# OS
+.DS_Store
