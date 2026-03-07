@@ -45,9 +45,19 @@ const initialForm = {
 
 function StepHeader({ question }) {
   return (
-    <header className="mb-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">TrustMeBroAI</p>
-      <p className="mt-2 text-xs font-medium text-slate-400">Question {question} of 3</p>
+    <header className="mb-8">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400">TrustMeBroAI</p>
+        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold text-secondaryText">
+          Step {question} of 3
+        </span>
+      </div>
+      <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/5">
+        <div
+          className="h-full bg-gradient-to-r from-brand-500 to-secondary-500 transition-all duration-500 ease-out"
+          style={{ width: (question / 3) * 100 + "%" }}
+        />
+      </div>
     </header>
   );
 }
@@ -59,73 +69,97 @@ function ChoiceCard({ title, subtitle, icon, selected, onClick, disabled = false
       onClick={onClick}
       disabled={disabled}
       className={[
-        "w-full rounded-2xl border px-4 py-3 text-left transition duration-200",
-        "focus:outline-none focus:ring-2 focus:ring-brand-500/60",
-        disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer",
+        "choice-card-hover group relative w-full overflow-hidden rounded-2xl border px-5 py-4 text-left transition-all duration-300",
+        "focus:outline-none focus:ring-2 focus:ring-brand-500/40",
+        disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
         selected
-          ? "border-brand-500 bg-brand-500/12 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]"
-          : "border-slate-700/80 bg-slate-900/65 hover:border-slate-500"
+          ? "choice-card-selected border-brand-500/50 bg-brand-500/10"
+          : "border-white/10 bg-white/[0.03]"
       ].join(" ")}
     >
-      <div className="flex items-start gap-3">
-        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-slate-600 bg-slate-900/80 px-2 text-[10px] font-bold uppercase tracking-wide text-slate-300">
+      <div className="flex items-center gap-4">
+        <span className={[
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xs font-bold transition-colors duration-300",
+          selected
+            ? "border-brand-500/50 bg-brand-500/20 text-brand-400"
+            : "border-white/10 bg-white/5 text-secondaryText group-hover:border-white/20 group-hover:text-primaryText"
+        ].join(" ")}>
           {icon}
         </span>
-        <span>
-          <span className="block text-sm font-semibold text-slate-100">{title}</span>
-          {subtitle ? <span className="mt-1 block text-xs text-slate-400">{subtitle}</span> : null}
-        </span>
+        <div className="flex-1">
+          <span className={[
+            "block text-sm font-semibold transition-colors",
+            selected ? "text-primaryText" : "text-secondaryText group-hover:text-primaryText"
+          ].join(" ")}>
+            {title}
+          </span>
+          {subtitle && (
+            <span className="mt-0.5 block text-xs leading-relaxed text-secondaryText opacity-70">
+              {subtitle}
+            </span>
+          )}
+        </div>
+        {selected && (
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-[10px] text-white">
+            ✓
+          </div>
+        )}
       </div>
     </button>
   );
 }
 
 function StepShell({ children }) {
-  return <div className="step-in">{children}</div>;
+  return <div className="step-in px-2 sm:px-4">{children}</div>;
 }
 
 function Landing({ onStart }) {
   return (
     <StepShell>
-      <div className="space-y-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">TrustMeBroAI</p>
-        <h1 className="text-3xl font-extrabold leading-tight text-slate-50 sm:text-4xl">
-          There are thousands of AI tools.
-          <br />
-          We tell you which one to use.
+      <div className="space-y-8 py-4 text-center sm:py-8">
+        <div className="inline-block rounded-full bg-brand-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400">
+          TrustMeBroAI
+        </div>
+        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          Thousands of AI tools.
+          <span className="mt-2 block bg-gradient-to-r from-brand-400 to-secondary-500 bg-clip-text text-transparent">
+            One right answer.
+          </span>
         </h1>
-        <p className="text-sm leading-relaxed text-slate-300 sm:text-base">
-          Answer a few simple questions and get the best AI tool for your task.
+        <p className="mx-auto max-w-lg text-base leading-relaxed text-secondaryText sm:text-lg">
+          Stop guessing. Answer a few simple questions and get the best AI tool for your specific workflow.
         </p>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
           <button
             type="button"
             onClick={onStart}
-            className="rounded-xl bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
+            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-8 py-4 text-sm font-bold text-background transition-all hover:bg-brand-50 sm:w-auto"
           >
-            Find my AI tool
+            <span>Find my AI tool</span>
+            <span className="transition-transform group-hover:translate-x-1">→</span>
           </button>
           <a
             href="/login"
-            className="rounded-xl border border-slate-600 px-5 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-400 hover:text-white"
+            className="flex w-full items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-white/5 sm:w-auto"
           >
             Log in
           </a>
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          {LANDING_LOGOS.map((logo) => (
-            <span
-              key={logo}
-              className="rounded-lg border border-slate-700/80 bg-slate-900/50 px-2.5 py-1 text-[11px] font-medium text-slate-400"
-            >
-              {logo}
-            </span>
-          ))}
+        <div className="pt-8">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-secondaryText/40">Trusted results for</p>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            {LANDING_LOGOS.map((logo) => (
+              <span
+                key={logo}
+                className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2 text-[11px] font-semibold text-secondaryText/60"
+              >
+                {logo}
+              </span>
+            ))}
+          </div>
         </div>
-
-        <p className="text-xs text-slate-500">Fast. Simple. Built for real people.</p>
       </div>
     </StepShell>
   );
@@ -135,8 +169,8 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
   return (
     <StepShell>
       <StepHeader question={1} />
-      <h2 className="mb-5 text-2xl font-bold text-slate-50">Who are you?</h2>
-      <div className="grid gap-3">
+      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">Who are you?</h2>
+      <div className="grid gap-4">
         {options.map((option) => (
           <ChoiceCard
             key={option.name}
@@ -149,11 +183,11 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
           />
         ))}
       </div>
-      <div className="mt-8 flex items-center justify-between gap-3">
+      <div className="mt-10 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-xl border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
+          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
         >
           Back
         </button>
@@ -161,9 +195,9 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
           type="button"
           onClick={onNext}
           disabled={!selectedId}
-          className="rounded-xl bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          Next
+          Continue
         </button>
       </div>
     </StepShell>
@@ -174,7 +208,7 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
   return (
     <StepShell>
       <StepHeader question={2} />
-      <h2 className="mb-5 text-2xl font-bold text-slate-50">What do you want to do?</h2>
+      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">What's the mission?</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {options.map((option) => (
           <ChoiceCard
@@ -188,11 +222,11 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
           />
         ))}
       </div>
-      <div className="mt-8 flex items-center justify-between gap-3">
+      <div className="mt-10 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-xl border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
+          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
         >
           Back
         </button>
@@ -200,9 +234,9 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
           type="button"
           onClick={onNext}
           disabled={!selectedId}
-          className="rounded-xl bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-45"
+          className="rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          Next
+          Continue
         </button>
       </div>
     </StepShell>
@@ -213,7 +247,7 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
   return (
     <StepShell>
       <StepHeader question={3} />
-      <h2 className="mb-5 text-2xl font-bold text-slate-50">What matters most?</h2>
+      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">What matters most?</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {PRIORITY_CHOICES.map((option) => {
           const isSelected = selected.includes(option.name);
@@ -228,11 +262,11 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
           );
         })}
       </div>
-      <div className="mt-8 flex items-center justify-between gap-3">
+      <div className="mt-10 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-xl border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
+          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
         >
           Back
         </button>
@@ -240,9 +274,14 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
           type="button"
           onClick={onSubmit}
           disabled={selected.length === 0 || loading}
-          className="rounded-xl bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-45"
+          className="relative overflow-hidden rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {loading ? "Working..." : "Get my AI tools"}
+          <span className={loading ? "opacity-0" : "opacity-100"}>Get recommendations</span>
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-background border-t-transparent" />
+            </div>
+          )}
         </button>
       </div>
     </StepShell>
@@ -254,24 +293,45 @@ function LoadingStep({ stage }) {
 
   return (
     <StepShell>
-      <div className="space-y-6 py-6 text-center sm:py-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">TrustMeBroAI</p>
-        <h2 className="text-2xl font-bold text-slate-50">Finding the best AI tool for you...</h2>
-        <div className="mx-auto max-w-sm space-y-3 text-left">
+      <div className="space-y-8 py-8 text-center sm:py-12">
+        <div className="relative mx-auto h-20 w-20">
+          <div className="absolute inset-0 animate-ping rounded-full bg-brand-500/20" />
+          <div className="relative flex h-full w-full items-center justify-center rounded-full bg-brand-500/10 text-brand-400">
+            <svg className="h-10 w-10 animate-spin" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-white">Finding your perfect match...</h2>
+          <p className="text-sm text-secondaryText">Our AI is consulting the experts.</p>
+        </div>
+
+        <div className="mx-auto max-w-xs space-y-3 pt-4 text-left">
           {checks.map((text, index) => {
             const active = stage > index;
+            const current = stage === index;
             return (
               <div
                 key={text}
                 className={[
-                  "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition duration-300",
+                  "flex items-center gap-3 rounded-2xl border px-5 py-3.5 text-sm transition-all duration-500",
                   active
-                    ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-100"
-                    : "border-slate-700 bg-slate-900/70 text-slate-400"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                    : current
+                      ? "border-brand-500/30 bg-brand-500/5 text-brand-400 shimmer"
+                      : "border-white/5 bg-white/[0.02] text-secondaryText opacity-40"
                 ].join(" ")}
               >
-                <span className="text-base">{active ? "✓" : "•"}</span>
-                <span>{text}</span>
+                <div className={[
+                  "flex h-5 w-5 items-center justify-center rounded-full border text-[10px]",
+                  active ? "border-emerald-500/50 bg-emerald-500 text-white" : "border-current"
+                ].join(" ")}>
+                  {active ? "✓" : index + 1}
+                </div>
+                <span className="font-medium">{text}</span>
               </div>
             );
           })}
@@ -285,123 +345,114 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
   const primary = result?.primary_tool;
   const alternatives = (result?.alternative_tools || []).slice(0, 2);
   const tag = "Best quality for your task";
-  const explanation =
-    result?.explanation ||
-    `${primary?.name || "This tool"} is most accurate and great for ${taskLabel ? taskLabel.toLowerCase() : "your workflow"}.`;
 
-  const shareMessage = `I asked TrustMeBroAI which AI tool to use for ${taskLabel || "my task"}.\n\nResult: ${primary?.name || "ChatGPT"}\n\nTry it yourself:\ntrustmebro.ai`;
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(shareMessage);
-    } catch {
-      // no-op
-    }
-  }
-
-  async function handleShare() {
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: shareMessage });
-        return;
-      } catch {
-        // no-op
-      }
-    }
-    await handleCopy();
-  }
+  const shareMessage = "I asked TrustMeBroAI which AI tool to use for " + (taskLabel || "my task") + ".\n\nResult: " + (primary?.name || "ChatGPT") + "\n\nTry it yourself:\ntrustmebro.ai";
 
   return (
     <StepShell>
-      <div className="space-y-6">
-        <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">TrustMeBroAI</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-50">Your best AI tool</h2>
-        </header>
-
-        <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-400">Primary recommendation</p>
-              <h3 className="mt-2 text-2xl font-bold text-slate-50">{primary?.name || "ChatGPT"}</h3>
-            </div>
-            <span className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300">
-              {tag}
-            </span>
+      <div className="space-y-8">
+        <header className="flex items-center justify-between border-b border-white/5 pb-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-400">Recommendation</p>
+            <h2 className="mt-1 text-3xl font-bold text-white">Your Best Match</h2>
           </div>
-
-          <p className="mt-4 text-sm leading-relaxed text-slate-300">{explanation}</p>
-
-          <ul className="mt-4 space-y-2 text-sm text-slate-200">
-            {(primary?.strengths || ["Great with long PDFs", "Very accurate", "Easy to use"]).slice(0, 3).map((item) => (
-              <li key={item} className="flex items-center gap-2">
-                <span className="text-emerald-300">✓</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-
-          <a
-            href={primary?.website_url || "#"}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex rounded-xl bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
-          >
-            Use {primary?.name || "ChatGPT"}
-          </a>
-        </section>
-
-        <section>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Other good options</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {alternatives.length > 0
-              ? alternatives.map((tool, index) => (
-                  <div key={tool.id || tool.name} className="rounded-2xl border border-slate-700 bg-slate-900/65 p-4">
-                    <p className="text-lg font-semibold text-slate-100">{tool.name}</p>
-                    <p className="mt-1 text-xs text-slate-400">{index === 0 ? "Fast" : "Easiest to use"}</p>
-                  </div>
-                ))
-              : ["Claude", "Copilot"].map((name, index) => (
-                  <div key={name} className="rounded-2xl border border-slate-700 bg-slate-900/65 p-4">
-                    <p className="text-lg font-semibold text-slate-100">{name}</p>
-                    <p className="mt-1 text-xs text-slate-400">{index === 0 ? "Fast" : "Easiest to use"}</p>
-                  </div>
-                ))}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-slate-700 bg-slate-900/65 p-5">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Share your result</h3>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleShare}
-              className="rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
-            >
-              Share result
-            </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
-            >
-              Copy link
-            </button>
-          </div>
-          <pre className="mt-4 whitespace-pre-wrap rounded-xl border border-slate-700 bg-slate-900 p-3 text-xs leading-relaxed text-slate-400">
-            {shareMessage}
-          </pre>
-        </section>
-
-        <div className="pt-1">
           <button
             type="button"
             onClick={onRunAgain}
-            className="rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
+            className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-secondaryText hover:bg-white/5"
           >
-            Run again
+            Start Over
           </button>
-        </div>
+        </header>
+
+        <section className="relative overflow-hidden rounded-[28px] border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-transparent to-transparent p-6 sm:p-8">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-brand-500/10 blur-3xl" />
+
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-brand-500/30 bg-brand-500/20 text-2xl font-bold text-brand-400">
+                {primary?.name?.substring(0, 2).toUpperCase() || "AI"}
+              </div>
+              <div>
+                <h3 className="text-3xl font-black tracking-tight text-white">{primary?.name || "ChatGPT"}</h3>
+                <p className="mt-1 flex items-center gap-2 text-xs font-bold text-brand-400/80">
+                  <span className="inline-block h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+                  {tag}
+                </p>
+              </div>
+            </div>
+            <a
+              href={primary?.website_url || "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-sm font-bold text-background transition-all hover:bg-brand-50"
+            >
+              Open {primary?.name || "Tool"}
+            </a>
+          </div>
+
+          <div className="mt-8 grid gap-6 border-t border-white/5 pt-8 sm:grid-cols-2">
+            <div>
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-secondaryText">Why this tool?</h4>
+              <p className="mt-3 text-sm leading-6 text-secondaryText">
+                {result?.explanation || (primary?.name || "This tool") + " is the industry leader for this specific use case, offering the best balance of speed and reasoning."}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-secondaryText">Key Strengths</h4>
+              <ul className="mt-3 space-y-2">
+                {(primary?.strengths || ["Industry standard", "High accuracy", "Easy integration"]).slice(0, 3).map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-sm text-primaryText">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-400">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {alternatives.length > 0 && (
+          <section>
+            <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-secondaryText">Other good options</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {alternatives.map((tool, idx) => (
+                <div key={tool.id} className="group rounded-[22px] border border-white/5 bg-white/[0.02] p-5 transition-all hover:bg-white/[0.04]">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-white">{tool.name}</p>
+                    <span className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-secondaryText lowercase">
+                      {idx === 0 ? "Fastest" : "Easiest"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-secondaryText opacity-70">A strong alternative with unique perks for your workflow.</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="rounded-[24px] border border-white/5 bg-white/[0.01] p-6 text-center">
+          <h3 className="text-sm font-bold text-white">Share your recommendation</h3>
+          <p className="mt-1 text-xs text-secondaryText">Help others find the right AI tool.</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(shareMessage);
+                alert("Link copied!");
+              }}
+              className="rounded-xl bg-white/5 px-6 py-3 text-xs font-bold text-white hover:bg-white/10"
+            >
+              Copy Link
+            </button>
+            <button
+              type="button"
+              className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-6 py-3 text-xs font-bold text-brand-400 hover:bg-brand-500/20"
+            >
+              Twitter / X
+            </button>
+          </div>
+        </section>
       </div>
     </StepShell>
   );
@@ -423,8 +474,8 @@ function App() {
       try {
         setError("");
         const [profilesRes, tasksRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/profiles`),
-          fetch(`${API_BASE_URL}/tasks`)
+          fetch(API_BASE_URL + "/profiles"),
+          fetch(API_BASE_URL + "/tasks")
         ]);
 
         if (!profilesRes.ok || !tasksRes.ok) {
@@ -499,7 +550,7 @@ function App() {
       const minDelay = new Promise((resolve) => setTimeout(resolve, 1400));
 
       const recommendationPromise = (async () => {
-        const sessionResponse = await fetch(`${API_BASE_URL}/session`, {
+        const sessionResponse = await fetch(API_BASE_URL + "/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -517,7 +568,7 @@ function App() {
 
         const session = await sessionResponse.json();
 
-        const recommendationResponse = await fetch(`${API_BASE_URL}/recommendation`, {
+        const recommendationResponse = await fetch(API_BASE_URL + "/recommendation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_session_id: session.id })
