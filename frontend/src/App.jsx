@@ -8,31 +8,165 @@ const SESSION_DEFAULTS = {
 };
 
 const PROFILE_CHOICES = [
-  { name: "Business", icon: "BR" },
-  { name: "Developer", icon: "DV" },
-  { name: "Consultant", icon: "CS" },
-  { name: "Student", icon: "ST" },
-  { name: "Creator", icon: "CR" }
+  {
+    name: "Business",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    name: "Developer",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+      </svg>
+    )
+  },
+  {
+    name: "Consultant",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    name: "Student",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+      </svg>
+    )
+  },
+  {
+    name: "Creator",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    )
+  }
 ];
 
 const TASK_CHOICES = [
-  { name: "Analyze a PDF", icon: "PDF" },
-  { name: "Write content", icon: "TXT" },
-  { name: "Summarize documents", icon: "SUM" },
-  { name: "Write code", icon: "DEV" },
-  { name: "Build an app", icon: "APP" },
-  { name: "Automate work", icon: "BOT" },
-  { name: "Do research", icon: "RCH" },
-  { name: "Create images", icon: "IMG" }
+  {
+    name: "Analyze a PDF",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    name: "Write content",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    )
+  },
+  {
+    name: "Summarize documents",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    )
+  },
+  {
+    name: "Write code",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m0 0l-2 1m2-1v2.5M14 4l-2 1m0 0l-2-1m2 1v2.5M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1m2 1l2-1m-2 1V15.5M18 18l2-1m-2 1l-2-1m2 1v-2.5" />
+      </svg>
+    )
+  },
+  {
+    name: "Build an app",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    name: "Automate work",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    )
+  },
+  {
+    name: "Do research",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    )
+  },
+  {
+    name: "Create images",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h14a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    )
+  }
 ];
 
 const PRIORITY_CHOICES = [
-  { name: "Lowest price", icon: "$$" },
-  { name: "Best quality", icon: "HQ" },
-  { name: "Fastest results", icon: "SPD" },
-  { name: "Easiest to use", icon: "UX" },
-  { name: "Privacy", icon: "PRV" },
-  { name: "Microsoft friendly", icon: "MS" }
+  {
+    name: "Lowest price",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )
+  },
+  {
+    name: "Best quality",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+      </svg>
+    )
+  },
+  {
+    name: "Fastest results",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    )
+  },
+  {
+    name: "Easiest to use",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )
+  },
+  {
+    name: "Privacy",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    )
+  },
+  {
+    name: "Microsoft friendly",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )
+  }
 ];
 
 const LANDING_LOGOS = [
@@ -50,17 +184,22 @@ const initialForm = {
 };
 
 function StepHeader({ question }) {
+  const steps = ["Profile", "Mission", "Priorities"];
   return (
-    <header className="mb-8">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400">TrustMeBroAI</p>
-        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold text-secondaryText">
-          Step {question} of 3
-        </span>
+    <header className="mb-6">
+      <div className="flex items-center justify-between pb-2">
+        <div className="space-y-0.5">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-500/80">TrustMeBroAI</p>
+          <h3 className="text-lg font-bold text-white tracking-tight">{steps[question - 1]}</h3>
+        </div>
+        <div className="text-right">
+          <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Progress</span>
+          <span className="text-xs font-black text-white">{Math.round((question / 3) * 100)}%</span>
+        </div>
       </div>
-      <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/5">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/5 p-[0.5px]">
         <div
-          className="h-full bg-gradient-to-r from-brand-500 to-secondary-500 transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all duration-700 ease-out"
           style={{ width: (question / 3) * 100 + "%" }}
         />
       </div>
@@ -75,41 +214,46 @@ function ChoiceCard({ title, subtitle, icon, selected, onClick, disabled = false
       onClick={onClick}
       disabled={disabled}
       className={[
-        "choice-card-hover group relative w-full overflow-hidden rounded-2xl border px-5 py-4 text-left transition-all duration-300",
-        "focus:outline-none focus:ring-2 focus:ring-brand-500/40",
+        "group relative w-full overflow-hidden rounded-2xl border px-5 py-4 text-left transition-all duration-500",
+        "hover:scale-[1.02] active:scale-[0.98]",
+        "focus:outline-none focus:ring-2 focus:ring-blue-500/40",
         disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
         selected
-          ? "choice-card-selected border-brand-500/50 bg-brand-500/10"
-          : "border-white/10 bg-white/[0.03]"
+          ? "border-blue-500/50 bg-gradient-to-br from-blue-500/10 to-blue-600/5 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
+          : "border-white/5 bg-white/[0.03] hover:border-white/10 hover:bg-white/5"
       ].join(" ")}
     >
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-500/0 to-transparent transition-opacity group-hover:via-blue-500/30" />
       <div className="flex items-center gap-4">
         <span className={[
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xs font-bold transition-colors duration-300",
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-sm font-bold transition-all duration-300",
           selected
-            ? "border-brand-500/50 bg-brand-500/20 text-brand-400"
-            : "border-white/10 bg-white/5 text-secondaryText group-hover:border-white/20 group-hover:text-primaryText"
+            ? "border-blue-500/50 bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+            : "border-white/10 bg-white/5 text-slate-400 group-hover:border-white/20 group-hover:text-white group-hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]"
         ].join(" ")}>
           {icon}
         </span>
         <div className="flex-1">
           <span className={[
-            "block text-sm font-semibold transition-colors",
-            selected ? "text-primaryText" : "text-secondaryText group-hover:text-primaryText"
+            "block text-sm font-bold tracking-tight transition-colors",
+            selected ? "text-white" : "text-slate-300 group-hover:text-white"
           ].join(" ")}>
             {title}
           </span>
           {subtitle && (
-            <span className="mt-0.5 block text-xs leading-relaxed text-secondaryText opacity-70">
+            <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500 transition-colors group-hover:text-slate-400">
               {subtitle}
             </span>
           )}
         </div>
-        {selected && (
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-[10px] text-white">
-            ✓
-          </div>
-        )}
+        <div className={[
+          "flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-500",
+          selected
+            ? "border-blue-500 bg-blue-500 text-white scale-110 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+            : "border-white/10 bg-white/5 opacity-0 group-hover:opacity-100"
+        ].join(" ")}>
+          <span className="text-[10px] font-bold">✓</span>
+        </div>
       </div>
     </button>
   );
@@ -122,62 +266,62 @@ function StepShell({ children }) {
 function Landing({ onStart }) {
   return (
     <StepShell>
-      <div className="space-y-10 py-4 text-center">
+      <div className="space-y-6 py-2 text-center">
         <p className="text-sm font-medium tracking-[0.2em] text-slate-400">TrustMeBroAI</p>
 
-        <h1 className="mx-auto max-w-2xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+        <h1 className="mx-auto max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
           There are thousands of AI tools.
           <br className="hidden sm:block" />
           We tell you which one to use.
         </h1>
 
-        <p className="mx-auto max-w-xl text-lg text-slate-400">
+        <p className="mx-auto max-w-xl text-base text-slate-400">
           Answer a few simple questions and get
           <br className="hidden sm:block" />
           the best AI tool for your task.
         </p>
 
-        <div className="mx-auto flex w-full max-w-sm flex-col gap-3 py-4">
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-2.5 py-2">
           <button
             type="button"
             onClick={onStart}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 text-lg font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98]"
+            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-base font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98]"
           >
             Find my AI tool
           </button>
           <a
             href="/login"
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 text-lg font-bold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-base font-bold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
           >
             Log in
           </a>
         </div>
 
-        <div className="space-y-6 pt-4">
+        <div className="space-y-4 pt-2">
           <div className="flex items-center gap-4">
             <div className="h-px flex-1 bg-white/5" />
-            <p className="whitespace-nowrap text-xs font-medium uppercase tracking-widest text-slate-500">Works with the best AI tools</p>
+            <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-widest text-slate-500">Works with the best AI tools</p>
             <div className="h-px flex-1 bg-white/5" />
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
-                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5153-4.9108 6.0462 6.0462 0 0 0-4.7471-3.1248 6.1213 6.1213 0 0 0-5.1189 1.954 6.0461 6.0461 0 0 0-5.1189-1.954 6.0462 6.0462 0 0 0-4.7471 3.1248 5.9847 5.9847 0 0 0-.5183 4.9108 6.0461 6.0461 0 0 0 1.956 5.1189 6.0461 6.0461 0 0 0-1.956 5.1189 5.9847 5.9847 0 0 0 .5153 4.9108 6.0462 6.0462 0 0 0 4.7471 3.1248 6.1213 6.1213 0 0 0 5.1189-1.954 6.0461 6.0461 0 0 0 5.1189 1.954 6.0462 6.0462 0 0 0 4.7471-3.1248 5.9847 5.9847 0 0 0 .5183-4.9108 6.0461 6.0461 0 0 0-1.956-5.1189 6.0461 6.0461 0 0 0 1.956-5.122zM12.0003 12.9803l-2.025-1.17 4.0538-2.3438 1.0113.585a2.025 2.025 0 0 1 0 3.5075l-3.0401 1.7513zm-1.0113-7.5187l3.0401-1.7513a2.025 2.025 0 0 1 2.7663.7431c.3.5181.4 1.1212.28 1.6963l-4.0538 2.3438-2.0326-1.1738v-1.8581zm-7.0945 4.0938a2.025 2.025 0 0 1-.2743-1.698 2.025 2.025 0 0 1 .741-.9983l3.0401-1.7513 2.0287 1.1738v4.6125l-5.5355-3.1974zm0 6.39l5.5355-3.1974v4.6125l-3.0401 1.7513a2.025 2.025 0 0 1-2.7663-.7431 2.0251 2.0251 0 0 1-.28-1.693l4.0538-2.3438zm11.148 4.094a2.025 2.025 0 0 1 .2743 1.698c.1175-.5738.0163-1.1713-.2845-1.685l-3.0401-1.7513-2.0287-1.1738v-4.6125l5.5355 3.1971z" /></svg>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-white">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5153-4.9108 6.0462 6.0462 0 0 0-4.7471-3.1248 6.1213 6.1213 0 0 0-5.1189 1.954 6.0461 6.0461 0 0 0-5.1189-1.954 6.0462 6.0462 0 0 0-4.7471 3.1248 5.9847 5.9847 0 0 0-.5183 4.9108 6.0461 6.0461 0 0 0 1.956 5.1189 6.0461 6.0461 0 0 0-1.956 5.1189 5.9847 5.9847 0 0 0 .5153 4.9108 6.0462 6.0462 0 0 0 4.7471 3.1248 6.1213 6.1213 0 0 0 5.1189-1.954 6.0461 6.0461 0 0 0 5.1189 1.954 6.0462 6.0462 0 0 0 4.7471-3.1248 5.9847 5.9847 0 0 0 .5183-4.9108 6.0461 6.0461 0 0 0-1.956-5.1189 6.0461 6.0461 0 0 0 1.956-5.122zM12.0003 12.9803l-2.025-1.17 4.0538-2.3438 1.0113.585a2.025 2.025 0 0 1 0 3.5075l-3.0401 1.7513zm-1.0113-7.5187l3.0401-1.7513a2.025 2.025 0 0 1 2.7663.7431c.3.5181.4 1.1212.28 1.6963l-4.0538 2.3438-2.0326-1.1738v-1.8581zm-7.0945 4.0938a2.025 2.025 0 0 1-.2743-1.698 2.025 2.025 0 0 1 .741-.9983l3.0401-1.7513 2.0287 1.1738v4.6125l-5.5355-3.1974zm0 6.39l5.5355-3.1974v4.6125l-3.0401 1.7513a2.025 2.025 0 0 1-2.7663-.7431 2.0251 2.0251 0 0 1-.28-1.693l4.0538-2.3438zm11.148 4.094a2.025 2.025 0 0 1 .2743 1.698c.1175-.5738.0163-1.1713-.2845-1.685l-3.0401-1.7513-2.0287-1.1738v-4.6125l5.5355 3.1971z" /></svg>
               </span>
-              <span className="text-xl font-semibold text-white">ChatGPT</span>
+              <span className="text-lg font-semibold text-white">ChatGPT</span>
             </div>
             {LANDING_LOGOS.slice(1).map((logo) => (
               <div key={logo.name} className="flex items-center gap-2">
-                <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${logo.tone} text-sm font-bold`}>
+                <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${logo.tone} text-[10px] font-bold`}>
                   {logo.token}
                 </span>
-                <span className="text-xl font-semibold text-white">{logo.name}</span>
+                <span className="text-lg font-semibold text-white">{logo.name}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="pt-8 text-lg font-medium text-slate-400">Fast. Simple. Built for real people.</p>
+        <p className="pt-2 text-sm font-medium text-slate-400">Fast. Simple. Built for real people.</p>
       </div>
     </StepShell>
   );
@@ -187,8 +331,8 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
   return (
     <StepShell>
       <StepHeader question={1} />
-      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">Who are you?</h2>
-      <div className="grid gap-4">
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">Who are you?</h2>
+      <div className="grid gap-3">
         {options.map((option) => (
           <ChoiceCard
             key={option.name}
@@ -201,11 +345,11 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
           />
         ))}
       </div>
-      <div className="mt-10 flex items-center justify-between gap-4">
+      <div className="mt-6 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
+          className="rounded-xl border border-white/10 bg-white/5 px-8 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10"
         >
           Back
         </button>
@@ -213,7 +357,7 @@ function StepProfile({ options, selectedId, onSelect, onNext, onBack }) {
           type="button"
           onClick={onNext}
           disabled={!selectedId}
-          className="rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
         >
           Continue
         </button>
@@ -226,8 +370,8 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
   return (
     <StepShell>
       <StepHeader question={2} />
-      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">What's the mission?</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">What's the mission?</h2>
+      <div className="grid gap-2.5 sm:grid-cols-2">
         {options.map((option) => (
           <ChoiceCard
             key={option.name}
@@ -240,11 +384,11 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
           />
         ))}
       </div>
-      <div className="mt-10 flex items-center justify-between gap-4">
+      <div className="mt-6 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
+          className="rounded-xl border border-white/10 bg-white/5 px-8 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10"
         >
           Back
         </button>
@@ -252,7 +396,7 @@ function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
           type="button"
           onClick={onNext}
           disabled={!selectedId}
-          className="rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
         >
           Continue
         </button>
@@ -265,8 +409,8 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
   return (
     <StepShell>
       <StepHeader question={3} />
-      <h2 className="mb-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">What matters most?</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">What matters most?</h2>
+      <div className="grid gap-2.5 sm:grid-cols-2">
         {PRIORITY_CHOICES.map((option) => {
           const isSelected = selected.includes(option.name);
           return (
@@ -280,11 +424,11 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
           );
         })}
       </div>
-      <div className="mt-10 flex items-center justify-between gap-4">
+      <div className="mt-6 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-[18px] border border-white/10 px-8 py-3.5 text-sm font-bold text-secondaryText transition-all hover:bg-white/5"
+          className="rounded-xl border border-white/10 bg-white/5 px-8 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10"
         >
           Back
         </button>
@@ -292,12 +436,12 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
           type="button"
           onClick={onSubmit}
           disabled={selected.length === 0 || loading}
-          className="relative overflow-hidden rounded-[18px] bg-white px-8 py-3.5 text-sm font-bold text-background transition-all hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
+          className="relative overflow-hidden rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
         >
           <span className={loading ? "opacity-0" : "opacity-100"}>Get recommendations</span>
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-background border-t-transparent" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             </div>
           )}
         </button>
@@ -305,29 +449,28 @@ function StepPriority({ selected, onToggle, onSubmit, onBack, loading }) {
     </StepShell>
   );
 }
-
 function LoadingStep({ stage }) {
   const checks = ["Analyzing your task", "Comparing AI tools", "Ranking results"];
 
   return (
     <StepShell>
-      <div className="space-y-8 py-8 text-center sm:py-12">
-        <div className="relative mx-auto h-20 w-20">
-          <div className="absolute inset-0 animate-ping rounded-full bg-brand-500/20" />
-          <div className="relative flex h-full w-full items-center justify-center rounded-full bg-brand-500/10 text-brand-400">
-            <svg className="h-10 w-10 animate-spin" viewBox="0 0 24 24">
+      <div className="space-y-6 py-4 text-center sm:py-6">
+        <div className="relative mx-auto h-16 w-16">
+          <div className="absolute inset-0 animate-ping rounded-full bg-blue-500/10" />
+          <div className="relative flex h-full w-full items-center justify-center rounded-full bg-blue-500/10 text-blue-400">
+            <svg className="h-8 w-8 animate-spin" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-white">Finding your perfect match...</h2>
-          <p className="text-sm text-secondaryText">Our AI is consulting the experts.</p>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-white tracking-tight sm:text-2xl">Finding your perfect match...</h2>
+          <p className="text-xs text-slate-500">Our AI is consulting the experts.</p>
         </div>
 
-        <div className="mx-auto max-w-xs space-y-3 pt-4 text-left">
+        <div className="mx-auto max-w-xs space-y-2.5 pt-2 text-left">
           {checks.map((text, index) => {
             const active = stage > index;
             const current = stage === index;
@@ -335,17 +478,17 @@ function LoadingStep({ stage }) {
               <div
                 key={text}
                 className={[
-                  "flex items-center gap-3 rounded-2xl border px-5 py-3.5 text-sm transition-all duration-500",
+                  "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all duration-500",
                   active
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
                     : current
-                      ? "border-brand-500/30 bg-brand-500/5 text-brand-400 shimmer"
-                      : "border-white/5 bg-white/[0.02] text-secondaryText opacity-40"
+                      ? "border-blue-500/20 bg-blue-500/5 text-blue-400 shimmer"
+                      : "border-white/5 bg-white/[0.02] text-slate-500 opacity-40"
                 ].join(" ")}
               >
                 <div className={[
-                  "flex h-5 w-5 items-center justify-center rounded-full border text-[10px]",
-                  active ? "border-emerald-500/50 bg-emerald-500 text-white" : "border-current"
+                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[9px]",
+                  active ? "border-emerald-500/50 bg-emerald-400 text-[#0d1117]" : "border-current"
                 ].join(" ")}>
                   {active ? "✓" : index + 1}
                 </div>
@@ -368,33 +511,33 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
 
   return (
     <StepShell>
-      <div className="space-y-8">
-        <header className="flex items-center justify-between border-b border-white/5 pb-6">
+      <div className="space-y-4 py-1">
+        <header className="flex items-center justify-between border-b border-white/5 pb-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-400">Recommendation</p>
-            <h2 className="mt-1 text-3xl font-bold text-white">Your Best Match</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Recommendation</p>
+            <h2 className="mt-0.5 text-2xl font-bold text-white tracking-tight">Your Best Match</h2>
           </div>
           <button
             type="button"
             onClick={onRunAgain}
-            className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-secondaryText hover:bg-white/5"
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
           >
             Start Over
           </button>
         </header>
 
-        <section className="relative overflow-hidden rounded-[28px] border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-transparent to-transparent p-6 sm:p-8">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-brand-500/10 blur-3xl" />
+        <section className="relative overflow-hidden rounded-2xl border border-blue-500/10 bg-[#161b22]/40 p-5 sm:p-6">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-500/5 blur-3xl" />
 
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-5">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-brand-500/30 bg-brand-500/20 text-2xl font-bold text-brand-400">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-xl font-bold text-blue-400">
                 {primary?.name?.substring(0, 2).toUpperCase() || "AI"}
               </div>
               <div>
-                <h3 className="text-3xl font-black tracking-tight text-white">{primary?.name || "ChatGPT"}</h3>
-                <p className="mt-1 flex items-center gap-2 text-xs font-bold text-brand-400/80">
-                  <span className="inline-block h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+                <h3 className="text-2xl font-bold tracking-tight text-white">{primary?.name || "ChatGPT"}</h3>
+                <p className="mt-0.5 flex items-center gap-2 text-[10px] font-semibold text-blue-400/80">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                   {tag}
                 </p>
               </div>
@@ -403,25 +546,25 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
               href={primary?.website_url || "#"}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-sm font-bold text-background transition-all hover:bg-brand-50"
+              className="flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white shadow-lg transition-all hover:bg-blue-500"
             >
               Open {primary?.name || "Tool"}
             </a>
           </div>
 
-          <div className="mt-8 grid gap-6 border-t border-white/5 pt-8 sm:grid-cols-2">
+          <div className="mt-6 grid gap-4 border-t border-white/5 pt-6 sm:grid-cols-2">
             <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-secondaryText">Why this tool?</h4>
-              <p className="mt-3 text-sm leading-6 text-secondaryText">
-                {result?.explanation || (primary?.name || "This tool") + " is the industry leader for this specific use case, offering the best balance of speed and reasoning."}
+              <h4 className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-500">Why this tool?</h4>
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                {result?.explanation || (primary?.name || "This tool") + " is the industry leader for this specific use case."}
               </p>
             </div>
             <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-secondaryText">Key Strengths</h4>
-              <ul className="mt-3 space-y-2">
+              <h4 className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-500">Key Strengths</h4>
+              <ul className="mt-2 space-y-1.5">
                 {(primary?.strengths || ["Industry standard", "High accuracy", "Easy integration"]).slice(0, 3).map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-primaryText">
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-400">✓</span>
+                  <li key={item} className="flex items-center gap-2 text-xs text-slate-300">
+                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500/10 text-[9px] text-emerald-400">✓</span>
                     {item}
                   </li>
                 ))}
@@ -432,40 +575,39 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
 
         {alternatives.length > 0 && (
           <section>
-            <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-secondaryText">Other good options</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <h3 className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">Other good options</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
               {alternatives.map((tool, idx) => (
-                <div key={tool.id} className="group rounded-[22px] border border-white/5 bg-white/[0.02] p-5 transition-all hover:bg-white/[0.04]">
+                <div key={tool.id} className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all hover:bg-white/[0.04]">
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-white">{tool.name}</p>
-                    <span className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-secondaryText lowercase">
+                    <p className="text-sm font-bold text-white">{tool.name}</p>
+                    <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[9px] font-bold text-slate-400 lowercase">
                       {idx === 0 ? "Fastest" : "Easiest"}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-secondaryText opacity-70">A strong alternative with unique perks for your workflow.</p>
+                  <p className="mt-1.5 text-[10px] text-slate-500">A strong alternative for your workflow.</p>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        <section className="rounded-[24px] border border-white/5 bg-white/[0.01] p-6 text-center">
-          <h3 className="text-sm font-bold text-white">Share your recommendation</h3>
-          <p className="mt-1 text-xs text-secondaryText">Help others find the right AI tool.</p>
-          <div className="mt-6 flex justify-center gap-3">
+        <section className="rounded-2xl border border-white/5 bg-white/[0.01] p-4 text-center">
+          <h3 className="text-xs font-bold text-white tracking-tight">Share recommendation</h3>
+          <div className="mt-3 flex justify-center gap-2">
             <button
               type="button"
               onClick={() => {
                 navigator.clipboard.writeText(shareMessage);
                 alert("Link copied!");
               }}
-              className="rounded-xl bg-white/5 px-6 py-3 text-xs font-bold text-white hover:bg-white/10"
+              className="rounded-lg bg-white/5 px-4 py-2 text-[10px] font-bold text-white hover:bg-white/10"
             >
               Copy Link
             </button>
             <button
               type="button"
-              className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-6 py-3 text-xs font-bold text-brand-400 hover:bg-brand-500/20"
+              className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-[10px] font-bold text-blue-400 hover:bg-blue-500/20"
             >
               Twitter / X
             </button>
@@ -478,7 +620,7 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
 
 function LandingFooter() {
   return (
-    <footer className="mx-auto mt-12 w-full max-w-sm pb-8">
+    <footer className="mx-auto mt-4 w-full max-w-sm pb-2">
       <div className="flex items-center justify-between text-[11px] font-medium tracking-tight text-slate-600">
         <p>© 2024 TrustMeBroAI</p>
         <div className="flex items-center gap-1">
@@ -499,13 +641,13 @@ function LandingFooter() {
 
 function DefaultFooter() {
   return (
-    <footer className="mx-auto mt-6 w-full max-w-3xl text-center">
-      <p className="text-xs text-slate-500">Made by real people.</p>
+    <footer className="mx-auto mt-4 w-full max-w-3xl text-center pb-2">
+      <p className="text-[10px] text-slate-600">Made by real people.</p>
       <a
         href="https://www.linkedin.com/in/YOUR-LINK-HERE"
         target="_blank"
         rel="noreferrer"
-        className="mt-1 inline-block text-xs text-slate-400 transition hover:text-slate-200"
+        className="mt-0.5 inline-block text-[10px] text-slate-500 transition hover:text-slate-400"
       >
         LinkedIn: [placeholder link]
       </a>
@@ -711,8 +853,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen text-slate-100">
-      <main className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 flex flex-col">
+      <main className="relative mx-auto flex flex-1 w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute left-1/2 top-16 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-blue-500/14 blur-3xl" />
           <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-violet-500/18 blur-3xl" />
@@ -720,10 +862,10 @@ function App() {
           <div className="absolute bottom-20 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-sky-400/12 blur-3xl" />
         </div>
 
-        <section className="mx-auto flex w-full flex-1 items-center justify-center py-6 sm:py-8">
+        <section className="mx-auto flex w-full flex-1 items-center justify-center py-4">
           <div
             className={[
-              "card-surface w-full p-8 sm:p-12",
+              "card-surface w-full p-6 sm:p-10",
               isLanding ? "landing-card max-w-[42rem]" : "max-w-3xl"
             ].join(" ")}
           >

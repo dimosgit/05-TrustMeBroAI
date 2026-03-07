@@ -1,0 +1,52 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - paragraph [ref=e7]: AI Tool Consultant
+        - heading "There are thousands of AI tools. TrustMeBroAI tells you which one to use." [level=1] [ref=e8]
+        - paragraph [ref=e9]: Pick your task, answer a few quick questions, and get the best AI tool for the job.
+        - generic [ref=e10]:
+          - button "Find my tool" [ref=e11] [cursor=pointer]
+          - paragraph [ref=e12]: Fast, simple, and built for real people.
+      - complementary [ref=e13]:
+        - paragraph [ref=e14]: Example recommendation
+        - 'heading "Best Match: Perplexity" [level=2] [ref=e15]'
+        - paragraph [ref=e16]: For fast research and source-backed answers, Perplexity gives the strongest speed-to-confidence ratio.
+        - generic [ref=e17]:
+          - generic [ref=e18]: "Alternative: ChatGPT"
+          - generic [ref=e19]: "Alternative: Claude"
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]: Step 1 of 3
+        - generic [ref=e23]: 33% complete
+      - generic [ref=e26]:
+        - heading "Who are you?" [level=3] [ref=e27]
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - button "Business Business-focused workflows and decision support" [ref=e30] [cursor=pointer]:
+              - generic [ref=e31]: Business
+              - generic [ref=e32]: Business-focused workflows and decision support
+            - button "Developer Software engineering and technical product tasks" [ref=e33] [cursor=pointer]:
+              - generic [ref=e34]: Developer
+              - generic [ref=e35]: Software engineering and technical product tasks
+            - button "Consultant Client delivery, strategy, and communication workflows" [ref=e36] [cursor=pointer]:
+              - generic [ref=e37]: Consultant
+              - generic [ref=e38]: Client delivery, strategy, and communication workflows
+            - button "Student Learning, studying, and knowledge synthesis" [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]: Student
+              - generic [ref=e41]: Learning, studying, and knowledge synthesis
+            - button "Creator Content, media, and audience growth workflows" [ref=e42] [cursor=pointer]:
+              - generic [ref=e43]: Creator
+              - generic [ref=e44]: Content, media, and audience growth workflows
+          - generic [ref=e45]:
+            - button "Back" [disabled] [ref=e46]
+            - button "Next" [disabled] [ref=e47]
+  - contentinfo [ref=e48]:
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - paragraph [ref=e51]: TrustMeBroAI
+        - paragraph [ref=e52]: Simple guidance to pick the right AI tool in minutes.
+      - generic [ref=e53]:
+        - 'link "LinkedIn: https://www.linkedin.com/in/YOUR-LINK-HERE" [ref=e54] [cursor=pointer]':
+          - /url: https://www.linkedin.com/in/YOUR-LINK-HERE
+        - paragraph [ref=e55]: © 2026 TrustMeBroAI. All rights reserved.

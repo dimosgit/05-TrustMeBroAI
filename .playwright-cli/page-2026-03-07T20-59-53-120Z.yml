@@ -1,0 +1,36 @@
+- main [ref=e4]:
+  - generic [ref=e8]:
+    - paragraph [ref=e9]: TrustMeBroAI
+    - heading "There are thousands of AI tools. We tell you which one to use." [level=1] [ref=e11]:
+      - text: There are thousands of AI tools.
+      - text: We tell you which one to use.
+    - paragraph [ref=e13]:
+      - text: Answer a few simple questions and get
+      - text: the best AI tool for your task.
+    - generic [ref=e14]:
+      - button "Find my AI tool" [ref=e15] [cursor=pointer]
+      - link "Log in" [ref=e16] [cursor=pointer]:
+        - /url: /login
+    - generic [ref=e17]:
+      - paragraph [ref=e20]: Works with the best AI tools
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: ✺
+          - generic [ref=e25]: ChatGPT
+        - generic [ref=e26]:
+          - generic [ref=e27]: C
+          - generic [ref=e28]: Claude
+        - generic [ref=e29]:
+          - generic [ref=e30]: ⬢
+          - generic [ref=e31]: Copilot
+        - generic [ref=e32]:
+          - generic [ref=e33]: P
+          - generic [ref=e34]: Perplexity
+        - generic [ref=e35]:
+          - generic [ref=e36]: ▶
+          - generic [ref=e37]: Cursor
+    - paragraph [ref=e38]: Fast. Simple. Built for real people.
+  - generic [ref=e40]:
+    - paragraph [ref=e41]: © 2024 TrustMeBroAI
+    - 'link "LinkedIn: linkedin.com/in/YOUR-LINK-HERE" [ref=e42] [cursor=pointer]':
+      - /url: https://www.linkedin.com/in/YOUR-LINK-HERE
