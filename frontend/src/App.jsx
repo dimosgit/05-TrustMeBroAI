@@ -35,7 +35,13 @@ const PRIORITY_CHOICES = [
   { name: "Microsoft friendly", icon: "MS" }
 ];
 
-const LANDING_LOGOS = ["ChatGPT", "Claude", "Copilot", "Perplexity", "Cursor"];
+const LANDING_LOGOS = [
+  { name: "ChatGPT", token: "✺", tone: "bg-white/10" },
+  { name: "Claude", token: "C", tone: "bg-fuchsia-500/20 text-fuchsia-300" },
+  { name: "Copilot", token: "⬢", tone: "bg-sky-500/20 text-sky-300" },
+  { name: "Perplexity", token: "P", tone: "bg-slate-500/20 text-slate-300" },
+  { name: "Cursor", token: "▶", tone: "bg-teal-500/20 text-teal-300" }
+];
 
 const initialForm = {
   profileId: null,
@@ -116,50 +122,62 @@ function StepShell({ children }) {
 function Landing({ onStart }) {
   return (
     <StepShell>
-      <div className="space-y-8 py-4 text-center sm:py-8">
-        <div className="inline-block rounded-full bg-brand-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400">
-          TrustMeBroAI
-        </div>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Thousands of AI tools.
-          <span className="mt-2 block bg-gradient-to-r from-brand-400 to-secondary-500 bg-clip-text text-transparent">
-            One right answer.
-          </span>
+      <div className="space-y-10 py-4 text-center">
+        <p className="text-sm font-medium tracking-[0.2em] text-slate-400">TrustMeBroAI</p>
+
+        <h1 className="mx-auto max-w-2xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+          There are thousands of AI tools.
+          <br className="hidden sm:block" />
+          We tell you which one to use.
         </h1>
-        <p className="mx-auto max-w-lg text-base leading-relaxed text-secondaryText sm:text-lg">
-          Stop guessing. Answer a few simple questions and get the best AI tool for your specific workflow.
+
+        <p className="mx-auto max-w-xl text-lg text-slate-400">
+          Answer a few simple questions and get
+          <br className="hidden sm:block" />
+          the best AI tool for your task.
         </p>
 
-        <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-3 py-4">
           <button
             type="button"
             onClick={onStart}
-            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-8 py-4 text-sm font-bold text-background transition-all hover:bg-brand-50 sm:w-auto"
+            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 text-lg font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98]"
           >
-            <span>Find my AI tool</span>
-            <span className="transition-transform group-hover:translate-x-1">→</span>
+            Find my AI tool
           </button>
           <a
             href="/login"
-            className="flex w-full items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-white/5 sm:w-auto"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 text-lg font-bold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
           >
             Log in
           </a>
         </div>
 
-        <div className="pt-8">
-          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-secondaryText/40">Trusted results for</p>
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            {LANDING_LOGOS.map((logo) => (
-              <span
-                key={logo}
-                className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2 text-[11px] font-semibold text-secondaryText/60"
-              >
-                {logo}
+        <div className="space-y-6 pt-4">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5" />
+            <p className="whitespace-nowrap text-xs font-medium uppercase tracking-widest text-slate-500">Works with the best AI tools</p>
+            <div className="h-px flex-1 bg-white/5" />
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5153-4.9108 6.0462 6.0462 0 0 0-4.7471-3.1248 6.1213 6.1213 0 0 0-5.1189 1.954 6.0461 6.0461 0 0 0-5.1189-1.954 6.0462 6.0462 0 0 0-4.7471 3.1248 5.9847 5.9847 0 0 0-.5183 4.9108 6.0461 6.0461 0 0 0 1.956 5.1189 6.0461 6.0461 0 0 0-1.956 5.1189 5.9847 5.9847 0 0 0 .5153 4.9108 6.0462 6.0462 0 0 0 4.7471 3.1248 6.1213 6.1213 0 0 0 5.1189-1.954 6.0461 6.0461 0 0 0 5.1189 1.954 6.0462 6.0462 0 0 0 4.7471-3.1248 5.9847 5.9847 0 0 0 .5183-4.9108 6.0461 6.0461 0 0 0-1.956-5.1189 6.0461 6.0461 0 0 0 1.956-5.122zM12.0003 12.9803l-2.025-1.17 4.0538-2.3438 1.0113.585a2.025 2.025 0 0 1 0 3.5075l-3.0401 1.7513zm-1.0113-7.5187l3.0401-1.7513a2.025 2.025 0 0 1 2.7663.7431c.3.5181.4 1.1212.28 1.6963l-4.0538 2.3438-2.0326-1.1738v-1.8581zm-7.0945 4.0938a2.025 2.025 0 0 1-.2743-1.698 2.025 2.025 0 0 1 .741-.9983l3.0401-1.7513 2.0287 1.1738v4.6125l-5.5355-3.1974zm0 6.39l5.5355-3.1974v4.6125l-3.0401 1.7513a2.025 2.025 0 0 1-2.7663-.7431 2.0251 2.0251 0 0 1-.28-1.693l4.0538-2.3438zm11.148 4.094a2.025 2.025 0 0 1 .2743 1.698c.1175-.5738.0163-1.1713-.2845-1.685l-3.0401-1.7513-2.0287-1.1738v-4.6125l5.5355 3.1971z" /></svg>
               </span>
+              <span className="text-xl font-semibold text-white">ChatGPT</span>
+            </div>
+            {LANDING_LOGOS.slice(1).map((logo) => (
+              <div key={logo.name} className="flex items-center gap-2">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${logo.tone} text-sm font-bold`}>
+                  {logo.token}
+                </span>
+                <span className="text-xl font-semibold text-white">{logo.name}</span>
+              </div>
             ))}
           </div>
         </div>
+
+        <p className="pt-8 text-lg font-medium text-slate-400">Fast. Simple. Built for real people.</p>
       </div>
     </StepShell>
   );
@@ -458,6 +476,43 @@ function ResultStep({ result, taskLabel, onRunAgain }) {
   );
 }
 
+function LandingFooter() {
+  return (
+    <footer className="mx-auto mt-12 w-full max-w-sm pb-8">
+      <div className="flex items-center justify-between text-[11px] font-medium tracking-tight text-slate-600">
+        <p>© 2024 TrustMeBroAI</p>
+        <div className="flex items-center gap-1">
+          <span>LinkedIn :</span>
+          <a
+            href="https://linkedin.com/in/YOUR-LINK-HERE"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-slate-400"
+          >
+            linkedin.com/in/YOUR-LINK-HERE
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function DefaultFooter() {
+  return (
+    <footer className="mx-auto mt-6 w-full max-w-3xl text-center">
+      <p className="text-xs text-slate-500">Made by real people.</p>
+      <a
+        href="https://www.linkedin.com/in/YOUR-LINK-HERE"
+        target="_blank"
+        rel="noreferrer"
+        className="mt-1 inline-block text-xs text-slate-400 transition hover:text-slate-200"
+      >
+        LinkedIn: [placeholder link]
+      </a>
+    </footer>
+  );
+}
+
 function App() {
   const [profiles, setProfiles] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -468,6 +523,7 @@ function App() {
   const [loadingStage, setLoadingStage] = useState(0);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const isLanding = view === "landing";
 
   useEffect(() => {
     async function loadLookupData() {
@@ -656,15 +712,23 @@ function App() {
 
   return (
     <div className="min-h-screen text-slate-100">
-      <main className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+      <main className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -left-28 top-16 h-72 w-72 rounded-full bg-blue-500/22 blur-3xl" />
-          <div className="absolute -right-28 top-1/4 h-80 w-80 rounded-full bg-violet-500/22 blur-3xl" />
-          <div className="absolute bottom-8 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/14 blur-3xl" />
+          <div className="absolute left-1/2 top-16 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-blue-500/14 blur-3xl" />
+          <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-violet-500/18 blur-3xl" />
+          <div className="absolute -right-24 top-1/3 h-80 w-80 rounded-full bg-indigo-400/16 blur-3xl" />
+          <div className="absolute bottom-20 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-sky-400/12 blur-3xl" />
         </div>
 
-        <section className="mx-auto flex w-full flex-1 items-center justify-center py-4 sm:py-8">
-          <div className="card-surface w-full max-w-3xl p-6 sm:p-8">{renderContent()}</div>
+        <section className="mx-auto flex w-full flex-1 items-center justify-center py-6 sm:py-8">
+          <div
+            className={[
+              "card-surface w-full p-8 sm:p-12",
+              isLanding ? "landing-card max-w-[42rem]" : "max-w-3xl"
+            ].join(" ")}
+          >
+            {renderContent()}
+          </div>
         </section>
 
         {error ? (
@@ -673,17 +737,7 @@ function App() {
           </div>
         ) : null}
 
-        <footer className="mx-auto mt-6 w-full max-w-3xl text-center">
-          <p className="text-xs text-slate-500">Made by real people.</p>
-          <a
-            href="https://www.linkedin.com/in/YOUR-LINK-HERE"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-1 inline-block text-xs text-slate-400 transition hover:text-slate-200"
-          >
-            LinkedIn: [placeholder link]
-          </a>
-        </footer>
+        {isLanding ? <LandingFooter /> : <DefaultFooter />}
       </main>
     </div>
   );
