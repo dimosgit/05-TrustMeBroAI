@@ -5,8 +5,8 @@ RUN npm ci
 COPY . .
 
 FROM base AS dev
-EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+EXPOSE 5174
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5174"]
 
 FROM base AS build
 ARG VITE_API_BASE_URL=/api

@@ -82,42 +82,23 @@ The DB is intentionally separated so external scripts can update tools/scoring i
 
 If Docker image pulls are blocked on your network, run the app without PostgreSQL using built-in mock mode.
 
-1. Install dependencies:
+Run this once from the project root:
 
 ```bash
-cd backend && npm install
-cd ../frontend && npm install
-cd ..
+npm run local
 ```
 
-2. Create local env files:
+What it does automatically:
 
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
+1. Installs backend dependencies
+2. Installs frontend dependencies
+3. Creates `backend/.env` and `frontend/.env` if missing
+4. Sets `FRONTEND_ORIGIN=http://localhost:5174` and `USE_MOCK_DATA=true` in `backend/.env`
+5. Starts backend and frontend together in the same terminal
 
-3. Enable backend mock mode:
+Open:
 
-```bash
-echo 'USE_MOCK_DATA=true' >> backend/.env
-```
-
-4. Start backend (terminal 1):
-
-```bash
-cd backend && npm run dev
-```
-
-5. Start frontend (terminal 2):
-
-```bash
-cd frontend && npm run dev
-```
-
-6. Open:
-
-- Frontend: [http://localhost:5173](http://localhost:5173)
+- Frontend: [http://localhost:5174](http://localhost:5174)
 - Backend health: [http://localhost:8080/api/health](http://localhost:8080/api/health)
 
 ## Local Development (Docker Compose)
@@ -136,7 +117,7 @@ docker compose up --build
 
 3. Open:
 
-- Frontend: [http://localhost:5173](http://localhost:5173)
+- Frontend: [http://localhost:5174](http://localhost:5174)
 - Backend: [http://localhost:8080/api/health](http://localhost:8080/api/health)
 - PostgreSQL: `localhost:5432`
 
