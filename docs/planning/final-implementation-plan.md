@@ -165,8 +165,11 @@ Business constraint: email capture is a primary product objective, not a side fe
 
 #### `tools` (internal scoring fields)
 - `tool_name`, `tool_slug`, `logo_url`, `best_for`, `website`, `category`
-- `pricing`, `ease_of_use`, `speed`, `quality`
+- `pricing` (display/source label), `pricing_tier` (`free|freemium|paid_low|paid_mid|paid_high`)
+- `ease_of_use`, `speed`, `quality`
 - `target_users`, `tags`
+- `context_word` VARCHAR(40) NULL (for alternative preview only)
+- `record_status` (`active|inactive|deprecated`) default `active`
 - `referral_url` NULL (future)
 
 #### `recommendation_feedback`
@@ -292,8 +295,112 @@ Exit criteria:
 
 ## 10. Open Questions / Future Enhancements
 
-- Should unlock require double opt-in email confirmation or unlock immediately with consent checkbox?
-- Should returning-user authentication be magic-link only or email+password?
-- What is the minimum acceptable unlock conversion rate for MVP go/no-go?
-- Should `Try it ->` clicks open direct website or referral URL when available?
-- At what catalog size should semantic retrieval be reconsidered?
+### Answered
+
+**Should unlock require double opt-in email confirmation or unlock immediately with consent checkbox?**
+Unlock immediately on email + consent checkbox. No double opt-in for MVP. Double opt-in adds friction at the exact moment of maximum motivation and will hurt conversion. A clear consent checkbox at the gate is sufficient for GDPR compliance.
+
+**Should returning-user authentication be magic-link only or email+password?**
+Magic link only for Phase 2. No passwords. The audience (non-technical professionals) finds passwordless flows less friction, and it eliminates password reset complexity entirely. Send a login link to their registered email.
+
+**Should `Try it ->` clicks open direct website or referral URL when available?**
+Open `referral_url` when populated, fall back to `website` when not. This enables future monetization without any frontend change. The `referral_url` field should be added to the `tools` table now, even if empty for all MVP tools.
+
+**What is the minimum acceptable unlock conversion rate for MVP go/no-go?**
+Target: 20% of wizard completions result in an email unlock. Below 10% after 200 completions indicates the result screen or the email gate copy needs reworking before further promotion. Track this from day one.
+
+**Should the landing page include a separate "follow the build" email capture independent of the wizard flow?**
+Yes. Include a low-friction "follow the build" capture on landing, separate from the recommendation unlock gate. Store these signups with distinct `signup_source` / campaign tags so this channel does not get mixed with unlock-conversion metrics.
+
+---
+
+### Scoring Formula Spec
+
+The recommendation engine uses deterministic weighted scoring. No external model dependency. All computation is SQL-local.
+
+**Base score per tool:**
+```
+score = (quality × w_quality) + (speed × w_speed) + (ease_of_use × w_ease) + pricing_fit × w_price
+```
+
+All rating fields (`quality`, `speed`, `ease_of_use`) are integers 1–5.
+
+Profile selection is not part of the base numeric formula in MVP. It is used for attribution/analytics and as a late tiebreak signal only.
+
+`pricing_fit` is derived from `pricing_tier` only (not free-text `pricing`):
+- `free` -> 5
+- `freemium` -> 4
+- `paid_low` -> 3
+- `paid_mid` -> 2
+- `paid_high` -> 1
+
+If `pricing_tier` is missing or invalid, default to `paid_mid` (2) and flag the tool for curation.
+
+**Weight profiles by selected priority:**
+
+| Selected Priority   | w_quality | w_speed | w_ease | w_price |
+|---------------------|-----------|---------|--------|---------|
+| Best quality        | 0.5       | 0.2     | 0.2    | 0.1     |
+| Fastest results     | 0.2       | 0.5     | 0.2    | 0.1     |
+| Easiest to use      | 0.2       | 0.2     | 0.5    | 0.1     |
+| Lowest price        | 0.1       | 0.2     | 0.2    | 0.5     |
+
+**Tiebreaker (priority-aware):**
+- If selected priority is `Best quality`, prefer higher `quality`.
+- If selected priority is `Fastest results`, prefer higher `speed`.
+- If selected priority is `Easiest to use`, prefer higher `ease_of_use`.
+- If selected priority is `Lowest price`, prefer higher `pricing_fit`.
+- If still tied, prefer tool where `target_users` contains selected profile.
+- If still tied, prefer alphabetical by `tool_name`.
+
+**Filtering before scoring:**
+- Only score tools where `category` matches the selected `task` category.
+- Only score tools where `record_status = 'active'`.
+- If fewer than 3 tools exist in the selected category, expand categories in this strict order:
+- `Document/PDF` -> `Research` -> `Content Creation`
+- `Research` -> `Document/PDF` -> `Content Creation`
+- `Content Creation` -> `Document/PDF` -> `Research`
+- `Coding` -> `Automation` -> `Research`
+- `Automation` -> `Coding` -> `Research`
+- If still fewer than 3 candidates, include highest-scoring tools from all remaining active categories.
+
+**Output:**
+- Rank all matching tools by score descending.
+- `primary_tool` = rank 1.
+- `alternative_tools` = ranks 2 and 3.
+
+---
+
+### `primary_reason` Generation Spec
+
+The `primary_reason` is a one-sentence plain-language explanation displayed on the result screen after unlock. It is generated at compute time using a template, not AI generation.
+
+**Template:**
+```
+"{tool_name} is the best fit for {task_label} {priority_context}."
+```
+
+**`priority_context` values by selected priority:**
+
+| Selected Priority | priority_context                        |
+|-------------------|-----------------------------------------|
+| Best quality      | "when quality is what matters most"     |
+| Fastest results   | "when you need results fast"            |
+| Easiest to use    | "if you want the simplest experience"   |
+| Lowest price      | "without spending money"                |
+
+**Example outputs:**
+- "ChatGPT is the best fit for analyzing PDFs when quality is what matters most."
+- "Zapier is the best fit for automation without spending money."
+- "Cursor is the best fit for coding if you want the simplest experience."
+
+The `best_for` field on the tool record is used as supplementary context in the UI (shown as a sub-label under the tool name after unlock), not as the reason sentence itself.
+
+**`context_word` for alternative tools:**
+Each alternative tool shown before the gate displays a single short context phrase. This is sourced directly from a `context_word` field on the `tools` table (e.g., "free tier", "Microsoft ecosystem", "open source"). If empty, show nothing — do not fabricate context.
+
+---
+
+### Still Open
+
+- At what catalog size should semantic retrieval be reconsidered? (suggested trigger: 200+ active tools or when structured scoring produces ties on more than 30% of queries)
