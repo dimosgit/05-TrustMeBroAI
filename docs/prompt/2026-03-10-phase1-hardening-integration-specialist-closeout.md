@@ -61,7 +61,8 @@ Perform final integration closeout for Phase 1 hardening and issue final merge r
 2. Never commit code with failing tests.
 3. Report exact commands executed and whether each passed.
 4. Escalate blockers instead of skipping required validation.
-5. Do not modify `/Users/dimouzunov/00 Coding/05 TrustMeBroAI/05-TrustMeBroAI/docs/planning/final-implementation-plan.md`.
+5. Do not modify `docs/planning/final-implementation-plan.md`.
+6. Do not modify `/Users/dimouzunov/00 Coding/05 TrustMeBroAI/05-TrustMeBroAI/docs/planning/final-implementation-plan.md`.
 
 ## 12. Assumptions and Open Questions
 - Assumptions:
