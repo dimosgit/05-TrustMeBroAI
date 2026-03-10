@@ -1,5 +1,5 @@
 ## 1. Feature Title
-`Phase 1 Hardening Agent B: Frontend Funnel Instrumentation + Stability`
+`Phase 1 Hardening Front-End Specialist: Funnel Instrumentation + Stability`
 
 ## 2. Objective
 Finalize frontend Phase 1 hardening by ensuring funnel tracking signals are emitted reliably and UX remains stable. Preserve conversion-first behavior while adding measurable event hooks for wizard completion, unlock, and try-it clicks.
@@ -18,6 +18,7 @@ Finalize frontend Phase 1 hardening by ensuring funnel tracking signals are emit
 - Out of scope:
   1. Phase 2 login/history features.
   2. New UX flows not required for Phase 1 hardening.
+  3. Research-to-seed curation and backend seed-data decisions (owned by the Back-End Specialist).
 
 ## 5. Requirements
 1. Keep anonymous flow and locked/unlocked rendering behavior unchanged.
@@ -31,6 +32,7 @@ Finalize frontend Phase 1 hardening by ensuring funnel tracking signals are emit
 2. Minimal, non-disruptive instrumentation only.
 3. Keep compatibility with backend unlock payload shape variants (`try_it_url`, nested `primary_reason`).
 4. No changes to final implementation plan file.
+5. Do not modify research seed SQL unless required by explicit backend contract change from the Back-End Specialist.
 
 ## 7. Implementation Notes
 1. Instrument events where user intent is explicit and success is confirmed.
@@ -63,7 +65,7 @@ Finalize frontend Phase 1 hardening by ensuring funnel tracking signals are emit
 2. Never commit code with failing tests.
 3. Report exact commands executed and whether each passed.
 4. Escalate blockers instead of skipping required validation.
-5. Do not modify `docs/planning/final-implementation-plan.md`.
+5. Do not modify `/Users/dimouzunov/00 Coding/05 TrustMeBroAI/05-TrustMeBroAI/docs/planning/final-implementation-plan.md`.
 
 ## 12. Assumptions and Open Questions
 - Assumptions:
