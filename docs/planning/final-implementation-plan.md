@@ -3,85 +3,90 @@
 ## 1. Product Overview
 
 ### Problem the app solves
-People spend too much time comparing AI tools across fragmented and outdated sources. TrustMeBroAI gives a fast, explainable recommendation for the user’s exact task and priorities.
+Choosing an AI tool is slow and mentally expensive. Most products force users to compare too many options, fields, and scores.
+
+TrustMeBroAI removes that burden by giving one confident recommendation for a specific task.
 
 ### Target users
 - Business professionals
 - Consultants
 - Students
 - Developers
-- Founders and creators
+- Founders
 
 ### Core value proposition
-- Fast decision support with clear recommendations
-- Transparent tradeoffs (not black-box output)
-- Curated and updatable tool intelligence
-- Account-based experience from day one (saved data, personalization, growth channel)
+- One clear answer, not a research workflow
+- Fast decision in under 60 seconds
+- Minimal cognitive load (no comparison UX)
+- Free product with email as the core value exchange
 
-Non-negotiable requirement: **the recommendation tool is accessible only to authenticated users**.
+Business constraint: email capture is a primary product objective, not a side feature.
 
 ---
 
 ## 2. Final UX Flow
 
 ### Complete step-by-step user journey
-1. User lands on public landing page.
-2. User can choose `Register` or `Login`.
-3. User cannot access wizard, recommendation, or internal app screens before authentication.
-4. New user registers with email + password.
-5. Registration screen shows friendly consent copy:
-   - "This tool is free. In exchange, we may occasionally send product updates. No spam. Just useful AI stuff."
-6. After successful login/registration, user enters the app wizard.
-7. User selects profile, task, and priorities.
-8. System generates recommendation result with primary tool, alternatives, and explanation.
-9. User can give quick feedback (`thumbs_up` / `thumbs_down`).
-10. Authenticated user session is tracked for future saved history and analytics.
+1. User lands on the website.
+2. User starts wizard immediately (no login, no account).
+3. User selects profile, task, and one top priority.
+4. Backend computes recommendation and returns result payload.
+5. Result screen loads in **gated mode**:
+- Primary recommendation card is locked/blurred.
+- User sees two secondary options (name + one-word context only).
+6. User enters email + explicit consent checkbox to unlock.
+7. System creates/updates user record and links the recommendation session.
+8. Primary recommendation unlocks and displays:
+- Tool name + logo
+- One-sentence reason
+- `Try it ->` button to tool website
 
 ### Simplified workflow decisions
-- Hard auth gate before any tool functionality.
-- Public pages limited to landing + login + register.
-- No anonymous recommendation flow.
-- Profile/task/priority flow remains simple and deterministic for MVP.
+- No auth gate before wizard.
+- Email gate is applied to the primary recommendation only.
+- Result screen is not a comparison interface.
+- Maximum visible tools: 3 total (1 primary + 2 secondary).
 
 ### Key UI screens
-- Public Landing
-- Register
-- Login
-- Protected Wizard
-- Protected Recommendation Result
+- Landing page
+- Wizard flow (3 steps)
+- Result screen (locked state)
+- Result screen (unlocked state)
+- Lightweight login screen for returning users (Phase 2, not required for MVP)
 
 ---
 
 ## 3. System Architecture
 
 ### Frontend architecture
-- React (Vite) SPA with explicit route-state boundaries:
-- Public: `Landing`, `Login`, `Register`
-- Protected: `Wizard`, `Result`
-- `AuthContext`/session bootstrap checks authenticated user on app load.
-- `ProtectedRoute` (or guarded view state) blocks protected screens when unauthenticated.
-- All API calls use credentialed requests for session cookie transport.
+- React SPA with state-driven flow:
+- `Landing`
+- `Wizard`
+- `ResultLocked`
+- `EmailUnlock`
+- `ResultUnlocked`
+- No comparison tables or score visualizations in UI.
+- UI contract enforces primary-only reveal after unlock.
 
 ### Backend architecture
-- Node.js + Express with layered modules:
-- `auth` module (registration, login, logout, session parsing, auth middleware)
-- `routes` (HTTP contracts)
-- `services` (recommendation + session logic)
-- `repositories` (PostgreSQL queries)
-- Global auth context middleware parses session and attaches `req.user`.
-- Guard middleware (`requireAuth`) protects all application endpoints except public auth/health endpoints.
+- Node.js + Express, modular boundaries:
+- `session-service` for anonymous wizard sessions
+- `recommendation-service` for deterministic scoring
+- `lead-capture-service` for email unlock, consent, and user linking
+- `result-service` for locked/unlocked response shapes
+- API returns internal scoring fields but frontend never displays them.
 
 ### Database structure
 - PostgreSQL as source of truth.
-- `users` and `auth_sessions` are foundational tables.
-- Business tables (`user_sessions`, `recommendations`) are user-owned and reference authenticated users.
-- Tool and recommendation tables remain the core recommendation data model.
+- Anonymous session and recommendation data created before email capture.
+- User record created on unlock event.
+- Recommendation session is linked to user after unlock.
 
 ### External services
-- Coolify for deployment orchestration.
-- Docker Compose for local and production-like environments.
-- GitHub Actions for CI/CD and later data-release automation.
-- Future optional OAuth providers (Google/GitHub) via pluggable auth provider design.
+- Coolify deployment
+- Docker Compose runtime
+- Optional email delivery provider (newsletter/update sends)
+- GitHub Actions for CI and later data-update automation
 
 ---
 
@@ -91,43 +96,40 @@ Non-negotiable requirement: **the recommendation tool is accessible only to auth
 - Frontend: React 18 + Vite + Tailwind CSS
 - Backend: Node.js + Express
 - Database: PostgreSQL 16
-- Auth/security: password hashing (scrypt/bcrypt class), secure cookie sessions, request validation, rate limiting
 
 ### Infrastructure
-- Multi-service Docker setup (`frontend`, `backend`, `db`)
-- Env-based configuration for CORS, DB URL, auth settings
-- Scheduled backups for PostgreSQL from first public release
+- Dockerized services: frontend, backend, db
+- Environment-based configuration
+- Scheduled DB backups from MVP launch
 
 ### Deployment model (Docker / Coolify)
 - Local: `docker-compose.yml`
 - Production: `docker-compose.prod.yml` or split Coolify services
-- Deployment baseline:
-- Enforce strong production DB credentials
-- HTTPS termination in front of app
-- Secure cookie behavior in production (`HttpOnly`, `Secure`, `SameSite`)
+- Deployment requirements:
+- HTTPS in production
+- Strict CORS allowlist
+- Rate limits on session and email unlock endpoints
 
 ---
 
 ## 5. Database Design
 
 ### Main entities
-- `users`
-- `auth_sessions`
+- `tools`
 - `profiles`
 - `tasks`
 - `priorities`
-- `tools`
-- `user_sessions`
+- `recommendation_sessions`
 - `recommendations`
+- `users`
 - `recommendation_feedback`
 
 ### Relationships
-- `auth_sessions.user_id -> users.id`
-- `user_sessions.user_id -> users.id`
-- `user_sessions.profile_id -> profiles.id`
-- `user_sessions.task_id -> tasks.id`
-- `recommendations.user_session_id -> user_sessions.id`
+- `recommendation_sessions.profile_id -> profiles.id`
+- `recommendation_sessions.task_id -> tasks.id`
+- `recommendations.session_id -> recommendation_sessions.id`
 - `recommendations.primary_tool_id -> tools.id`
+- `users.id -> recommendation_sessions.user_id` (nullable before unlock, required after unlock)
 - `recommendation_feedback.recommendation_id -> recommendations.id`
 
 ### Core tables
@@ -135,46 +137,42 @@ Non-negotiable requirement: **the recommendation tool is accessible only to auth
 #### `users`
 - `id` BIGSERIAL PK
 - `email` VARCHAR(255) UNIQUE (case-insensitive uniqueness)
-- `password_hash` TEXT
-- `auth_provider` (default `local`, future OAuth-ready)
-- `provider_user_id` (nullable)
-- `marketing_consent` BOOLEAN
-- `consent_copy` TEXT
-- `plan` (`free|pro|team|enterprise`)
-- `subscription_status` (`inactive|trial|active|past_due|canceled`)
-- `metadata` JSONB
-- `is_active` BOOLEAN
-- `last_login_at`, `created_at`, `updated_at`
+- `email_consent` BOOLEAN NOT NULL
+- `consent_timestamp` TIMESTAMP NOT NULL
+- `signup_source` VARCHAR(100) NULL
+- `plan` VARCHAR(30) DEFAULT `free`
+- `subscription_status` VARCHAR(30) DEFAULT `inactive`
+- `created_at`, `updated_at`
 
-#### `auth_sessions`
+#### `recommendation_sessions`
 - `id` BIGSERIAL PK
-- `user_id` FK
-- `session_token_hash` CHAR(64) UNIQUE
-- `ip_hash` CHAR(64)
-- `user_agent` TEXT
-- `expires_at`, `created_at`, `last_seen_at`, `revoked_at`
-
-#### `user_sessions`
-- `id` BIGSERIAL PK
-- `user_id` FK (required)
-- `profile_id`, `task_id`
-- `budget`, `experience_level`
-- `selected_priorities` JSONB
-- timestamps
+- `user_id` BIGINT NULL FK
+- `profile_id` INT NOT NULL FK
+- `task_id` INT NOT NULL FK
+- `selected_priority` VARCHAR(120) NOT NULL
+- `wizard_duration_seconds` INT NULL
+- `created_at`, `updated_at`
 
 #### `recommendations`
 - `id` BIGSERIAL PK
-- `user_session_id` FK
-- `primary_tool_id` FK
-- `alternative_tool_ids` JSONB
-- `explanation` TEXT
+- `session_id` BIGINT NOT NULL FK
+- `primary_tool_id` INT NOT NULL FK
+- `alternative_tool_ids` JSONB NOT NULL
+- `primary_reason` TEXT NOT NULL
+- `is_primary_locked` BOOLEAN NOT NULL DEFAULT TRUE
+- `unlocked_at` TIMESTAMP NULL
 - `created_at`
+
+#### `tools` (internal scoring fields)
+- `tool_name`, `tool_slug`, `logo_url`, `best_for`, `website`, `category`
+- `pricing`, `ease_of_use`, `speed`, `quality`
+- `target_users`, `tags`
+- `referral_url` NULL (future)
 
 #### `recommendation_feedback`
 - `id` BIGSERIAL PK
-- `recommendation_id` FK
-- `signal` SMALLINT (`-1|1`)
-- `comment` TEXT nullable
+- `recommendation_id` BIGINT NOT NULL FK
+- `signal` SMALLINT CHECK (`-1|1`)
 - `created_at`
 
 ---
@@ -182,135 +180,120 @@ Non-negotiable requirement: **the recommendation tool is accessible only to auth
 ## 6. Core Features
 
 ### Feature list
-1. Email/password registration
-2. Email/password login
-3. Persistent secure session management
-4. Hard route/API protection for all app features
-5. Guided recommendation wizard (authenticated only)
-6. Recommendation output with alternatives + explanation
-7. Feedback capture linked to recommendation
+1. 3-step wizard without pre-auth friction
+2. Deterministic recommendation engine (internal weighted scoring)
+3. Locked primary recommendation with email unlock
+4. Secondary options shown as name + one-word context only
+5. Consent-aware email capture and user creation
+6. One-click `Try it ->` primary CTA
+7. Feedback capture for quality iteration
 
 ### Functional behavior
-- Register:
-- Validate email format and password strength.
-- Hash password before storing.
-- Persist user record with consent metadata.
-- Create authenticated session immediately after registration.
-
-- Login:
-- Validate credentials.
-- Verify password hash.
-- Create session and set secure cookie.
-
-- Access control:
-- Unauthenticated requests to protected API return `401`.
-- Frontend never renders protected views unless `auth/me` succeeds.
-
-- Recommendation flow:
-- Same deterministic scoring path as MVP contract.
-- Recommendation belongs to authenticated user via `user_sessions.user_id`.
+- Wizard submission creates `recommendation_session` and recommendation record.
+- API response for locked state includes:
+- `session_id`
+- `primary_tool` metadata with `locked=true` flag
+- `alternative_tools` limited to 2, each with `tool_name` + `context_word`
+- Email unlock endpoint validates email + consent and then:
+- upserts user
+- links session to user
+- marks recommendation unlocked
+- returns full primary card payload
 
 ### API interactions
-Public:
-- `GET /api/health`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-
-Protected:
-- `GET /api/auth/me`
 - `GET /api/profiles`
 - `GET /api/tasks`
 - `GET /api/priorities`
-- `GET /api/tools`
-- `POST /api/session`
-- `POST /api/recommendation`
-- `POST /api/recommendations/:id/feedback`
+- `POST /api/recommendation/session`
+- `POST /api/recommendation/compute`
+- `POST /api/recommendation/unlock`
+- `POST /api/recommendation/:id/feedback`
+
+Response contract rules:
+- Never expose scoring numbers in UI-facing fields.
+- Never return more than 3 tools for result rendering.
 
 ---
 
 ## 7. Performance Considerations
 
-- Keep auth/session lookups indexed and lightweight.
+- Target end-to-end wizard + result generation under 60 seconds user journey; API recommendation compute under 500 ms p95.
 - Indexes:
 - `users(lower(email))` unique
-- `auth_sessions(session_token_hash)` unique
-- `auth_sessions(user_id, expires_at)`
-- `user_sessions(user_id)`
-- `recommendations(user_session_id)`
-- Cache non-sensitive lookup tables (`profiles`, `tasks`, `priorities`) for authenticated users.
-- Keep recommendation queries deterministic and DB-local for MVP responsiveness.
+- `recommendation_sessions(task_id, created_at)`
+- `recommendation_sessions(user_id)`
+- `recommendations(session_id)`
+- `recommendations(is_primary_locked, created_at)`
+- Keep scoring deterministic and SQL-local (no external model dependency in MVP).
+- Cache lookup tables (`profiles`, `tasks`, `priorities`) with short TTL.
 
 ---
 
 ## 8. Security & Data Handling
 
-### Authentication
-- Password hashing required (strong adaptive hash strategy).
-- Session token stored as hashed value in DB.
-- Session token delivered via `HttpOnly` cookie.
-- Session expiration + revocation support.
+### Authentication and access model
+- MVP access model: anonymous wizard + email unlock gate.
+- Returning-user login is deferred to Phase 2.
+- Until Phase 2, no protected app area requiring password auth.
 
 ### Data protection
-- Strict request validation on auth and protected endpoints.
+- Validate all inputs (`email`, consent, session IDs, priority values).
 - Parameterized SQL only.
-- CORS allowlist for trusted frontend origins.
-- Store only required user PII (email + auth/session metadata).
-- Hash IP in session records rather than storing plain IP.
+- Store explicit consent fields per user.
+- Capture `signup_source` for attribution.
+- GDPR-aware retention and deletion support for email records.
 
 ### Rate limits
-- `POST /api/auth/register`: 10 req/min/IP
-- `POST /api/auth/login`: 10 req/min/IP
-- `POST /api/session`: 20 req/min/IP
-- `POST /api/recommendation`: 15 req/min/IP
-- `POST /api/recommendations/:id/feedback`: 30 req/min/IP
+- `POST /api/recommendation/session`: 30 req/min/IP
+- `POST /api/recommendation/compute`: 20 req/min/IP
+- `POST /api/recommendation/unlock`: 10 req/min/IP
+- `POST /api/recommendation/:id/feedback`: 30 req/min/IP
 
 ---
 
 ## 9. Development Phases
 
-### Phase 1: MVP (authentication-first baseline)
+### Phase 1: MVP (conversion-first)
 Scope:
-- Implement `users` + `auth_sessions` schema.
-- Build auth module (register/login/logout/me).
-- Add password hashing + secure session cookies.
-- Enforce route guards in frontend and backend.
-- Keep public access limited to landing/login/register only.
-- Ensure recommendation flow works only for authenticated users.
+- Implement wizard-first flow (no pre-auth).
+- Implement locked primary recommendation UX.
+- Implement email unlock endpoint and consent capture.
+- Persist user records on unlock with source attribution.
+- Enforce result screen contract (no comparison UI, no score display).
+- Seed 20-30 curated tools.
 
 Exit criteria:
-- Unauthenticated users cannot access any tool API or screens.
-- Register/login/logout flows are stable.
-- Recommendation records are tied to authenticated user IDs.
+- Wizard completion in under 60 seconds median.
+- Email unlock conversion measurable and stable.
+- `Try it ->` click-through tracked after unlock.
 
 ### Phase 2: Feature expansion
 Scope:
-- Saved recommendations/history per user.
-- Usage analytics dashboards.
-- Extended account lifecycle controls (email verification/reset).
-- Data release pipeline improvements for tool catalog updates.
+- Add returning-user login (magic link or passwordless email flow preferred).
+- Add saved recommendation history by user.
+- Add richer analytics dashboards (funnel: start -> complete -> unlock -> try-it).
+- Implement safe dataset update automation (post-MVP).
 
 Exit criteria:
-- Users can revisit prior recommendations.
-- Product analytics available at user/cohort level.
+- Returning users can access past recommendations.
+- Channel-level conversion by `signup_source` is visible.
 
 ### Phase 3: Optimization
 Scope:
-- Subscription tiers and entitlements.
-- OAuth providers (Google/GitHub) via provider abstraction.
-- Advanced recommendation retrieval upgrades.
+- Subscription tiers and entitlements
+- Newsletter personalization
+- Optional advanced retrieval only if deterministic scoring is insufficient
 
 Exit criteria:
-- Tier-based feature access operational.
-- Multiple auth providers supported without auth module rewrite.
+- Monetization-ready account model active
+- Recommendation quality improvements validated by feedback and CTR
 
 ---
 
 ## 10. Open Questions / Future Enhancements
 
-- Should email verification be required before first recommendation, or only before premium features?
-- Password reset flow timing (Phase 1.5 vs Phase 2).
-- Session policy tuning (single session vs multi-device sessions).
-- Exact consent UX variant for best conversion while staying transparent.
-- Subscription/payment provider choice and rollout sequence.
-- OAuth provider priority order after local auth stabilizes.
+- Should unlock require double opt-in email confirmation or unlock immediately with consent checkbox?
+- Should returning-user authentication be magic-link only or email+password?
+- What is the minimum acceptable unlock conversion rate for MVP go/no-go?
+- Should `Try it ->` clicks open direct website or referral URL when available?
+- At what catalog size should semantic retrieval be reconsidered?

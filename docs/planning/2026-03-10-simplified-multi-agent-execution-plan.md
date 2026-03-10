@@ -1,173 +1,203 @@
-# Simplified Multi-Agent Execution Plan
+# Progressive Agent Execution Plan (2 Agents First)
 
 Source of truth: `docs/planning/final-implementation-plan.md`
 
 ## Executive Summary
 
-To reduce coordination overhead while keeping quality high, run delivery with **4 agents**:
+Use a progressive staffing model:
 
-1. Tech Lead + Integrator
-2. Backend + Data Engineer
-3. Frontend + UI/UX Engineer
-4. QA + Release Engineer
+1. **Phase 1 (MVP auth-first): 2 agents only**
+2. **Phase 2 (feature expansion): add 1 QA agent**
+3. **Phase 3 (optimization): add 1 platform/scale agent**
 
-This model keeps ownership clear, supports parallel execution, and protects UI/UX and test quality without over-fragmenting responsibilities.
+This keeps early coordination very light while preserving quality through strict phase gates.
 
-## Recommended Agent Roles
+## Agent Model by Phase
 
-### 1) Tech Lead + Integrator
-- Own architecture decisions and API contract definitions.
-- Sequence PRs and run integration checkpoints.
-- Enforce phase gates and final merge readiness.
+| Phase | Active Agents | Why this is the right size |
+|---|---|---|
+| Phase 1: MVP Authentication Hard Gate | A1 Core Fullstack Lead, A2 Frontend UI/Product Lead | Fastest path with minimal handoffs and no over-management |
+| Phase 2: Expansion (history, analytics, account lifecycle) | A1, A2, **A3 QA/Release Lead** | Quality workload grows; dedicated QA prevents regressions |
+| Phase 3: Optimization (subscriptions, OAuth, scale hardening) | A1, A2, A3, **A4 Platform/Scale Lead** | Infra/performance/security complexity justifies specialist ownership |
 
-### 2) Backend + Data Engineer
-- Build and maintain backend modules and database schema.
-- Deliver auth/session layer and protected APIs.
-- Own backend infrastructure config (`docker-compose`, env alignment, DB reliability).
+## Role Definitions
 
-### 3) Frontend + UI/UX Engineer
-- Build public + protected route architecture and auth UX.
-- Implement wizard/result/feedback product flow.
-- Own design consistency, reusable UI primitives, and responsive behavior.
+## A1 Core Fullstack Lead (Phase 1+)
+Responsibilities:
+- Backend architecture and API contracts
+- DB schema/migrations/indexes
+- Auth/session implementation (`register/login/logout/me`, cookie session security)
+- Protected API enforcement (`requireAuth`)
 
-### 4) QA + Release Engineer
-- Define risk-based testing depth per change.
-- Own unit/integration/E2E/visual test strategy and execution.
-- Block weak merges and issue release verdict (`Go`, `Go with Mitigations`, `No-Go`).
+Primary ownership:
+- `backend/src/**`
+- `backend/db/**`
+- `docker-compose*.yml`
 
-## Ownership Map
+## A2 Frontend UI/Product Lead (Phase 1+)
+Responsibilities:
+- Public and protected route structure
+- Login/register UX and auth bootstrap behavior
+- Wizard/result/feedback flow UX
+- Design consistency and reusable UI primitives
 
-| Agent | Primary Ownership | Allowed to Change | Must Coordinate Before Changing |
-|---|---|---|---|
-| Tech Lead + Integrator | `docs/planning/*`, contract docs, integration checklist | Contracts, delivery gates, cross-agent integration glue | Domain feature internals in FE/BE |
-| Backend + Data Engineer | `backend/src/**`, `backend/db/**`, `docker-compose*.yml` | Auth/session, protected APIs, DB schema/indexes, backend config | Frontend UX structure/flows |
-| Frontend + UI/UX Engineer | `frontend/src/**` | Route structure, auth screens, wizard/result/feedback UI, style tokens/components | Backend contracts and DB design |
-| QA + Release Engineer | `backend/tests/**`, `frontend/src/**/*.test.*`, `e2e/**`, CI test workflow files | Test code, quality gates, release validation | Product behavior outside test scope unless coordinated |
+Primary ownership:
+- `frontend/src/**`
 
-## Dependency-Aware Phased Delivery
+## A3 QA/Release Lead (starts Phase 2)
+Responsibilities:
+- Automated test depth expansion (integration, E2E, visual)
+- Regression ownership and release gate decisions
+- Quality dashboard and defect triage ownership
 
-## Phase 0: Foundation (short, mandatory)
-- Define contract baseline for auth + protected APIs.
-- Split frontend into maintainable feature/module structure (replace monolithic app layout).
-- Establish testing harness and CI checks.
+Primary ownership:
+- `backend/tests/**`
+- `frontend/src/**/*.test.*`
+- `e2e/**`
+- CI test workflow files
 
-Parallelizable:
-- Backend scaffolding and frontend restructuring can run in parallel after contract draft.
-- QA sets up test framework in parallel.
+## A4 Platform/Scale Lead (starts Phase 3)
+Responsibilities:
+- Performance, observability, and deployment hardening
+- Subscription and entitlement infrastructure support
+- OAuth provider abstraction hardening and operational reliability
 
-Exit criteria:
-- CI runs baseline test pipeline.
-- Contracts are documented and frozen for Phase 1.
+Primary ownership:
+- Infra/ops and platform hardening files added in Phase 3
 
-## Phase 1: MVP Authentication Hard Gate (highest priority)
-- Implement `users` + `auth_sessions` schema and secure session handling.
-- Deliver register/login/logout/me backend.
-- Enforce backend `requireAuth` on protected endpoints.
-- Enforce frontend protected routing so wizard/result never render unauthenticated.
+## Ownership Boundaries and Coordination Rules
 
-Exit criteria:
-- Unauthenticated users cannot access protected screens or APIs.
-- Auth flows are stable and tested.
+| Agent | Can change freely | Must coordinate before changing |
+|---|---|---|
+| A1 | Backend modules, DB schema, backend env/deploy config | Frontend UX structures, shared design primitives |
+| A2 | Frontend routes, screens, UI components, styling system | API contracts and DB shape |
+| A3 (Phase 2+) | Test suites, test configs, release checklists | Product behavior outside test scope |
+| A4 (Phase 3+) | Infra/perf/security hardening surfaces | Product UX and business logic semantics |
 
-## Phase 2: Protected Recommendation Flow
-- Ensure `user_sessions`, `recommendations`, and feedback are user-owned.
-- Implement end-to-end flow: login -> wizard -> recommendation -> feedback.
-- Handle all loading/error states with polished UX.
+## Dependency-Aware Delivery Plan
 
-Exit criteria:
-- Recommendation and feedback persist correctly under authenticated user ownership.
-- Full critical journey passes integration and E2E tests.
+## Phase 1 (2 Agents Only): Authentication-First MVP
+Build order:
+1. A1 defines API contract + DB schema changes for auth/session
+2. A2 implements route protection and auth UI against that contract
+3. A1 locks backend auth endpoints and protected middleware
+4. A2 connects protected wizard/result access to authenticated state
 
-## Phase 3: Stabilization and Product Polish
-- UI coherence pass across landing/auth/wizard/result.
-- Accessibility and responsive refinements.
-- Regression hardening, performance checks, final release checklist.
+Parallelization:
+- A1 and A2 work in parallel after contract draft is frozen.
 
-Exit criteria:
-- No critical regressions.
-- Visual baseline stable across key screens.
+Integration points:
+- Contract checkpoint at start of week
+- Mid-phase integration pass for `auth/me` + protected routes
+- End-phase hard gate for unauthenticated denial paths
 
-## Testing Strategy by Workstream
+Phase 1 exit criteria:
+- Unauthenticated user cannot access protected APIs/screens
+- Register/login/logout/me stable
+- Recommendation flow only available when authenticated
 
-## Backend + Data Engineer
-Required tests:
-- Unit: validators, auth/session helpers, recommendation service logic.
-- Integration: register/login/logout/me, protected endpoint 401 behavior, DB persistence ownership checks.
+## Phase 2 (Add A3): Feature Expansion with Strong QA
+Build scope:
+- Saved history
+- Analytics
+- Account lifecycle improvements (verification/reset)
+- Data release pipeline improvements
 
-Done means:
-- All backend unit + integration tests pass.
-- No unresolved high-severity auth/data defects.
+Parallelization:
+- A1 backend/data features
+- A2 frontend feature UX
+- A3 builds regression packs and visual checks continuously
 
-## Frontend + UI/UX Engineer
-Required tests:
-- Unit: route guards, wizard state transitions, key UI states.
-- Integration: API success/error/loading behaviors.
-- E2E (with QA): critical authenticated user journey.
+Phase 2 exit criteria:
+- History and analytics function correctly
+- Regression suite covers critical journeys
+- Release decision formally documented by A3
 
-Done means:
-- Core flow works on desktop and mobile.
-- No accessibility-blocking interaction failures on key screens.
+## Phase 3 (Add A4): Optimization and Scale
+Build scope:
+- Subscription tiers and entitlements
+- OAuth providers (Google/GitHub)
+- Advanced recommendation retrieval upgrades
+- Performance and operational hardening
 
-## QA + Release Engineer
-Required tests:
-- Contract validation between FE and BE.
-- E2E smoke + regression.
-- Visual regression for Landing, Login, Register, Wizard, Result.
+Parallelization:
+- A1 business/backend optimization
+- A2 UX for entitlements/auth provider flows
+- A3 release regression and risk gate
+- A4 platform reliability and scale
 
-Done means:
-- Release verdict documented with explicit residual risk.
-- Merge blocked if critical defects remain.
+Phase 3 exit criteria:
+- Tier-based access reliable
+- Multi-provider auth stable
+- Performance and reliability gates met
+
+## Testing Strategy (Progressive)
+
+## Phase 1 (2 agents only)
+A1 minimum test requirements:
+- Unit: validators, auth/session helpers
+- Integration: register/login/logout/me + `401` on protected endpoints
+
+A2 minimum test requirements:
+- Unit: route guard and auth state behavior
+- Integration/UI: login/register errors, protected route redirect behavior
+- E2E smoke: login -> wizard access -> logout -> blocked access
+
+Merge rule in Phase 1:
+- No PR merges without tests for changed logic
+- Both agents must approve cross-boundary contract changes
+
+## Phase 2 (with A3)
+- Add broader E2E regression suite for core journeys
+- Add visual regression on Landing/Login/Register/Wizard/Result
+- A3 owns release gate (`Go` / `Go with Mitigations` / `No-Go`)
+
+## Phase 3 (with A4)
+- Add performance and reliability test gates
+- Add auth provider matrix regression (local + OAuth)
+- Add entitlement/authorization regression for subscription tiers
 
 ## UI/UX Quality Protection Plan
 
-1. Single design owner: **Frontend + UI/UX Engineer** has final design coherence authority.
-2. Shared UI primitives first: define tokens/components (spacing, typography, inputs, buttons, cards) and require reuse.
-3. Visual guardrails: every UI PR includes desktop + mobile screenshots.
-4. Visual regression checks: block merges on critical diffs.
-5. Avoid design drift: no ad-hoc global styling patterns without design-owner approval.
-6. Improve polish without mess:
-   - replace disruptive `alert` style interactions with inline/toast feedback
-   - unify loading/empty/error states
-   - maintain one consistent visual language across all screens
+1. A2 is the single design coherence owner in all phases.
+2. Shared UI primitives are introduced in Phase 1 and reused in all later phases.
+3. Every UI-affecting PR includes desktop + mobile screenshots.
+4. Visual regression checks become mandatory in Phase 2.
+5. UX improvements must stay coherent: consistent typography, spacing, interaction states, and error/loading patterns.
 
 ## Code Review and Merge Workflow
 
-Branch strategy:
-- Protected `main`.
-- Feature branches: `codex/<agent>/<task>`.
+Branch model:
+- Protected `main`
+- Feature branches: `codex/<agent>/<task>`
 
-PR sequencing:
-1. Contracts/schema PRs
-2. Backend + frontend implementation PRs
-3. Integration/polish PRs
+PR sequence:
+1. Contract/schema changes
+2. Backend/frontend feature implementation
+3. Integration and polish
 
 Review ownership:
-- Domain owner reviews every PR.
-- Tech Lead provides cross-domain approval for contract/integration-impacting changes.
+- Phase 1: A1 and A2 cross-review integration-impacting PRs
+- Phase 2+: A3 must approve release-critical changes
+- Phase 3+: A4 must approve platform hardening changes
 
-Integration checkpoints:
-- Daily integration pass for early conflict detection.
-- Phase-end hardening checkpoint before next phase starts.
-
-Merge safety:
-- Required checks: unit + integration + E2E smoke (+ visual checks for UI PRs).
-- No direct pushes to `main`.
+Safety checks:
+- Required status checks expand by phase
+- No direct pushes to `main`
+- Phase exit criteria must be met before starting next phase
 
 ## Key Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Backend/frontend contract drift | Broken runtime integration | Contract-first development and contract tests |
-| UI inconsistency in parallel work | Product feels fragmented | Single UI owner + shared component system + visual checks |
-| Weak tests under delivery pressure | Regressions reach users | QA-owned merge gates with required layer coverage |
-| Late integration failures | Delayed releases | Daily integration checkpoints and strict phase exits |
-| Overengineering before MVP auth gate | Missed priority and complexity growth | Enforce Phase 1 completion before expansion work |
+| Risk | Mitigation |
+|---|---|
+| Two-agent overload in Phase 1 | Keep Phase 1 scope strict to auth hard gate only |
+| API/UI contract drift | Freeze contracts early and require cross-review for changes |
+| Weak early testing without dedicated QA | Mandatory per-PR tests in Phase 1, then add A3 in Phase 2 |
+| UI inconsistency as team expands | A2 remains single design owner across all phases |
+| Late-stage platform instability | Add A4 in Phase 3 specifically for scale/reliability hardening |
 
-## Final Recommended Execution Model
+## Final Recommendation
 
-Use this **4-agent execution model** as the default operating structure for current project size and scope:
-
-1. Keep architecture decisions centralized with the Tech Lead.
-2. Keep backend and frontend delivery parallel after contracts are fixed.
-3. Keep QA continuously active as a gate, not a final-step activity.
-4. Prioritize authentication hard gate completion before any feature expansion.
+Start with **2 agents in Phase 1** for speed and low coordination overhead.
+Add **A3 QA/Release** in Phase 2 when regression risk rises.
+Add **A4 Platform/Scale** in Phase 3 when optimization and operational complexity justify specialization.
