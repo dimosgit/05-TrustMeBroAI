@@ -1,0 +1,54 @@
+name: Protect Final Implementation Plan
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  protect-plan-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure final plan file was not modified
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          chmod +x scripts/check-final-plan-protected.sh
+          chmod +x scripts/check-prompt-plan-guardrail.sh
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED_FILES="$(git diff-tree --no-commit-id --name-only -r "$HEAD_SHA")"
+            if printf '%s\n' "$CHANGED_FILES" | grep -Fxq "docs/planning/final-implementation-plan.md"; then
+              echo "ERROR: docs/planning/final-implementation-plan.md is protected and must not be modified."
+              exit 1
+            fi
+            CHANGED_PROMPTS="$(git diff-tree --no-commit-id --name-only -r "$HEAD_SHA" -- 'docs/prompt/*.md')"
+            if [ -n "$CHANGED_PROMPTS" ]; then
+              REQUIRED_LINE='Do not modify `docs/planning/final-implementation-plan.md`.'
+              while IFS= read -r FILE; do
+                [ -f "$FILE" ] || continue
+                if ! grep -Fq "$REQUIRED_LINE" "$FILE"; then
+                  echo "ERROR: $FILE is missing required immutable-plan guardrail line."
+                  exit 1
+                fi
+              done <<EOF
+$CHANGED_PROMPTS
+EOF
+            fi
+          else
+            scripts/check-final-plan-protected.sh "$BASE_SHA" "$HEAD_SHA"
+            scripts/check-prompt-plan-guardrail.sh "$BASE_SHA" "$HEAD_SHA"
+          fi

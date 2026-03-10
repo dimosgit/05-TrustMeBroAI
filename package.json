@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "hooks:install": "git config core.hooksPath .githooks",
     "local:setup": "node scripts/local-setup.mjs",
     "local:start": "node scripts/local-start.mjs",
     "local": "npm run local:setup && npm run local:start"

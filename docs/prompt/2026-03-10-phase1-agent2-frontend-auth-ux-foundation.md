@@ -1,113 +1,96 @@
 ## 1. Feature Title
-`Phase 1 Agent 2: Frontend Wizard + Locked Result + Email Unlock UX`
+`Phase 1 Agent 2: Frontend Anonymous Wizard + Unlock UX`
 
 ## 2. Objective
-Implement the Phase 1 frontend exactly as defined in `docs/planning/final-implementation-plan.md` from Git: anonymous wizard-first flow, locked primary recommendation, and email+consent unlock. Preserve a modern, minimal UI with low cognitive load and no comparison UX. Do not introduce pre-auth login friction in MVP.
+Implement frontend flow exactly per `docs/planning/final-implementation-plan.md`: Landing -> Wizard -> ResultLocked -> EmailUnlock -> ResultUnlocked, with minimal cognitive load and no comparison UI. Ensure the user can start immediately without login and unlock primary recommendation via email+consent.
 
 ## 3. Context
-- Product area: `React SPA user flow and result-gating UX`
-- Current behavior: `Existing UI structure is not yet aligned to locked/unlocked conversion-first contract`
-- Problem to solve: `Need exact UX states and payload handling for conversion-first MVP`
+- Product area: `Frontend SPA flow and result UX`
+- Current behavior: `Frontend may still contain transitional behavior from previous auth-gated assumptions`
+- Problem to solve: `Strictly enforce conversion-first UI contract and payload rendering`
+- Known review findings to incorporate:
+  1. Keep frontend normalization compatible with backend-native unlock payloads (`try_it_url`, nested `primary_reason`).
+  2. Add/confirm frontend event tracking hooks required for Phase 1 exit metrics.
 
 ## 4. Scope
 - In scope:
-  1. Implement state-driven flow/screens for MVP:
-     - `Landing`
-     - `Wizard` (3 steps)
-     - `ResultLocked`
-     - `EmailUnlock`
-     - `ResultUnlocked`
-  2. Implement wizard behavior with exactly one selected top priority.
-  3. Integrate API endpoints:
-     - `GET /api/profiles`
-     - `GET /api/tasks`
-     - `GET /api/priorities`
-     - `POST /api/recommendation/session`
-     - `POST /api/recommendation/compute`
-     - `POST /api/recommendation/unlock`
-     - `POST /api/recommendation/:id/feedback`
-  4. Implement locked primary card UX + alternative preview (2 items max, minimal fields only).
-  5. Implement email unlock form with explicit consent checkbox and unlock transition.
-  6. Implement primary CTA `Try it ->` behavior from unlocked payload.
-  7. Add frontend tests for flow correctness and contract compliance.
+  1. Anonymous landing + wizard start (no login requirement).
+  2. Wizard with exactly three steps: profile, task, one top priority.
+  3. Locked result rendering with blurred/locked primary and exactly two alternatives.
+  4. Email unlock form with explicit consent checkbox.
+  5. Unlocked primary card with `Try it ->` CTA.
+  6. Feedback submission UI (`thumbs_up`/`thumbs_down`).
 - Out of scope:
-  1. Login/password auth for MVP (Phase 2 only).
-  2. Comparison tables, score visualizations, or multi-tool research interface.
-  3. Phase 2/3 features (returning-user history, subscriptions, advanced retrieval).
+  1. Phase 2 returning-user login.
+  2. Comparison tables/scores/ranking UI.
+  3. Phase 3 subscription UX.
 
 ## 5. Requirements
-1. User must start wizard without login/account.
-2. Wizard must collect exactly: profile, task, one top priority.
-3. Result locked state must show:
-   - primary recommendation blurred/locked
-   - exactly two alternatives with `tool_name` + `context_word` only
-4. Unlock requires valid email and explicit consent checkbox.
-5. After unlock, UI must show full primary card with:
-   - tool name + logo
-   - one-sentence reason
-   - `Try it ->` button
-6. `Try it ->` must use `referral_url` when provided, fallback to `website`.
-7. UI must never display internal scoring numbers or comparison scores.
-8. UI must never render more than 3 tools total on results.
-9. Include feedback action submission (`thumbs_up` / `thumbs_down`) mapped to `-1|1`.
-10. Keep flow optimized for fast completion (<60s total user journey target).
+1. User starts wizard directly from landing.
+2. Wizard submit calls session + compute endpoints and renders locked mode.
+3. Locked mode shows:
+   - locked primary shell only
+   - two alternatives max, each with `tool_name` and optional `context_word`
+4. Unlock requires valid email + consent checkbox.
+5. Unlocked mode shows tool name, logo, one-sentence reason, and `Try it ->`.
+6. Never render internal scoring numbers.
+7. Never render more than 3 tools total.
+8. CTA uses backend-provided try-it URL logic.
+9. Keep responsive quality on desktop + mobile.
+10. Session creation should send `wizard_duration_seconds` when available.
+11. Capture try-it click tracking event after unlock using agreed backend/frontend tracking mechanism.
 
 ## 6. Technical Constraints
-1. Use existing stack: React 18 + Vite + Tailwind CSS.
-2. Keep frontend modular and maintainable; avoid monolithic single-component architecture.
-3. Follow backend contract doc and final Git implementation plan; do not invent alternate endpoint/UI logic.
-4. Keep UI intentionally minimal: no comparison tables, no score bars, no extra cognitive-load widgets.
-5. Do not modify backend implementation logic directly; coordinate contract mismatches via docs/issues.
+1. React + Vite + Tailwind only.
+2. Keep modular feature structure.
+3. Follow backend contract doc and final plan exactly.
+4. Do not add pre-auth friction to MVP flow.
+5. Do not change backend semantics directly from frontend work.
 
 ## 7. Implementation Notes
-1. Organize code into clear feature boundaries, for example:
-   - `app/` (flow shell)
-   - `features/wizard/`
-   - `features/result/`
-   - `features/unlock/`
-   - `components/ui/`
-   - `lib/api/`
-2. Keep locked and unlocked payload rendering strictly separate to avoid accidental primary data leakage before unlock.
-3. Show only one-word context for alternatives; if `context_word` is empty, show no fallback fabricated text.
-4. Handle API failure states explicitly for session creation, compute, unlock, and feedback.
-5. Keep interaction polish coherent across landing/wizard/result states (mobile + desktop).
+1. Keep locked/unlocked states strictly separate to avoid accidental primary leakage.
+2. Normalize unlock payload to support approved backend shape variants only.
+3. Keep copy concise and conversion-friendly.
+4. Ensure UX error states are clear for session/compute/unlock/feedback failures.
+5. Implement minimal non-disruptive instrumentation for:
+   - wizard completion timing
+   - unlock conversion event
+   - try-it click event
+6. Preserve integration-specialist fix for unlock payload shape compatibility; do not regress it.
 
 ## 8. Test Requirements
-1. Add or update automated tests for all changed behavior.
-2. Run relevant checks before commit:
-   - Lint: `cd frontend && npm run lint` (add script/config if missing)
-   - Type check/build: `cd frontend && npm run build`
-   - Unit/integration/e2e tests: `cd frontend && npm run test` (add script if missing) and `npm run test:e2e:smoke` (add script if missing)
-3. Add explicit tests for:
-   - locked primary rendering before unlock
-   - exactly two alternative previews
-   - unlock flow with consent required
-   - unlocked primary card and `Try it ->` behavior
-4. Do not create a commit if any required check fails.
+1. Add/update automated tests for all changed behavior.
+2. Run checks before commit:
+   - Lint: `cd frontend && npm run lint`
+   - Build: `cd frontend && npm run build`
+   - Tests: `cd frontend && npm run test`
+   - Smoke: `cd frontend && npm run test:e2e:smoke`
+3. Do not create a commit if any required check fails.
 
 ## 9. Acceptance Criteria
-1. User can complete anonymous wizard without login.
-2. Locked result appears with blurred primary + two minimal alternatives only.
-3. Email+consent unlock transitions to full primary card payload.
-4. UI never shows score values and never renders more than 3 tools.
-5. Feedback submission works for recommendation result.
-6. Frontend tests validate key contract and state transitions.
+1. No login required before wizard.
+2. Locked result contract is respected in UI.
+3. Unlock flow works and reveals full primary card.
+4. UI never shows scores or comparison-heavy content.
+5. Feedback flow submits valid signals.
+6. Unlocked state renders correctly for both top-level and nested reason/try-it fields from backend payload.
+7. UI emits required Phase 1 KPI tracking events.
 
 ## 10. Deliverables
-1. Frontend code implementing Phase 1 conversion-first UX flow.
-2. Test updates proving flow and contract behavior.
-3. Short implementation summary with exact commands and outcomes.
+1. Frontend code aligned with final flow.
+2. Frontend tests with passing results.
+3. Short implementation summary with exact commands/results.
+4. Tracking summary: where wizard duration, unlock event, and try-it click are emitted.
 
 ## 11. Mandatory Agent Rules
 1. Execute all required tests before creating any commit.
 2. Never commit code with failing tests.
 3. Report exact commands executed and whether each passed.
 4. Escalate blockers instead of skipping required validation.
-5. Do not add MVP pre-auth/login screens into primary flow.
+5. Do not modify `docs/planning/final-implementation-plan.md`.
 
 ## 12. Assumptions and Open Questions
 - Assumptions:
-  1. Git `docs/planning/final-implementation-plan.md` is final and authoritative.
-  2. Backend returns response shapes aligned to locked/unlocked contract.
+  1. Backend contract remains aligned to final plan.
 - Open questions:
-  1. For landing “follow the build” capture, should frontend include form now if no dedicated endpoint is yet available?
+  1. Whether landing “follow the build” capture is included now or as a separate scoped task.

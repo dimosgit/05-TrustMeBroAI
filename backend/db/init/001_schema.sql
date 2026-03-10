@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id SERIAL PRIMARY KEY,
   name VARCHAR(120) UNIQUE NOT NULL,
   description TEXT,
-  category VARCHAR(80),
+  category VARCHAR(80) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -23,45 +23,299 @@ CREATE TABLE IF NOT EXISTS priorities (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS tools (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(120) UNIQUE NOT NULL,
-  category VARCHAR(80) NOT NULL,
-  pricing_type VARCHAR(50) NOT NULL,
-  pricing_label VARCHAR(120) NOT NULL,
-  website_url TEXT NOT NULL,
-  description TEXT NOT NULL,
-  strengths JSONB NOT NULL DEFAULT '[]'::jsonb,
-  weaknesses JSONB NOT NULL DEFAULT '[]'::jsonb,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  email_consent BOOLEAN NOT NULL,
+  consent_timestamp TIMESTAMP NOT NULL,
+  signup_source VARCHAR(100),
+  plan VARCHAR(30) NOT NULL DEFAULT 'free',
+  subscription_status VARCHAR(30) NOT NULL DEFAULT 'inactive',
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS user_sessions (
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_consent BOOLEAN;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS consent_timestamp TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_source VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(30);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(30);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+UPDATE users SET email_consent = COALESCE(email_consent, TRUE);
+UPDATE users SET consent_timestamp = COALESCE(consent_timestamp, NOW());
+UPDATE users SET plan = COALESCE(plan, 'free');
+UPDATE users SET subscription_status = COALESCE(subscription_status, 'inactive');
+
+ALTER TABLE users ALTER COLUMN email_consent SET NOT NULL;
+ALTER TABLE users ALTER COLUMN consent_timestamp SET NOT NULL;
+ALTER TABLE users ALTER COLUMN plan SET DEFAULT 'free';
+ALTER TABLE users ALTER COLUMN subscription_status SET DEFAULT 'inactive';
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'password_hash'
+  ) THEN
+    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS recommendation_sessions (
   id BIGSERIAL PRIMARY KEY,
-  email VARCHAR(255),
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
   profile_id INT NOT NULL REFERENCES profiles(id),
   task_id INT NOT NULL REFERENCES tasks(id),
-  budget VARCHAR(50) NOT NULL,
-  experience_level VARCHAR(50) NOT NULL,
-  selected_priorities JSONB NOT NULL DEFAULT '[]'::jsonb,
+  selected_priority VARCHAR(120) NOT NULL,
+  wizard_duration_seconds INT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS recommendations (
   id BIGSERIAL PRIMARY KEY,
-  user_session_id BIGINT NOT NULL REFERENCES user_sessions(id) ON DELETE CASCADE,
-  primary_tool_id INT NOT NULL REFERENCES tools(id),
+  session_id BIGINT NOT NULL REFERENCES recommendation_sessions(id) ON DELETE CASCADE,
+  primary_tool_id INT NOT NULL,
   alternative_tool_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
-  explanation TEXT NOT NULL,
+  primary_reason TEXT NOT NULL,
+  is_primary_locked BOOLEAN NOT NULL DEFAULT TRUE,
+  unlocked_at TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_tools_active ON tools (is_active);
-CREATE INDEX IF NOT EXISTS idx_sessions_profile_task ON user_sessions (profile_id, task_id);
-CREATE INDEX IF NOT EXISTS idx_recommendations_session ON recommendations (user_session_id);
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS session_id BIGINT;
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS primary_reason TEXT;
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS is_primary_locked BOOLEAN DEFAULT TRUE;
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS unlocked_at TIMESTAMP;
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS alternative_tool_ids JSONB DEFAULT '[]'::jsonb;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'recommendations'
+      AND column_name = 'explanation'
+  ) THEN
+    UPDATE recommendations
+    SET primary_reason = COALESCE(primary_reason, explanation)
+    WHERE primary_reason IS NULL;
+  END IF;
+END;
+$$;
+
+UPDATE recommendations
+SET is_primary_locked = COALESCE(is_primary_locked, TRUE)
+WHERE is_primary_locked IS NULL;
+
+UPDATE recommendations
+SET alternative_tool_ids = '[]'::jsonb
+WHERE alternative_tool_ids IS NULL;
+
+CREATE TABLE IF NOT EXISTS recommendation_feedback (
+  id BIGSERIAL PRIMARY KEY,
+  recommendation_id BIGINT NOT NULL REFERENCES recommendations(id) ON DELETE CASCADE,
+  signal SMALLINT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE recommendation_feedback ADD COLUMN IF NOT EXISTS signal SMALLINT;
+ALTER TABLE recommendation_feedback ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+UPDATE recommendation_feedback SET created_at = COALESCE(created_at, NOW());
+UPDATE recommendation_feedback SET signal = COALESCE(signal, 1) WHERE signal IS NULL;
+ALTER TABLE recommendation_feedback ALTER COLUMN signal SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'recommendation_feedback_signal_check'
+      AND conrelid = 'recommendation_feedback'::regclass
+  ) THEN
+    ALTER TABLE recommendation_feedback
+      ADD CONSTRAINT recommendation_feedback_signal_check CHECK (signal IN (-1, 1));
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS recommendation_try_it_clicks (
+  id BIGSERIAL PRIMARY KEY,
+  recommendation_id BIGINT NOT NULL REFERENCES recommendations(id) ON DELETE CASCADE,
+  session_id BIGINT NOT NULL REFERENCES recommendation_sessions(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE recommendation_try_it_clicks ADD COLUMN IF NOT EXISTS recommendation_id BIGINT;
+ALTER TABLE recommendation_try_it_clicks ADD COLUMN IF NOT EXISTS session_id BIGINT;
+ALTER TABLE recommendation_try_it_clicks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+UPDATE recommendation_try_it_clicks SET created_at = COALESCE(created_at, NOW());
+ALTER TABLE recommendation_try_it_clicks ALTER COLUMN recommendation_id SET NOT NULL;
+ALTER TABLE recommendation_try_it_clicks ALTER COLUMN session_id SET NOT NULL;
+ALTER TABLE recommendation_try_it_clicks ALTER COLUMN created_at SET NOT NULL;
+
+CREATE TABLE IF NOT EXISTS tools (
+  id SERIAL PRIMARY KEY,
+  tool_name VARCHAR(120),
+  tool_slug VARCHAR(160),
+  logo_url TEXT,
+  best_for TEXT,
+  website TEXT,
+  referral_url TEXT,
+  category VARCHAR(80),
+  pricing VARCHAR(120),
+  pricing_tier VARCHAR(20),
+  ease_of_use SMALLINT,
+  speed SMALLINT,
+  quality SMALLINT,
+  target_users JSONB NOT NULL DEFAULT '[]'::jsonb,
+  tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  context_word VARCHAR(40),
+  record_status VARCHAR(20) NOT NULL DEFAULT 'active',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  name VARCHAR(120),
+  pricing_type VARCHAR(50),
+  pricing_label VARCHAR(120),
+  website_url TEXT,
+  description TEXT,
+  strengths JSONB NOT NULL DEFAULT '[]'::jsonb,
+  weaknesses JSONB NOT NULL DEFAULT '[]'::jsonb
+);
+
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS tool_name VARCHAR(120);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(160);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS best_for TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS referral_url TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS pricing VARCHAR(120);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS pricing_tier VARCHAR(20);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS ease_of_use SMALLINT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS speed SMALLINT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS quality SMALLINT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS target_users JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS context_word VARCHAR(40);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS record_status VARCHAR(20) DEFAULT 'active';
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS name VARCHAR(120);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS pricing_type VARCHAR(50);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS pricing_label VARCHAR(120);
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS website_url TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS strengths JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tools ADD COLUMN IF NOT EXISTS weaknesses JSONB DEFAULT '[]'::jsonb;
+
+UPDATE tools SET tool_name = COALESCE(tool_name, name);
+UPDATE tools
+SET tool_slug = COALESCE(tool_slug, LOWER(REGEXP_REPLACE(COALESCE(tool_name, name, 'tool-' || id::text), '[^a-z0-9]+', '-', 'g')));
+UPDATE tools SET website = COALESCE(website, website_url);
+UPDATE tools SET pricing = COALESCE(pricing, pricing_label, pricing_type, 'Unknown');
+UPDATE tools
+SET pricing_tier = COALESCE(
+  pricing_tier,
+  CASE pricing_type
+    WHEN 'open-source' THEN 'free'
+    WHEN 'freemium' THEN 'freemium'
+    WHEN 'paid' THEN 'paid_mid'
+    ELSE 'paid_mid'
+  END
+);
+UPDATE tools SET ease_of_use = COALESCE(ease_of_use, 3);
+UPDATE tools SET speed = COALESCE(speed, 3);
+UPDATE tools SET quality = COALESCE(quality, 3);
+UPDATE tools SET target_users = COALESCE(target_users, '[]'::jsonb);
+UPDATE tools SET tags = COALESCE(tags, '[]'::jsonb);
+UPDATE tools SET record_status = COALESCE(record_status, CASE WHEN is_active THEN 'active' ELSE 'inactive' END);
+
+ALTER TABLE tools ALTER COLUMN tool_name SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN tool_slug SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN website SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN category SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN pricing SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN pricing_tier SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN ease_of_use SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN speed SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN quality SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN target_users SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN tags SET NOT NULL;
+ALTER TABLE tools ALTER COLUMN record_status SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'tools_pricing_tier_check'
+      AND conrelid = 'tools'::regclass
+  ) THEN
+    ALTER TABLE tools
+      ADD CONSTRAINT tools_pricing_tier_check
+      CHECK (pricing_tier IN ('free', 'freemium', 'paid_low', 'paid_mid', 'paid_high'));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'tools_record_status_check'
+      AND conrelid = 'tools'::regclass
+  ) THEN
+    ALTER TABLE tools
+      ADD CONSTRAINT tools_record_status_check
+      CHECK (record_status IN ('active', 'inactive', 'deprecated'));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'tools_quality_range_check'
+      AND conrelid = 'tools'::regclass
+  ) THEN
+    ALTER TABLE tools
+      ADD CONSTRAINT tools_quality_range_check CHECK (quality BETWEEN 1 AND 5);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'tools_speed_range_check'
+      AND conrelid = 'tools'::regclass
+  ) THEN
+    ALTER TABLE tools
+      ADD CONSTRAINT tools_speed_range_check CHECK (speed BETWEEN 1 AND 5);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'tools_ease_range_check'
+      AND conrelid = 'tools'::regclass
+  ) THEN
+    ALTER TABLE tools
+      ADD CONSTRAINT tools_ease_range_check CHECK (ease_of_use BETWEEN 1 AND 5);
+  END IF;
+END;
+$$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower_unique ON users ((LOWER(email)));
+CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_task_created ON recommendation_sessions (task_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_user ON recommendation_sessions (user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendations_session_unique ON recommendations (session_id);
+CREATE INDEX IF NOT EXISTS idx_recommendations_locked_created ON recommendations (is_primary_locked, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_recommendation_feedback_recommendation ON recommendation_feedback (recommendation_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_try_it_clicks_recommendation_session_unique ON recommendation_try_it_clicks (recommendation_id, session_id);
+CREATE INDEX IF NOT EXISTS idx_try_it_clicks_recommendation ON recommendation_try_it_clicks (recommendation_id);
+CREATE INDEX IF NOT EXISTS idx_try_it_clicks_session ON recommendation_try_it_clicks (session_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tools_tool_slug_unique ON tools (tool_slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tools_tool_name_unique ON tools ((LOWER(tool_name)));
+CREATE INDEX IF NOT EXISTS idx_tools_status_category ON tools (record_status, category);
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
@@ -89,14 +343,20 @@ BEFORE UPDATE ON priorities
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS trigger_tools_updated_at ON tools;
-CREATE TRIGGER trigger_tools_updated_at
-BEFORE UPDATE ON tools
+DROP TRIGGER IF EXISTS trigger_users_updated_at ON users;
+CREATE TRIGGER trigger_users_updated_at
+BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS trigger_user_sessions_updated_at ON user_sessions;
-CREATE TRIGGER trigger_user_sessions_updated_at
-BEFORE UPDATE ON user_sessions
+DROP TRIGGER IF EXISTS trigger_recommendation_sessions_updated_at ON recommendation_sessions;
+CREATE TRIGGER trigger_recommendation_sessions_updated_at
+BEFORE UPDATE ON recommendation_sessions
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trigger_tools_updated_at ON tools;
+CREATE TRIGGER trigger_tools_updated_at
+BEFORE UPDATE ON tools
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();

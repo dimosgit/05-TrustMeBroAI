@@ -5,12 +5,23 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "db:bootstrap": "node scripts/local-db-bootstrap.mjs",
+    "lint": "eslint \"src/**/*.js\" \"test/**/*.js\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/unit/**/*.test.js",
+    "test:integration": "node --test test/integration/**/*.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "eslint": "^8.57.1",
+    "supertest": "^7.1.4",
+    "typescript": "^5.9.3"
   }
 }
