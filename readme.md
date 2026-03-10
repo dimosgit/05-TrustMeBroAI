@@ -7,6 +7,11 @@ Production-ready MVP foundation for **TrustMeBroAI** with separated services fro
 - `db`: PostgreSQL with schema + seed scripts
 - Dockerized for local development and straightforward Coolify deployment
 
+## Planning Documents
+
+- Product plan: [`docs/planning/2026-03-10-trustmebroai-product-plan.md`](docs/planning/2026-03-10-trustmebroai-product-plan.md)
+- Research DB + safe auto-update architecture: [`docs/planning/2026-03-10-research-driven-tool-db-safe-auto-update-architecture.md`](docs/planning/2026-03-10-research-driven-tool-db-safe-auto-update-architecture.md)
+
 ## Stack
 
 - React (Vite) + Tailwind CSS
