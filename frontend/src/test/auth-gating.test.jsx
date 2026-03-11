@@ -27,11 +27,19 @@ function setLockedResultInSessionStorage(overrides = {}) {
   );
 }
 
+function createAbortError() {
+  const error = new Error("Aborted");
+  error.name = "AbortError";
+  return error;
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
 });
 
 afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
 
@@ -191,6 +199,98 @@ describe("phase1 conversion flow", () => {
 
     const tryItLink = screen.getByRole("link", { name: "Try it ->" });
     expect(tryItLink).toHaveAttribute("href", "https://ref.example.com/chatgpt");
+  });
+
+  it("times out a hanging unlock request, resets loading, and shows recoverable error", async () => {
+    vi.stubEnv("VITE_UNLOCK_TIMEOUT_MS", "50");
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 711, sessionId: 21 });
+
+    const fetchMock = vi.fn((input, init = {}) => {
+      const url = typeof input === "string" ? input : input.url;
+      const pathname = new URL(url, "http://localhost").pathname;
+      const method = (init.method || "GET").toUpperCase();
+
+      if (method === "POST" && pathname === "/api/recommendation/unlock") {
+        return new Promise((_, reject) => {
+          const abortUnlock = () => reject(createAbortError());
+          if (init.signal?.aborted) {
+            abortUnlock();
+            return;
+          }
+          init.signal?.addEventListener("abort", abortUnlock, { once: true });
+        });
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ message: `No mock for ${method} ${pathname}` }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    expect(screen.getByRole("button", { name: "Unlocking..." })).toBeDisabled();
+
+    expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+  });
+
+  it("recovers from unlock 5xx failure and allows retry", async () => {
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 722, sessionId: 22 });
+
+    let unlockAttempts = 0;
+
+    const fetchMock = createApiFetchMock({
+      "POST /api/recommendation/unlock": () => {
+        unlockAttempts += 1;
+
+        if (unlockAttempts === 1) {
+          return {
+            status: 503,
+            body: { message: "Service temporarily unavailable." }
+          };
+        }
+
+        return {
+          status: 200,
+          body: {
+            recommendation_id: 722,
+            session_id: 22,
+            primary_tool: {
+              tool_name: "Claude",
+              try_it_url: "https://try.example.com/claude"
+            },
+            primary_reason: "Claude is the best fit for your use case."
+          }
+        };
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
+    expect(unlockAttempts).toBe(2);
   });
 
   it("falls back to website and submits thumbs_up feedback signal", async () => {
@@ -462,5 +562,96 @@ describe("phase1 conversion flow", () => {
       recommendation_id: 955,
       signup_source: "landing"
     });
+  });
+
+  it("does not block manual unlock while auto-unlock attempt is in flight", async () => {
+    vi.stubEnv("VITE_UNLOCK_TIMEOUT_MS", "100");
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 977, sessionId: 39 });
+    window.localStorage.setItem("trustmebro.registered_unlock", "1");
+
+    let unlockAttempts = 0;
+
+    const fetchMock = vi.fn((input, init = {}) => {
+      const url = typeof input === "string" ? input : input.url;
+      const pathname = new URL(url, "http://localhost").pathname;
+      const method = (init.method || "GET").toUpperCase();
+
+      if (method === "POST" && pathname === "/api/recommendation/unlock") {
+        unlockAttempts += 1;
+
+        if (unlockAttempts === 1) {
+          return new Promise((_, reject) => {
+            const abortUnlock = () => reject(createAbortError());
+            if (init.signal?.aborted) {
+              abortUnlock();
+              return;
+            }
+            init.signal?.addEventListener("abort", abortUnlock, { once: true });
+          });
+        }
+
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              session_id: 39,
+              recommendation_id: 977,
+              primary_tool: {
+                tool_name: "Claude",
+                try_it_url: "https://try.example.com/claude"
+              },
+              primary_reason: "Claude is the best fit for your use case."
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ message: `No mock for ${method} ${pathname}` }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    const unlockButton = await screen.findByRole("button", { name: "Unlock my best match" });
+    expect(unlockButton).toBeEnabled();
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(unlockButton);
+
+    expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
+    expect(unlockAttempts).toBeGreaterThanOrEqual(2);
+  });
+
+  it("recovers from auto-unlock failure and re-enables manual unlock", async () => {
+    setLockedResultInSessionStorage({ recommendationId: 966, sessionId: 29 });
+    window.localStorage.setItem("trustmebro.registered_unlock", "1");
+
+    const fetchMock = createApiFetchMock({
+      "POST /api/recommendation/unlock": {
+        status: 503,
+        body: { message: "Service unavailable." }
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    expect(await screen.findByLabelText("Email to unlock")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+    });
+    expect(window.localStorage.getItem("trustmebro.registered_unlock")).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent } from "../../lib/analytics/tracking";
-import { ApiError } from "../../lib/api/client";
+import { ApiError, ApiNetworkError, ApiTimeoutError } from "../../lib/api/client";
 import {
   normalizeUnlockedResult,
   submitTryItClick,
@@ -60,7 +60,7 @@ export default function ResultPage() {
     clearResult
   } = useRecommendation();
 
-  const [unlocking, setUnlocking] = useState(false);
+  const [manualUnlocking, setManualUnlocking] = useState(false);
   const autoUnlockAttemptRef = useRef(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackSignal, setFeedbackSignal] = useState(null);
@@ -76,7 +76,6 @@ export default function ResultPage() {
 
     let isCancelled = false;
     autoUnlockAttemptRef.current = true;
-    setUnlocking(true);
 
     unlockRecommendation({
       sessionId: resultState.sessionId,
@@ -98,11 +97,6 @@ export default function ResultPage() {
       .catch(() => {
         if (!isCancelled) {
           setRegisteredUnlockMarker(false);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setUnlocking(false);
         }
       });
 
@@ -132,7 +126,7 @@ export default function ResultPage() {
   const tryItUrl = primaryTool.tryItUrl || primaryTool.referralUrl || primaryTool.website || "#";
 
   async function handleUnlock({ email, emailConsent }) {
-    setUnlocking(true);
+    setManualUnlocking(true);
 
     try {
       const payload = await unlockRecommendation({
@@ -152,13 +146,21 @@ export default function ResultPage() {
       });
       notify("Recommendation unlocked.", "success");
     } catch (error) {
+      if (
+        error instanceof ApiTimeoutError ||
+        error instanceof ApiNetworkError ||
+        (error instanceof ApiError && error.status >= 500)
+      ) {
+        throw new Error("Server is unavailable. Please try again.");
+      }
+
       if (error instanceof ApiError) {
         throw new Error(error.message || "Could not unlock recommendation.");
       }
 
-      throw new Error("Could not unlock recommendation.");
+      throw new Error("Server is unavailable. Please try again.");
     } finally {
-      setUnlocking(false);
+      setManualUnlocking(false);
     }
   }
 
@@ -308,7 +310,7 @@ export default function ResultPage() {
         <section className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6" data-testid="locked-primary">
           <h2 className="text-lg font-bold text-white">Primary recommendation (locked)</h2>
           <LockedPrimaryCard />
-          <UnlockForm onUnlock={handleUnlock} loading={unlocking} />
+          <UnlockForm onUnlock={handleUnlock} loading={manualUnlocking} />
         </section>
       )}
     </div>

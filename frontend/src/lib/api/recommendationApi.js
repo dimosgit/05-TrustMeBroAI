@@ -1,5 +1,20 @@
 import { apiClient } from "./client";
 
+const DEFAULT_UNLOCK_TIMEOUT_MS = 10_000;
+
+function resolveUnlockTimeoutMs(timeoutMs) {
+  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    return timeoutMs;
+  }
+
+  const envTimeout = Number(import.meta.env.VITE_UNLOCK_TIMEOUT_MS);
+  if (Number.isFinite(envTimeout) && envTimeout > 0) {
+    return envTimeout;
+  }
+
+  return DEFAULT_UNLOCK_TIMEOUT_MS;
+}
+
 function normalizeAlternative(tool) {
   return {
     toolName: tool?.tool_name || tool?.name || "",
@@ -88,7 +103,13 @@ export async function computeRecommendation({ sessionId }) {
   });
 }
 
-export async function unlockRecommendation({ sessionId, recommendationId, email, emailConsent }) {
+export async function unlockRecommendation({
+  sessionId,
+  recommendationId,
+  email,
+  emailConsent,
+  timeoutMs
+}) {
   const payload = {
     session_id: sessionId,
     recommendation_id: recommendationId,
@@ -103,7 +124,9 @@ export async function unlockRecommendation({ sessionId, recommendationId, email,
     payload.email_consent = emailConsent;
   }
 
-  return apiClient.post("/recommendation/unlock", payload);
+  return apiClient.post("/recommendation/unlock", payload, {
+    timeoutMs: resolveUnlockTimeoutMs(timeoutMs)
+  });
 }
 
 export async function submitRecommendationFeedback({ recommendationId, signal }) {
