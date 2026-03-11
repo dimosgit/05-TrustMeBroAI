@@ -1,12 +1,8 @@
-import { ConflictError, UnauthorizedError, ValidationError } from "../errors.js";
-import { hashPassword, verifyPassword } from "../utils/password.js";
+import { UnauthorizedError, ValidationError } from "../errors.js";
 import { generateSessionToken, hashSessionToken } from "../utils/sessionToken.js";
-import {
-  assertValidEmail,
-  assertValidPassword,
-  normalizeEmail,
-  parseOptionalString
-} from "../utils/validators.js";
+import { assertValidEmail, normalizeEmail, parseOptionalString } from "../utils/validators.js";
+
+const GENERIC_MAGIC_LINK_MESSAGE = "If the email is valid, you will receive a link.";
 
 function mapPublicUser(user) {
   return {
@@ -15,6 +11,8 @@ function mapPublicUser(user) {
     email_consent: user.email_consent,
     consent_timestamp: user.consent_timestamp,
     signup_source: user.signup_source,
+    registered_at: user.registered_at,
+    last_login_at: user.last_login_at,
     plan: user.plan,
     subscription_status: user.subscription_status,
     created_at: user.created_at,
@@ -22,7 +20,19 @@ function mapPublicUser(user) {
   };
 }
 
-export function createAuthService({ authRepository, sessionTtlMs }) {
+function assertValidMagicToken(token) {
+  if (typeof token !== "string" || token.trim().length < 20 || token.length > 512) {
+    throw new UnauthorizedError("Invalid or expired token");
+  }
+}
+
+export function createAuthService({
+  authRepository,
+  sessionTtlMs,
+  magicLinkTtlMs,
+  sendMagicLink,
+  onMagicLinkIssued
+}) {
   async function createSessionForUser({ userId, userAgent, ipAddress }) {
     const token = generateSessionToken();
     const tokenHash = hashSessionToken(token);
@@ -42,6 +52,40 @@ export function createAuthService({ authRepository, sessionTtlMs }) {
     };
   }
 
+  async function issueMagicLink({ user, flow, userAgent, ipAddress }) {
+    const token = generateSessionToken();
+    const tokenHash = hashSessionToken(token);
+    const expiresAt = new Date(Date.now() + magicLinkTtlMs);
+
+    await authRepository.createMagicLinkChallenge({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+      userAgent,
+      ipAddress,
+      flow
+    });
+
+    if (sendMagicLink) {
+      await sendMagicLink({
+        email: user.email,
+        token,
+        expiresAt,
+        flow
+      });
+    }
+
+    if (onMagicLinkIssued) {
+      await onMagicLinkIssued({
+        userId: user.id,
+        email: user.email,
+        token,
+        expiresAt,
+        flow
+      });
+    }
+  }
+
   return {
     async issueSessionForUser({ userId, userAgent, ipAddress }) {
       if (!Number.isInteger(userId) || userId <= 0) {
@@ -55,69 +99,81 @@ export function createAuthService({ authRepository, sessionTtlMs }) {
       });
     },
 
-    async register({ email, password, emailConsent, signupSource, userAgent, ipAddress }) {
+    async register({ email, emailConsent, signupSource, userAgent, ipAddress }) {
       const normalizedEmail = normalizeEmail(email);
       assertValidEmail(normalizedEmail);
-      assertValidPassword(password);
 
       if (emailConsent !== true) {
         throw new ValidationError("email_consent must be true");
       }
 
       const safeSignupSource = parseOptionalString(signupSource);
-      const existing = await authRepository.findUserByEmail(normalizedEmail);
-      if (existing) {
-        throw new ConflictError("Email is already registered");
-      }
-
-      const passwordHash = await hashPassword(password);
       const consentTimestamp = new Date();
+      const registrationTimestamp = new Date();
 
-      let user;
-      try {
-        user = await authRepository.createUser({
-          email: normalizedEmail,
-          passwordHash,
-          emailConsent,
-          consentTimestamp,
-          signupSource: safeSignupSource
-        });
-      } catch (error) {
-        if (error?.code === "23505") {
-          throw new ConflictError("Email is already registered");
-        }
-        throw error;
-      }
+      const user = await authRepository.upsertUserForRegistration({
+        email: normalizedEmail,
+        emailConsent,
+        consentTimestamp,
+        signupSource: safeSignupSource,
+        registeredAt: registrationTimestamp
+      });
 
-      const session = await createSessionForUser({
-        userId: user.id,
+      await issueMagicLink({
+        user,
+        flow: "register",
         userAgent,
         ipAddress
       });
 
       return {
-        user: mapPublicUser(user),
-        session
+        message: GENERIC_MAGIC_LINK_MESSAGE
       };
     },
 
-    async login({ email, password, userAgent, ipAddress }) {
+    async requestLogin({ email, userAgent, ipAddress }) {
       const normalizedEmail = normalizeEmail(email);
       assertValidEmail(normalizedEmail);
-      assertValidPassword(password);
 
-      const user = await authRepository.findUserByEmail(normalizedEmail);
-      if (!user) {
-        throw new UnauthorizedError("Invalid credentials");
+      const user = await authRepository.findRegisteredUserByEmail(normalizedEmail);
+
+      if (user) {
+        await issueMagicLink({
+          user,
+          flow: "login",
+          userAgent,
+          ipAddress
+        });
       }
 
-      const passwordMatches = await verifyPassword(password, user.password_hash);
-      if (!passwordMatches) {
-        throw new UnauthorizedError("Invalid credentials");
+      return {
+        message: GENERIC_MAGIC_LINK_MESSAGE
+      };
+    },
+
+    async verifyLogin({ token, userAgent, ipAddress }) {
+      assertValidMagicToken(token);
+
+      const tokenHash = hashSessionToken(token);
+      const challenge = await authRepository.consumeMagicLinkChallengeByTokenHash(tokenHash);
+
+      if (!challenge) {
+        throw new UnauthorizedError("Invalid or expired token");
+      }
+
+      const loginTimestamp = new Date();
+      await authRepository.markUserLogin({
+        userId: challenge.user_id,
+        loginAt: loginTimestamp
+      });
+
+      const user = await authRepository.findUserById(challenge.user_id);
+      if (!user) {
+        throw new UnauthorizedError("Invalid or expired token");
       }
 
       const session = await createSessionForUser({
-        userId: user.id,
+        userId: challenge.user_id,
         userAgent,
         ipAddress
       });

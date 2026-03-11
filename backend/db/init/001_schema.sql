@@ -40,7 +40,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS consent_timestamp TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_source VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(30);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(30);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registered_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
 ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
@@ -56,14 +57,7 @@ ALTER TABLE users ALTER COLUMN subscription_status SET DEFAULT 'inactive';
 
 DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_name = 'users'
-      AND column_name = 'password_hash'
-  ) THEN
-    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
-  END IF;
+  ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
 END;
 $$;
 
@@ -107,6 +101,49 @@ BEGIN
   ) THEN
     ALTER TABLE auth_sessions
       ADD CONSTRAINT auth_sessions_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS auth_magic_links (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP,
+  user_agent TEXT,
+  ip_address TEXT,
+  flow VARCHAR(32),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS token_hash VARCHAR(64);
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS used_at TIMESTAMP;
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS flow VARCHAR(32);
+ALTER TABLE auth_magic_links ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+UPDATE auth_magic_links SET created_at = COALESCE(created_at, NOW());
+
+ALTER TABLE auth_magic_links ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE auth_magic_links ALTER COLUMN token_hash SET NOT NULL;
+ALTER TABLE auth_magic_links ALTER COLUMN expires_at SET NOT NULL;
+ALTER TABLE auth_magic_links ALTER COLUMN created_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'auth_magic_links_user_id_fkey'
+      AND conrelid = 'auth_magic_links'::regclass
+  ) THEN
+    ALTER TABLE auth_magic_links
+      ADD CONSTRAINT auth_magic_links_user_id_fkey
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
   END IF;
 END;
@@ -354,6 +391,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower_unique ON users ((LOWER(
 CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_sessions_token_hash_unique ON auth_sessions (token_hash);
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_active ON auth_sessions (user_id, expires_at DESC)
 WHERE revoked_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_magic_links_token_hash_unique ON auth_magic_links (token_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_magic_links_user_active ON auth_magic_links (user_id, expires_at DESC)
+WHERE used_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_task_created ON recommendation_sessions (task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_user ON recommendation_sessions (user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendations_session_unique ON recommendations (session_id);

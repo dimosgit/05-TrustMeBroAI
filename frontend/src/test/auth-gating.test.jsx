@@ -129,7 +129,11 @@ describe("phase1 conversion flow", () => {
       await screen.findByText("Consent is required to unlock your recommendation.")
     ).toBeInTheDocument();
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    const unlockCalls = fetchMock.mock.calls.filter(([input]) => {
+      const url = typeof input === "string" ? input : input.url;
+      return url.includes("/api/recommendation/unlock");
+    });
+    expect(unlockCalls).toHaveLength(0);
   });
 
   it("unlocks primary card and uses referral_url for Try it", async () => {
@@ -340,6 +344,43 @@ describe("phase1 conversion flow", () => {
     await waitFor(() => {
       expect(feedbackRequestBody).toEqual({ signal: 1 });
     });
+  });
+
+  it("shows post-unlock account callout for anonymous users", async () => {
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 188 });
+
+    const fetchMock = createApiFetchMock({
+      "GET /api/auth/me": {
+        status: 401,
+        body: { message: "Unauthorized" }
+      },
+      "POST /api/recommendation/unlock": {
+        status: 200,
+        body: {
+          recommendation_id: 188,
+          primary_tool: {
+            tool_name: "Claude",
+            website: "https://claude.ai"
+          },
+          primary_reason: "Claude is the best fit for your use case."
+        }
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    expect(await screen.findByText("Create an account to save and return later.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create account" })).toHaveAttribute(
+      "href",
+      "/register?redirect=%2Fresult&email=user%40example.com"
+    );
   });
 
   it("uses only one top priority in session payload", async () => {

@@ -1,12 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { clearCookie, serializeCookie } from "../utils/cookies.js";
-import {
-  assertValidEmail,
-  assertValidPassword,
-  normalizeEmail,
-  parseOptionalString
-} from "../utils/validators.js";
+import { assertValidEmail, normalizeEmail, parseOptionalString } from "../utils/validators.js";
 
 function setSessionCookie({ res, cookieName, token, maxAgeMs, isProduction }) {
   res.setHeader(
@@ -49,47 +44,49 @@ export function createAuthRouter({
     authRateLimiter,
     asyncHandler(async (req, res) => {
       const email = normalizeEmail(req.body?.email);
-      const password = req.body?.password;
       const emailConsent = req.body?.email_consent;
       const signupSource = parseOptionalString(req.body?.signup_source);
 
       assertValidEmail(email);
-      assertValidPassword(password);
 
       const result = await authService.register({
         email,
-        password,
         emailConsent,
         signupSource,
         userAgent: req.headers["user-agent"] || null,
         ipAddress: req.ip || req.socket?.remoteAddress || null
       });
 
-      setSessionCookie({
-        res,
-        cookieName,
-        token: result.session.token,
-        maxAgeMs: sessionTtlMs,
-        isProduction
-      });
-
-      return res.status(201).json({ user: result.user });
+      return res.status(202).json(result);
     })
   );
 
   router.post(
-    "/login",
+    "/login/request",
     authRateLimiter,
     asyncHandler(async (req, res) => {
       const email = normalizeEmail(req.body?.email);
-      const password = req.body?.password;
 
       assertValidEmail(email);
-      assertValidPassword(password);
 
-      const result = await authService.login({
+      const result = await authService.requestLogin({
         email,
-        password,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || req.socket?.remoteAddress || null
+      });
+
+      return res.status(202).json(result);
+    })
+  );
+
+  router.post(
+    "/login/verify",
+    authRateLimiter,
+    asyncHandler(async (req, res) => {
+      const token = req.body?.token;
+
+      const result = await authService.verifyLogin({
+        token,
         userAgent: req.headers["user-agent"] || null,
         ipAddress: req.ip || req.socket?.remoteAddress || null
       });

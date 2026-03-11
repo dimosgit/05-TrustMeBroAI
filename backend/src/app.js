@@ -18,6 +18,7 @@ import { createRecommendationRouter } from "./routes/recommendationRoutes.js";
 import { createAuthService } from "./services/authService.js";
 import { createCatalogService } from "./services/catalogService.js";
 import { createLeadCaptureService } from "./services/leadCaptureService.js";
+import { createMagicLinkProvider } from "./services/magicLinkProvider.js";
 import { createRecommendationService } from "./services/recommendationService.js";
 import { createResultService } from "./services/resultService.js";
 import { createSessionService } from "./services/sessionService.js";
@@ -28,6 +29,8 @@ export function createApp(options = {}) {
   const corsOrigin = config.isProduction ? config.allowedOrigins : true;
   const sessionCookieName = config.session?.cookieName || "tmb_session";
   const sessionTtlMs = config.session?.ttlMs || 1000 * 60 * 60 * 24 * 30;
+  const magicLinkTtlMs = config.auth?.magicLinkTtlMs || 1000 * 60 * 15;
+  const magicLinkProviderMode = config.auth?.magicLinkProvider || "console";
 
   const catalogRepository =
     options.catalogRepository || createCatalogRepository({ query: queryFn });
@@ -39,13 +42,30 @@ export function createApp(options = {}) {
   const userRepository = options.userRepository || createUserRepository({ query: queryFn });
   const authRepository = options.authRepository || createAuthRepository({ query: queryFn });
 
+  const magicLinkProvider =
+    options.magicLinkProvider ||
+    (!options.authService
+      ? createMagicLinkProvider({
+          mode: magicLinkProviderMode,
+          isProduction: config.isProduction,
+          baseUrl: config.auth?.magicLinkBaseUrl,
+          resendApiKey: config.auth?.magicLinkResendApiKey,
+          fromEmail: config.auth?.magicLinkFromEmail,
+          fromName: config.auth?.magicLinkFromName
+        })
+      : null);
+
   const catalogService = options.catalogService || createCatalogService({ catalogRepository });
   const resultService = options.resultService || createResultService();
   const authService =
     options.authService ||
     createAuthService({
       authRepository,
-      sessionTtlMs
+      sessionTtlMs,
+      magicLinkTtlMs,
+      sendMagicLink: ({ email, token, expiresAt, flow }) =>
+        magicLinkProvider.sendMagicLink({ email, token, expiresAt, flow }),
+      onMagicLinkIssued: options.onMagicLinkIssued
     });
   const sessionService =
     options.sessionService || createSessionService({ sessionRepository, catalogService });

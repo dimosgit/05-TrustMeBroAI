@@ -1,4 +1,5 @@
 import { createApp } from "../../src/app.js";
+import { createAuthService } from "../../src/services/authService.js";
 import { createCatalogService } from "../../src/services/catalogService.js";
 import { createLeadCaptureService } from "../../src/services/leadCaptureService.js";
 import { createRecommendationService } from "../../src/services/recommendationService.js";
@@ -6,82 +7,38 @@ import { createResultService } from "../../src/services/resultService.js";
 import { createSessionService } from "../../src/services/sessionService.js";
 import { createInMemoryRepositories } from "./inMemoryRepositories.js";
 
-function createInMemoryAuthService({ repositories, sessionTtlMs }) {
-  let nextSessionId = 1;
-  const tokenToSession = new Map();
-
-  function clone(value) {
-    return JSON.parse(JSON.stringify(value));
-  }
-
-  return {
-    async issueSessionForUser({ userId }) {
-      const token = `test-session-${nextSessionId}-${Date.now()}`;
-      const session = {
-        id: nextSessionId++,
-        user_id: userId,
-        expires_at: new Date(Date.now() + sessionTtlMs),
-        created_at: new Date()
-      };
-      tokenToSession.set(token, session);
-      return {
-        token,
-        expiresAt: session.expires_at
-      };
-    },
-
-    async authenticateSessionToken(token) {
-      const session = tokenToSession.get(token);
-      if (!session) {
-        return null;
-      }
-
-      if (session.expires_at <= new Date()) {
-        tokenToSession.delete(token);
-        return null;
-      }
-
-      const user = repositories.data.users.find((candidate) => candidate.id === session.user_id);
-      if (!user) {
-        return null;
-      }
-
-      return {
-        user: clone(user),
-        session: clone(session)
-      };
-    },
-
-    async logoutBySessionId(sessionId) {
-      for (const [token, session] of tokenToSession.entries()) {
-        if (session.id === sessionId) {
-          tokenToSession.delete(token);
-          return;
-        }
-      }
-    },
-
-    async logoutByToken(token) {
-      tokenToSession.delete(token);
-    }
-  };
-}
-
-export function createTestApp() {
+export function createTestApp(options = {}) {
   const repositories = createInMemoryRepositories();
+  const authOutbox = [];
+
+  const deliveryProvider =
+    options.magicLinkProvider ||
+    {
+      async sendMagicLink(payload) {
+        authOutbox.push(payload);
+      }
+    };
 
   const config = {
-    nodeEnv: "test",
-    isProduction: false,
+    nodeEnv: options.nodeEnv || "test",
+    isProduction: options.isProduction || false,
     port: 0,
     databaseUrl: "test",
+    auth: {
+      magicLinkTtlMs: 1000 * 60 * 15,
+      magicLinkBaseUrl: "http://localhost:5174/auth/verify",
+      magicLinkProvider: options.magicLinkProviderMode || "console"
+    },
     allowedOrigins: ["http://localhost:5174", "http://127.0.0.1:5174"],
     session: {
       cookieName: "tmb_session",
       ttlMs: 1000 * 60 * 60 * 24 * 30
     },
     rateLimits: {
-      auth: { windowMs: 60_000, max: 1000 },
+      auth: {
+        windowMs: options.authRateLimitWindowMs || 60_000,
+        max: options.authRateLimitMax || 1000
+      },
       authMe: { windowMs: 60_000, max: 1000 },
       recommendationSession: { windowMs: 60_000, max: 1000 },
       recommendationCompute: { windowMs: 60_000, max: 1000 },
@@ -117,24 +74,55 @@ export function createTestApp() {
     resultService
   });
 
-  const authService = createInMemoryAuthService({
-    repositories,
-    sessionTtlMs: config.session.ttlMs
-  });
-
-  const app = createApp({
+  const baseAppOptions = {
     config,
-    authService,
     catalogService,
     sessionService,
     recommendationService,
     leadCaptureService,
     healthCheck: async () => ({ status: "ok", mode: "test" })
+  };
+
+  let authService = null;
+
+  if (options.useRuntimeAuthService) {
+    const app = createApp({
+      ...baseAppOptions,
+      authRepository: repositories.authRepository,
+      magicLinkProvider: deliveryProvider
+    });
+
+    return {
+      app,
+      repositories,
+      authOutbox,
+      services: {
+        catalogService,
+        sessionService,
+        recommendationService,
+        leadCaptureService,
+        authService,
+        resultService
+      }
+    };
+  }
+
+  authService = createAuthService({
+    authRepository: repositories.authRepository,
+    sessionTtlMs: config.session.ttlMs,
+    magicLinkTtlMs: config.auth.magicLinkTtlMs,
+    sendMagicLink: (payload) => deliveryProvider.sendMagicLink(payload)
+  });
+
+  const app = createApp({
+    ...baseAppOptions,
+    authService
   });
 
   return {
     app,
     repositories,
+    authOutbox,
     services: {
       catalogService,
       sessionService,

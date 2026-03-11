@@ -2,7 +2,18 @@ export function createAuthRepository({ query }) {
   return {
     async findUserByEmail(email) {
       const result = await query(
-        `SELECT id, email, password_hash, email_consent, consent_timestamp, signup_source, plan, subscription_status, created_at, updated_at
+        `SELECT
+           id,
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at,
+           last_login_at,
+           plan,
+           subscription_status,
+           created_at,
+           updated_at
          FROM users
          WHERE LOWER(email) = LOWER($1)
          LIMIT 1`,
@@ -12,9 +23,44 @@ export function createAuthRepository({ query }) {
       return result.rows[0] || null;
     },
 
+    async findRegisteredUserByEmail(email) {
+      const result = await query(
+        `SELECT
+           id,
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at,
+           last_login_at,
+           plan,
+           subscription_status,
+           created_at,
+           updated_at
+         FROM users
+         WHERE LOWER(email) = LOWER($1)
+           AND registered_at IS NOT NULL
+         LIMIT 1`,
+        [email]
+      );
+
+      return result.rows[0] || null;
+    },
+
     async findUserById(userId) {
       const result = await query(
-        `SELECT id, email, email_consent, consent_timestamp, signup_source, plan, subscription_status, created_at, updated_at
+        `SELECT
+           id,
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at,
+           last_login_at,
+           plan,
+           subscription_status,
+           created_at,
+           updated_at
          FROM users
          WHERE id = $1
          LIMIT 1`,
@@ -24,15 +70,94 @@ export function createAuthRepository({ query }) {
       return result.rows[0] || null;
     },
 
-    async createUser({ email, passwordHash, emailConsent, consentTimestamp, signupSource }) {
+    async upsertUserForRegistration({
+      email,
+      emailConsent,
+      consentTimestamp,
+      signupSource,
+      registeredAt
+    }) {
       const result = await query(
-        `INSERT INTO users (email, password_hash, email_consent, consent_timestamp, signup_source)
+        `INSERT INTO users (
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at
+         )
          VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, email, email_consent, consent_timestamp, signup_source, plan, subscription_status, created_at, updated_at`,
-        [email, passwordHash, emailConsent, consentTimestamp, signupSource]
+         ON CONFLICT ((LOWER(email)))
+         DO UPDATE SET
+           email_consent = EXCLUDED.email_consent,
+           consent_timestamp = EXCLUDED.consent_timestamp,
+           signup_source = COALESCE(EXCLUDED.signup_source, users.signup_source),
+           registered_at = COALESCE(users.registered_at, EXCLUDED.registered_at),
+           updated_at = NOW()
+         RETURNING
+           id,
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at,
+           last_login_at,
+           plan,
+           subscription_status,
+           created_at,
+           updated_at`,
+        [email, emailConsent, consentTimestamp, signupSource, registeredAt]
       );
 
       return result.rows[0];
+    },
+
+    async markUserLogin({ userId, loginAt }) {
+      const result = await query(
+        `UPDATE users
+         SET last_login_at = $2,
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING
+           id,
+           email,
+           email_consent,
+           consent_timestamp,
+           signup_source,
+           registered_at,
+           last_login_at,
+           plan,
+           subscription_status,
+           created_at,
+           updated_at`,
+        [userId, loginAt]
+      );
+
+      return result.rows[0] || null;
+    },
+
+    async createMagicLinkChallenge({ userId, tokenHash, expiresAt, userAgent, ipAddress, flow }) {
+      const result = await query(
+        `INSERT INTO auth_magic_links (user_id, token_hash, expires_at, user_agent, ip_address, flow)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, user_id, expires_at, created_at`,
+        [userId, tokenHash, expiresAt, userAgent, ipAddress, flow]
+      );
+
+      return result.rows[0];
+    },
+
+    async consumeMagicLinkChallengeByTokenHash(tokenHash) {
+      const result = await query(
+        `UPDATE auth_magic_links
+         SET used_at = NOW()
+         WHERE token_hash = $1
+           AND used_at IS NULL
+           AND expires_at > NOW()
+         RETURNING id, user_id, expires_at, created_at, used_at`,
+        [tokenHash]
+      );
+
+      return result.rows[0] || null;
     },
 
     async createAuthSession({ userId, tokenHash, expiresAt, userAgent, ipAddress }) {
@@ -58,6 +183,8 @@ export function createAuthRepository({ query }) {
            u.email_consent,
            u.consent_timestamp,
            u.signup_source,
+           u.registered_at,
+           u.last_login_at,
            u.plan,
            u.subscription_status,
            u.created_at,

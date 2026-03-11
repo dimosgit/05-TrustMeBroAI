@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { trackEvent } from "../../lib/analytics/tracking";
+import { useAuth } from "../../features/auth/AuthContext";
 
 function LandingFooter() {
   return (
@@ -40,6 +42,18 @@ function DefaultFooter() {
 export default function AppShell({ children }) {
   const location = useLocation();
   const isLanding = location.pathname === "/";
+  const { user, isAuthenticated, isBootstrapping, logout } = useAuth();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      trackEvent("logout", {
+        user_id: user?.id || null
+      });
+    } catch {
+      // Keep UI interactive even if logout request fails.
+    }
+  }
 
   return (
     <div className="min-h-screen text-slate-100">
@@ -56,9 +70,44 @@ export default function AppShell({ children }) {
             <Link className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-400" to="/">
               TrustMeBroAI
             </Link>
-            <Link className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500" to="/wizard">
-              Start Wizard
-            </Link>
+            <div className="flex items-center gap-2">
+              {isBootstrapping ? (
+                <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-400">
+                  Loading...
+                </span>
+              ) : isAuthenticated ? (
+                <>
+                  <span className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 sm:inline-flex">
+                    {user?.email || "Signed in"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                    to={`/register?redirect=${encodeURIComponent(location.pathname)}`}
+                  >
+                    Register
+                  </Link>
+                  <Link
+                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                    to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
+                  >
+                    Login
+                  </Link>
+                </>
+              )}
+              <Link className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500" to="/wizard">
+                Start Wizard
+              </Link>
+            </div>
           </nav>
         </header>
 

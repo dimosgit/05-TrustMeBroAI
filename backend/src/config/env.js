@@ -21,6 +21,14 @@ export function loadRuntimeConfig(env = process.env) {
     port: parsePositiveInt(env.PORT, 8080),
     databaseUrl: env.DATABASE_URL || "",
     allowedOrigins,
+    auth: {
+      magicLinkTtlMs: parsePositiveInt(env.AUTH_MAGIC_LINK_TTL_MS, 1000 * 60 * 15),
+      magicLinkBaseUrl: env.AUTH_MAGIC_LINK_BASE_URL || "http://localhost:5174/auth/verify",
+      magicLinkProvider: (env.AUTH_MAGIC_LINK_PROVIDER || "console").trim().toLowerCase(),
+      magicLinkResendApiKey: env.AUTH_MAGIC_LINK_RESEND_API_KEY || "",
+      magicLinkFromEmail: env.AUTH_MAGIC_LINK_FROM_EMAIL || "",
+      magicLinkFromName: env.AUTH_MAGIC_LINK_FROM_NAME || "TrustMeBroAI"
+    },
     session: {
       cookieName: env.SESSION_COOKIE_NAME || "tmb_session",
       ttlMs: parsePositiveInt(env.AUTH_SESSION_TTL_MS, 1000 * 60 * 60 * 24 * 30)

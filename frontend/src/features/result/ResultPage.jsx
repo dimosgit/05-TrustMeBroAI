@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { ApiError, ApiNetworkError, ApiTimeoutError } from "../../lib/api/client";
 import {
@@ -9,6 +9,7 @@ import {
   unlockRecommendation
 } from "../../lib/api/recommendationApi";
 import { useToast } from "../../components/ui/ToastProvider";
+import { useAuth } from "../auth/AuthContext";
 import UnlockForm from "../unlock/UnlockForm";
 import { useRecommendation } from "./RecommendationContext";
 
@@ -54,6 +55,7 @@ function LockedPrimaryCard() {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
+  const { isAuthenticated } = useAuth();
   const {
     resultState,
     setUnlockedResult,
@@ -62,6 +64,7 @@ export default function ResultPage() {
 
   const [manualUnlocking, setManualUnlocking] = useState(false);
   const autoUnlockAttemptRef = useRef(false);
+  const [lastUnlockedEmail, setLastUnlockedEmail] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackSignal, setFeedbackSignal] = useState(null);
 
@@ -139,6 +142,7 @@ export default function ResultPage() {
       const unlocked = normalizeUnlockedResult(payload, resultState);
       setUnlockedResult(unlocked);
       setRegisteredUnlockMarker(true);
+      setLastUnlockedEmail(email.trim());
       trackEvent("recommendation_unlocked", {
         session_id: unlocked.sessionId,
         recommendation_id: unlocked.recommendationId,
@@ -273,6 +277,32 @@ export default function ResultPage() {
               Try it -&gt;
             </a>
           </div>
+
+          {!isAuthenticated ? (
+            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <p className="text-sm font-semibold text-amber-200">Create an account to save and return later.</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                <Link
+                  to={`/register?${new URLSearchParams({
+                    redirect: "/result",
+                    ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {})
+                  }).toString()}`}
+                  className="rounded-lg bg-amber-400/20 px-3 py-1.5 font-semibold text-amber-100 hover:bg-amber-400/30"
+                >
+                  Create account
+                </Link>
+                <Link
+                  to={`/login?${new URLSearchParams({
+                    redirect: "/result",
+                    ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {})
+                  }).toString()}`}
+                  className="rounded-lg border border-amber-300/30 px-3 py-1.5 font-semibold text-amber-100 hover:bg-amber-400/10"
+                >
+                  Login
+                </Link>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-5 border-t border-white/10 pt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">Was this helpful?</p>

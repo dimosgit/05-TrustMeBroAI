@@ -256,6 +256,8 @@ function baseData() {
       }
     ],
     users: [],
+    authSessions: [],
+    authMagicLinks: [],
     recommendationSessions: [],
     recommendations: [],
     feedback: [],
@@ -267,6 +269,8 @@ export function createInMemoryRepositories() {
   const data = baseData();
   const counters = {
     users: 1,
+    authSessions: 1,
+    authMagicLinks: 1,
     recommendationSessions: 1,
     recommendations: 1,
     feedback: 1,
@@ -451,6 +455,8 @@ export function createInMemoryRepositories() {
         existing.email_consent = emailConsent;
         existing.consent_timestamp = consentTimestamp;
         existing.signup_source = signupSource || existing.signup_source;
+        existing.registered_at = existing.registered_at || null;
+        existing.last_login_at = existing.last_login_at || null;
         existing.updated_at = now();
         return clone(existing);
       }
@@ -461,6 +467,8 @@ export function createInMemoryRepositories() {
         email_consent: emailConsent,
         consent_timestamp: consentTimestamp,
         signup_source: signupSource,
+        registered_at: null,
+        last_login_at: null,
         plan: "free",
         subscription_status: "inactive",
         created_at: now(),
@@ -472,12 +480,166 @@ export function createInMemoryRepositories() {
     }
   };
 
+  const authRepository = {
+    async findUserByEmail(email) {
+      const user = data.users.find((candidate) => candidate.email.toLowerCase() === email.toLowerCase());
+      return clone(user || null);
+    },
+    async findRegisteredUserByEmail(email) {
+      const user = data.users.find(
+        (candidate) =>
+          candidate.email.toLowerCase() === email.toLowerCase() && candidate.registered_at
+      );
+      return clone(user || null);
+    },
+    async findUserById(userId) {
+      const user = data.users.find((candidate) => candidate.id === userId);
+      return clone(user || null);
+    },
+    async upsertUserForRegistration({
+      email,
+      emailConsent,
+      consentTimestamp,
+      signupSource,
+      registeredAt
+    }) {
+      const existing = data.users.find((candidate) => candidate.email.toLowerCase() === email.toLowerCase());
+
+      if (existing) {
+        existing.email_consent = emailConsent;
+        existing.consent_timestamp = consentTimestamp;
+        existing.signup_source = signupSource || existing.signup_source;
+        existing.registered_at = existing.registered_at || registeredAt;
+        existing.updated_at = now();
+        return clone(existing);
+      }
+
+      const row = {
+        id: counters.users++,
+        email,
+        email_consent: emailConsent,
+        consent_timestamp: consentTimestamp,
+        signup_source: signupSource,
+        registered_at: registeredAt,
+        last_login_at: null,
+        plan: "free",
+        subscription_status: "inactive",
+        created_at: now(),
+        updated_at: now()
+      };
+
+      data.users.push(row);
+      return clone(row);
+    },
+    async markUserLogin({ userId, loginAt }) {
+      const user = data.users.find((candidate) => candidate.id === userId);
+      if (!user) {
+        return null;
+      }
+
+      user.last_login_at = loginAt;
+      user.updated_at = now();
+      return clone(user);
+    },
+    async createMagicLinkChallenge({ userId, tokenHash, expiresAt, userAgent, ipAddress, flow }) {
+      const row = {
+        id: counters.authMagicLinks++,
+        user_id: userId,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+        used_at: null,
+        user_agent: userAgent,
+        ip_address: ipAddress,
+        flow,
+        created_at: now()
+      };
+
+      data.authMagicLinks.push(row);
+      return clone(row);
+    },
+    async consumeMagicLinkChallengeByTokenHash(tokenHash) {
+      const row = data.authMagicLinks.find(
+        (candidate) =>
+          candidate.token_hash === tokenHash &&
+          candidate.used_at == null &&
+          candidate.expires_at > now()
+      );
+
+      if (!row) {
+        return null;
+      }
+
+      row.used_at = now();
+      return clone(row);
+    },
+    async createAuthSession({ userId, tokenHash, expiresAt, userAgent, ipAddress }) {
+      const row = {
+        id: counters.authSessions++,
+        user_id: userId,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+        user_agent: userAgent,
+        ip_address: ipAddress,
+        last_used_at: now(),
+        created_at: now(),
+        revoked_at: null
+      };
+
+      data.authSessions.push(row);
+      return clone(row);
+    },
+    async findActiveSessionByTokenHash(tokenHash) {
+      const session = data.authSessions.find(
+        (candidate) =>
+          candidate.token_hash === tokenHash &&
+          candidate.revoked_at == null &&
+          candidate.expires_at > now()
+      );
+
+      if (!session) {
+        return null;
+      }
+
+      const user = data.users.find((candidate) => candidate.id === session.user_id);
+      if (!user) {
+        return null;
+      }
+
+      return clone({
+        session_id: session.id,
+        user_id: session.user_id,
+        expires_at: session.expires_at,
+        session_created_at: session.created_at,
+        ...user
+      });
+    },
+    async touchAuthSession(sessionId) {
+      const session = data.authSessions.find((candidate) => candidate.id === sessionId);
+      if (session) {
+        session.last_used_at = now();
+      }
+    },
+    async revokeAuthSessionById(sessionId) {
+      const session = data.authSessions.find((candidate) => candidate.id === sessionId);
+      if (session && !session.revoked_at) {
+        session.revoked_at = now();
+      }
+    },
+    async revokeAuthSessionByTokenHash(tokenHash) {
+      const session = data.authSessions.find((candidate) => candidate.token_hash === tokenHash);
+      if (session && !session.revoked_at) {
+        session.revoked_at = now();
+      }
+    }
+  };
+
   return {
     data,
     catalogRepository,
     sessionRepository,
     toolRepository,
     recommendationRepository,
-    userRepository
+    userRepository,
+    authRepository
   };
 }
