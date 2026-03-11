@@ -1,11 +1,33 @@
 import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
+import { serializeCookie } from "../utils/cookies.js";
 import { assertPositiveInteger, assertValidEmail, normalizeEmail } from "../utils/validators.js";
+
+function setSessionCookie({ res, cookieName, token, maxAgeMs, isProduction }) {
+  if (!cookieName || !token || !maxAgeMs) {
+    return;
+  }
+
+  res.setHeader(
+    "Set-Cookie",
+    serializeCookie(cookieName, token, {
+      path: "/",
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      maxAgeMs
+    })
+  );
+}
 
 export function createRecommendationRouter({
   sessionService,
   recommendationService,
   leadCaptureService,
+  authService,
+  sessionCookieName,
+  sessionTtlMs,
+  isProduction,
   sessionRateLimiter,
   computeRateLimiter,
   unlockRateLimiter,
@@ -48,18 +70,43 @@ export function createRecommendationRouter({
         "recommendation_id"
       );
       const sessionId = assertPositiveInteger(req.body?.session_id, "session_id");
-      const email = normalizeEmail(req.body?.email);
+      const providedEmail = normalizeEmail(req.body?.email);
+      const hasProvidedEmail = Boolean(providedEmail);
+      const isRememberedUserUnlock = !hasProvidedEmail && Boolean(req.user?.email);
+
+      const email = isRememberedUserUnlock ? normalizeEmail(req.user.email) : providedEmail;
       assertValidEmail(email);
 
-      const result = await leadCaptureService.unlockRecommendation({
+      const emailConsent = isRememberedUserUnlock ? true : req.body?.email_consent;
+      const signupSource =
+        req.body?.signup_source ||
+        (isRememberedUserUnlock ? "returning-user-auto-unlock" : "landing");
+
+      const { unlockedResult, user } = await leadCaptureService.unlockRecommendation({
         recommendationId,
         sessionId,
         email,
-        emailConsent: req.body?.email_consent,
-        signupSource: req.body?.signup_source
+        emailConsent,
+        signupSource
       });
 
-      return res.json(result);
+      if (authService?.issueSessionForUser && user?.id) {
+        const authSession = await authService.issueSessionForUser({
+          userId: user.id,
+          userAgent: req.headers["user-agent"] || null,
+          ipAddress: req.ip || req.socket?.remoteAddress || null
+        });
+
+        setSessionCookie({
+          res,
+          cookieName: sessionCookieName,
+          token: authSession.token,
+          maxAgeMs: sessionTtlMs,
+          isProduction
+        });
+      }
+
+      return res.json(unlockedResult);
     })
   );
 

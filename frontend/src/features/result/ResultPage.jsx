@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { ApiError } from "../../lib/api/client";
@@ -11,6 +11,29 @@ import {
 import { useToast } from "../../components/ui/ToastProvider";
 import UnlockForm from "../unlock/UnlockForm";
 import { useRecommendation } from "./RecommendationContext";
+
+const REGISTERED_UNLOCK_KEY = "trustmebro.registered_unlock";
+
+function hasRegisteredUnlockMarker() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(REGISTERED_UNLOCK_KEY) === "1";
+}
+
+function setRegisteredUnlockMarker(isEnabled) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (isEnabled) {
+    window.localStorage.setItem(REGISTERED_UNLOCK_KEY, "1");
+    return;
+  }
+
+  window.localStorage.removeItem(REGISTERED_UNLOCK_KEY);
+}
 
 function LockedPrimaryCard() {
   return (
@@ -38,8 +61,55 @@ export default function ResultPage() {
   } = useRecommendation();
 
   const [unlocking, setUnlocking] = useState(false);
+  const autoUnlockAttemptRef = useRef(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackSignal, setFeedbackSignal] = useState(null);
+
+  useEffect(() => {
+    if (!resultState || resultState.unlocked || autoUnlockAttemptRef.current) {
+      return;
+    }
+
+    if (!hasRegisteredUnlockMarker()) {
+      return;
+    }
+
+    let isCancelled = false;
+    autoUnlockAttemptRef.current = true;
+    setUnlocking(true);
+
+    unlockRecommendation({
+      sessionId: resultState.sessionId,
+      recommendationId: resultState.recommendationId
+    })
+      .then((payload) => {
+        if (isCancelled) {
+          return;
+        }
+
+        const unlocked = normalizeUnlockedResult(payload, resultState);
+        setUnlockedResult(unlocked);
+        trackEvent("recommendation_unlocked", {
+          session_id: unlocked.sessionId,
+          recommendation_id: unlocked.recommendationId,
+          unlock_method: "remembered_session"
+        });
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setRegisteredUnlockMarker(false);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setUnlocking(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [resultState, setUnlockedResult]);
 
   if (!resultState) {
     return (
@@ -74,6 +144,7 @@ export default function ResultPage() {
 
       const unlocked = normalizeUnlockedResult(payload, resultState);
       setUnlockedResult(unlocked);
+      setRegisteredUnlockMarker(true);
       trackEvent("recommendation_unlocked", {
         session_id: unlocked.sessionId,
         recommendation_id: unlocked.recommendationId,
@@ -106,6 +177,8 @@ export default function ResultPage() {
     void submitTryItClick({
       recommendationId: resultState.recommendationId,
       sessionId: resultState.sessionId
+    }).catch(() => {
+      // KPI tracking must not block or disrupt the conversion path.
     });
   }
 

@@ -242,7 +242,8 @@ export function createRecommendationService({
         throw new NotFoundError("Recommendation not found");
       }
 
-      if (recommendation.session_id !== parsedSessionId) {
+      const recommendationSessionId = assertPositiveInteger(recommendation.session_id, "session_id");
+      if (recommendationSessionId !== parsedSessionId) {
         throw new ValidationError("recommendation_id does not belong to session_id");
       }
 

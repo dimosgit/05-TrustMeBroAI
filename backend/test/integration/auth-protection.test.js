@@ -41,6 +41,41 @@ test("anonymous catalog endpoints are available", async () => {
   assert.ok(Array.isArray(priorities.body));
 });
 
+test("session creation persists wizard_duration_seconds", async () => {
+  const { app, repositories } = createTestApp();
+
+  const response = await request(app)
+    .post("/api/recommendation/session")
+    .send({
+      profile_id: 1,
+      task_id: 1,
+      selected_priority: "Best quality",
+      wizard_duration_seconds: 37
+    })
+    .expect(201);
+
+  const sessionRow = repositories.data.recommendationSessions.find(
+    (row) => row.id === response.body.session_id
+  );
+  assert.equal(sessionRow.wizard_duration_seconds, 37);
+});
+
+test("session creation rejects negative wizard_duration_seconds", async () => {
+  const { app } = createTestApp();
+
+  const response = await request(app)
+    .post("/api/recommendation/session")
+    .send({
+      profile_id: 1,
+      task_id: 1,
+      selected_priority: "Best quality",
+      wizard_duration_seconds: -1
+    })
+    .expect(400);
+
+  assert.equal(response.body.message, "wizard_duration_seconds must be a non-negative integer");
+});
+
 test("catalog endpoints allow both localhost and 127 local dev origins", async () => {
   const { app } = createTestApp();
 
@@ -113,6 +148,9 @@ test("unlock upserts user, unlocks recommendation, and prefers referral_url for 
     })
     .expect(200);
 
+  assert.ok(unlock.headers["set-cookie"]);
+  assert.ok(unlock.headers["set-cookie"][0].includes("tmb_session="));
+
   assert.equal(unlock.body.primary_tool.locked, false);
   assert.ok(unlock.body.primary_tool.primary_reason);
   assert.ok(unlock.body.primary_tool.tool_name);
@@ -146,6 +184,39 @@ test("unlock upserts user, unlocks recommendation, and prefers referral_url for 
 
   assert.equal(secondUnlock.body.primary_tool.locked, false);
   assert.equal(repositories.data.users.length, 1);
+});
+
+test("returning user can unlock without re-entering email when session cookie is present", async () => {
+  const { app } = createTestApp();
+
+  const first = await createSessionAndCompute(app);
+  const initialUnlock = await request(app)
+    .post("/api/recommendation/unlock")
+    .send({
+      session_id: first.sessionId,
+      recommendation_id: first.compute.recommendation_id,
+      email: "remembered@example.com",
+      email_consent: true,
+      signup_source: "wizard"
+    })
+    .expect(200);
+
+  const sessionCookie = initialUnlock.headers["set-cookie"]?.[0];
+  assert.ok(sessionCookie);
+
+  const second = await createSessionAndCompute(app);
+  const rememberedUnlock = await request(app)
+    .post("/api/recommendation/unlock")
+    .set("Cookie", sessionCookie)
+    .send({
+      session_id: second.sessionId,
+      recommendation_id: second.compute.recommendation_id
+    })
+    .expect(200);
+
+  assert.equal(rememberedUnlock.body.primary_tool.locked, false);
+  assert.ok(rememberedUnlock.headers["set-cookie"]);
+  assert.ok(rememberedUnlock.headers["set-cookie"][0].includes("tmb_session="));
 });
 
 test("feedback accepts only -1 or 1", async () => {

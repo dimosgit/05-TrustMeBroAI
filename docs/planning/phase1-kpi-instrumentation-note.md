@@ -16,6 +16,10 @@ Owner: Agent 1 (Backend)
 - Stored in `recommendation_try_it_clicks` via `POST /api/recommendation/:id/try-it-click`.
 - Tracking is idempotent per (`recommendation_id`, `session_id`) to keep CTR stable.
 
+## Executable Artifacts
+- KPI SQL report: `backend/scripts/phase1-kpi-report.sql`
+- Compute latency benchmark: `cd backend && npm run perf:compute`
+
 ## Query Examples
 
 ### 1) Wizard completion timing (daily)

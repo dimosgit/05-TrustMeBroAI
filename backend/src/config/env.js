@@ -21,7 +21,19 @@ export function loadRuntimeConfig(env = process.env) {
     port: parsePositiveInt(env.PORT, 8080),
     databaseUrl: env.DATABASE_URL || "",
     allowedOrigins,
+    session: {
+      cookieName: env.SESSION_COOKIE_NAME || "tmb_session",
+      ttlMs: parsePositiveInt(env.AUTH_SESSION_TTL_MS, 1000 * 60 * 60 * 24 * 30)
+    },
     rateLimits: {
+      auth: {
+        windowMs: parsePositiveInt(env.RATE_LIMIT_AUTH_WINDOW_MS, 60_000),
+        max: parsePositiveInt(env.RATE_LIMIT_AUTH_MAX, 10)
+      },
+      authMe: {
+        windowMs: parsePositiveInt(env.RATE_LIMIT_AUTH_ME_WINDOW_MS, 60_000),
+        max: parsePositiveInt(env.RATE_LIMIT_AUTH_ME_MAX, 60)
+      },
       recommendationSession: {
         windowMs: parsePositiveInt(env.RATE_LIMIT_SESSION_WINDOW_MS, 60_000),
         max: parsePositiveInt(env.RATE_LIMIT_SESSION_MAX, 30)

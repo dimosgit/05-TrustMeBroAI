@@ -40,6 +40,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS consent_timestamp TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_source VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(30);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(30);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
 ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
 
@@ -62,6 +63,51 @@ BEGIN
       AND column_name = 'password_hash'
   ) THEN
     ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  user_agent TEXT,
+  ip_address TEXT,
+  last_used_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  revoked_at TIMESTAMP
+);
+
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS token_hash VARCHAR(64);
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP;
+
+UPDATE auth_sessions SET last_used_at = COALESCE(last_used_at, NOW());
+UPDATE auth_sessions SET created_at = COALESCE(created_at, NOW());
+
+ALTER TABLE auth_sessions ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE auth_sessions ALTER COLUMN token_hash SET NOT NULL;
+ALTER TABLE auth_sessions ALTER COLUMN expires_at SET NOT NULL;
+ALTER TABLE auth_sessions ALTER COLUMN last_used_at SET NOT NULL;
+ALTER TABLE auth_sessions ALTER COLUMN created_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'auth_sessions_user_id_fkey'
+      AND conrelid = 'auth_sessions'::regclass
+  ) THEN
+    ALTER TABLE auth_sessions
+      ADD CONSTRAINT auth_sessions_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
   END IF;
 END;
 $$;
@@ -305,6 +351,9 @@ END;
 $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower_unique ON users ((LOWER(email)));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_sessions_token_hash_unique ON auth_sessions (token_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_active ON auth_sessions (user_id, expires_at DESC)
+WHERE revoked_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_task_created ON recommendation_sessions (task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_user ON recommendation_sessions (user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendations_session_unique ON recommendations (session_id);

@@ -426,4 +426,41 @@ describe("phase1 conversion flow", () => {
 
     expect(tryItRequestBody).toEqual({ session_id: 73 });
   });
+
+  it("auto-unlocks for returning registered users without requiring email input", async () => {
+    setLockedResultInSessionStorage({ recommendationId: 955, sessionId: 19 });
+    window.localStorage.setItem("trustmebro.registered_unlock", "1");
+
+    let unlockRequestBody = null;
+
+    const fetchMock = createApiFetchMock({
+      "POST /api/recommendation/unlock": ({ init }) => {
+        unlockRequestBody = JSON.parse(init.body);
+        return {
+          status: 200,
+          body: {
+            session_id: 19,
+            recommendation_id: 955,
+            primary_tool: {
+              tool_name: "Claude",
+              try_it_url: "https://try.example.com/claude"
+            },
+            primary_reason: "Claude is the best fit for your use case."
+          }
+        };
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
+    expect(screen.queryByText("Email to unlock")).not.toBeInTheDocument();
+    expect(unlockRequestBody).toEqual({
+      session_id: 19,
+      recommendation_id: 955,
+      signup_source: "landing"
+    });
+  });
 });

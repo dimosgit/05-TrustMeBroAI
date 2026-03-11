@@ -43,6 +43,18 @@ export function createAuthService({ authRepository, sessionTtlMs }) {
   }
 
   return {
+    async issueSessionForUser({ userId, userAgent, ipAddress }) {
+      if (!Number.isInteger(userId) || userId <= 0) {
+        throw new ValidationError("user_id must be a positive integer");
+      }
+
+      return createSessionForUser({
+        userId,
+        userAgent,
+        ipAddress
+      });
+    },
+
     async register({ email, password, emailConsent, signupSource, userAgent, ipAddress }) {
       const normalizedEmail = normalizeEmail(email);
       assertValidEmail(normalizedEmail);

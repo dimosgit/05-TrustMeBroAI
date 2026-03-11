@@ -89,13 +89,21 @@ export async function computeRecommendation({ sessionId }) {
 }
 
 export async function unlockRecommendation({ sessionId, recommendationId, email, emailConsent }) {
-  return apiClient.post("/recommendation/unlock", {
+  const payload = {
     session_id: sessionId,
     recommendation_id: recommendationId,
-    email,
-    email_consent: emailConsent,
     signup_source: "landing"
-  });
+  };
+
+  if (typeof email === "string" && email.trim()) {
+    payload.email = email;
+  }
+
+  if (typeof emailConsent === "boolean") {
+    payload.email_consent = emailConsent;
+  }
+
+  return apiClient.post("/recommendation/unlock", payload);
 }
 
 export async function submitRecommendationFeedback({ recommendationId, signal }) {
