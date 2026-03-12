@@ -6,6 +6,15 @@ function normalizeUser(payload) {
   return payload?.user || null;
 }
 
+function normalizeRecoveryVerifyPayload(payload) {
+  return {
+    user: normalizeUser(payload),
+    requiresPasskeyEnrollment:
+      payload?.requires_passkey_enrollment === true ||
+      payload?.requiresPasskeyEnrollment === true
+  };
+}
+
 export async function requestPasskeyRegisterOptions({
   email,
   emailConsent,
@@ -72,7 +81,7 @@ export async function verifyRecoveryAuth({ token }) {
   }
 
   const payload = await pendingRequest;
-  return normalizeUser(payload);
+  return normalizeRecoveryVerifyPayload(payload);
 }
 
 export async function fetchAuthMe() {

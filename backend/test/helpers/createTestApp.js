@@ -83,6 +83,7 @@ export function createTestApp(options = {}) {
 
   const baseAppOptions = {
     config,
+    metricsRepository: repositories.metricsRepository,
     catalogService,
     sessionService,
     recommendationService,

@@ -36,14 +36,17 @@ describe("authApi.verifyRecoveryAuth", () => {
         user: {
           id: 1,
           email: "same@example.com"
-        }
+        },
+        requires_passkey_enrollment: true
       })
     );
 
-    const [firstUser, secondUser] = await Promise.all([first, second]);
+    const [firstPayload, secondPayload] = await Promise.all([first, second]);
 
-    expect(firstUser.email).toBe("same@example.com");
-    expect(secondUser.email).toBe("same@example.com");
+    expect(firstPayload.user.email).toBe("same@example.com");
+    expect(secondPayload.user.email).toBe("same@example.com");
+    expect(firstPayload.requiresPasskeyEnrollment).toBe(true);
+    expect(secondPayload.requiresPasskeyEnrollment).toBe(true);
   });
 
   it("does not cache completed verify requests", async () => {

@@ -33,6 +33,39 @@ function normalizePrimaryTool(tool) {
   };
 }
 
+function normalizeHistoryItem(item) {
+  const recommendation = item?.recommendation || item;
+  const primaryTool = recommendation?.primary_tool || item?.primary_tool;
+
+  return {
+    sessionId: recommendation?.session_id || item?.session_id || item?.id || null,
+    recommendationId: recommendation?.recommendation_id || recommendation?.id || item?.recommendation_id || null,
+    createdAt:
+      recommendation?.created_at ||
+      recommendation?.createdAt ||
+      item?.created_at ||
+      item?.createdAt ||
+      null,
+    selectedPriority:
+      item?.selected_priority ||
+      item?.selectedPriority ||
+      recommendation?.selected_priority ||
+      recommendation?.selectedPriority ||
+      "",
+    primaryTool: normalizePrimaryTool(primaryTool),
+    primaryReason:
+      recommendation?.primary_reason ||
+      recommendation?.primaryReason ||
+      item?.primary_reason ||
+      "",
+    alternatives: (Array.isArray(recommendation?.alternative_tools) ? recommendation.alternative_tools : [])
+      .map(normalizeAlternative)
+      .filter((tool) => Boolean(tool.toolName))
+      .slice(0, 2),
+    unlocked: recommendation?.is_primary_locked === false || item?.is_primary_locked === false
+  };
+}
+
 export function normalizeLockedResult(payload, fallbackSessionId) {
   return {
     sessionId: payload?.session_id || payload?.sessionId || fallbackSessionId || null,
@@ -139,4 +172,22 @@ export async function submitTryItClick({ recommendationId, sessionId }) {
   return apiClient.post(`/recommendation/${recommendationId}/try-it-click`, {
     session_id: sessionId
   });
+}
+
+export async function fetchRecommendationHistory({ limit = 20 } = {}) {
+  const query = Number.isInteger(limit) && limit > 0 ? `?limit=${limit}` : "";
+  const payload = await apiClient.get(`/recommendation/history${query}`);
+  const list = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload?.history)
+        ? payload.history
+        : Array.isArray(payload?.recommendations)
+          ? payload.recommendations
+          : [];
+
+  return list
+    .map(normalizeHistoryItem)
+    .filter((item) => Boolean(item.sessionId) && Boolean(item.primaryTool.toolName));
 }

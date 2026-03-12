@@ -1,6 +1,7 @@
 import { useState } from "react";
 import InlineAlert from "../../components/ui/InlineAlert";
 import { CONSENT_COPY } from "../wizard/constants";
+import { t } from "../../lib/i18n";
 
 export default function UnlockForm({ onUnlock, loading }) {
   const [email, setEmail] = useState("");
@@ -12,19 +13,19 @@ export default function UnlockForm({ onUnlock, loading }) {
     setError("");
 
     if (!email.trim().includes("@")) {
-      setError("Enter a valid email address.");
+      setError(t("unlock.invalidEmail"));
       return;
     }
 
     if (!emailConsent) {
-      setError("Consent is required to unlock your recommendation.");
+      setError(t("unlock.consentRequired"));
       return;
     }
 
     try {
       await onUnlock({ email: email.trim(), emailConsent });
     } catch (unlockError) {
-      setError(unlockError.message || "Could not unlock recommendation.");
+      setError(unlockError.message || t("unlock.genericUnlockError"));
     }
   }
 
@@ -33,14 +34,14 @@ export default function UnlockForm({ onUnlock, loading }) {
       {error ? <InlineAlert>{error}</InlineAlert> : null}
 
       <label className="block text-left text-sm font-medium text-slate-300">
-        Email to unlock
+        {t("unlock.emailLabel")}
         <input
           type="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
-          placeholder="you@example.com"
+          placeholder={t("unlock.emailPlaceholder")}
           autoComplete="email"
         />
       </label>
@@ -60,7 +61,7 @@ export default function UnlockForm({ onUnlock, loading }) {
         disabled={loading}
         className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 py-3.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] transition-all hover:from-blue-500 hover:to-violet-500 hover:shadow-[0_0_32px_rgba(99,102,241,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Unlocking..." : "✦ Reveal my best match"}
+        {loading ? t("unlock.unlocking") : t("unlock.unlockCta")}
       </button>
     </form>
   );

@@ -11,6 +11,7 @@ import { createRecommendationRepository } from "./repositories/recommendationRep
 import { createSessionRepository } from "./repositories/sessionRepository.js";
 import { createToolRepository } from "./repositories/toolRepository.js";
 import { createUserRepository } from "./repositories/userRepository.js";
+import { createMetricsRepository } from "./repositories/metricsRepository.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createCatalogRouter } from "./routes/catalogRoutes.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
@@ -19,6 +20,7 @@ import { createAuthService } from "./services/authService.js";
 import { createCatalogService } from "./services/catalogService.js";
 import { createLeadCaptureService } from "./services/leadCaptureService.js";
 import { createMagicLinkProvider } from "./services/magicLinkProvider.js";
+import { createMetricsService } from "./services/metricsService.js";
 import { createPasskeyAdapter } from "./services/passkeyAdapter.js";
 import { createRecommendationService } from "./services/recommendationService.js";
 import { createResultService } from "./services/resultService.js";
@@ -43,6 +45,8 @@ export function createApp(options = {}) {
     options.recommendationRepository || createRecommendationRepository({ query: queryFn });
   const userRepository = options.userRepository || createUserRepository({ query: queryFn });
   const authRepository = options.authRepository || createAuthRepository({ query: queryFn });
+  const metricsRepository =
+    options.metricsRepository || createMetricsRepository({ query: queryFn });
 
   const magicLinkProvider =
     options.magicLinkProvider ||
@@ -66,6 +70,11 @@ export function createApp(options = {}) {
 
   const catalogService = options.catalogService || createCatalogService({ catalogRepository });
   const resultService = options.resultService || createResultService();
+  const metricsService =
+    options.metricsService ||
+    createMetricsService({
+      metricsRepository
+    });
   const authService =
     options.authService ||
     createAuthService({
@@ -174,7 +183,8 @@ export function createApp(options = {}) {
       isProduction: config.isProduction,
       requireAuth,
       authRateLimiter,
-      meRateLimiter
+      meRateLimiter,
+      metricsService
     })
   );
   app.use("/api", createCatalogRouter({ catalogService }));
@@ -188,11 +198,14 @@ export function createApp(options = {}) {
       sessionCookieName,
       sessionTtlMs,
       isProduction: config.isProduction,
+      requireAuth,
       sessionRateLimiter,
       computeRateLimiter,
       unlockRateLimiter,
       feedbackRateLimiter,
-      tryItRateLimiter
+      tryItRateLimiter,
+      meRateLimiter,
+      metricsService
     })
   );
 

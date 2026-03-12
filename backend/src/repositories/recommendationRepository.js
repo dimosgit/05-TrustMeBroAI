@@ -46,6 +46,86 @@ export function createRecommendationRepository({ query }) {
       return result.rows[0] || null;
     },
 
+    async listRecommendationHistoryByUserId({ userId, limit, offset }) {
+      const result = await query(
+        `SELECT
+           r.id AS recommendation_id,
+           r.session_id,
+           r.primary_tool_id,
+           r.alternative_tool_ids,
+           r.primary_reason,
+           r.is_primary_locked,
+           r.unlocked_at,
+           r.created_at AS recommendation_created_at,
+           rs.selected_priority,
+           rs.created_at AS session_created_at,
+           t.name AS task_name,
+           p.name AS profile_name,
+           tool.tool_name AS primary_tool_name,
+           tool.tool_slug AS primary_tool_slug,
+           tool.logo_url AS primary_tool_logo_url,
+           tool.website AS primary_tool_website,
+           tool.referral_url AS primary_tool_referral_url,
+           EXISTS (
+             SELECT 1
+             FROM recommendation_try_it_clicks c
+             WHERE c.recommendation_id = r.id
+               AND c.session_id = rs.id
+           ) AS try_it_clicked
+         FROM recommendations r
+         JOIN recommendation_sessions rs ON rs.id = r.session_id
+         JOIN tasks t ON t.id = rs.task_id
+         JOIN profiles p ON p.id = rs.profile_id
+         JOIN tools tool ON tool.id = r.primary_tool_id
+         WHERE rs.user_id = $1
+         ORDER BY COALESCE(r.unlocked_at, r.created_at) DESC, r.id DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset]
+      );
+
+      return result.rows;
+    },
+
+    async findRecommendationHistoryByUserAndRecommendationId({ userId, recommendationId }) {
+      const result = await query(
+        `SELECT
+           r.id AS recommendation_id,
+           r.session_id,
+           r.primary_tool_id,
+           r.alternative_tool_ids,
+           r.primary_reason,
+           r.is_primary_locked,
+           r.unlocked_at,
+           r.created_at AS recommendation_created_at,
+           rs.selected_priority,
+           rs.created_at AS session_created_at,
+           t.name AS task_name,
+           p.name AS profile_name,
+           tool.tool_name AS primary_tool_name,
+           tool.tool_slug AS primary_tool_slug,
+           tool.logo_url AS primary_tool_logo_url,
+           tool.website AS primary_tool_website,
+           tool.referral_url AS primary_tool_referral_url,
+           EXISTS (
+             SELECT 1
+             FROM recommendation_try_it_clicks c
+             WHERE c.recommendation_id = r.id
+               AND c.session_id = rs.id
+           ) AS try_it_clicked
+         FROM recommendations r
+         JOIN recommendation_sessions rs ON rs.id = r.session_id
+         JOIN tasks t ON t.id = rs.task_id
+         JOIN profiles p ON p.id = rs.profile_id
+         JOIN tools tool ON tool.id = r.primary_tool_id
+         WHERE rs.user_id = $1
+           AND r.id = $2
+         LIMIT 1`,
+        [userId, recommendationId]
+      );
+
+      return result.rows[0] || null;
+    },
+
     async createRecommendation({ sessionId, primaryToolId, alternativeToolIds, primaryReason }) {
       const result = await query(
         `INSERT INTO recommendations (session_id, primary_tool_id, alternative_tool_ids, primary_reason, is_primary_locked)

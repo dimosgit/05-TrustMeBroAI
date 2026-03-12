@@ -264,7 +264,8 @@ function baseData() {
     recommendationSessions: [],
     recommendations: [],
     feedback: [],
-    tryItClicks: []
+    tryItClicks: [],
+    funnelEvents: []
   };
 }
 
@@ -280,7 +281,8 @@ export function createInMemoryRepositories() {
     recommendationSessions: 1,
     recommendations: 1,
     feedback: 1,
-    tryItClicks: 1
+    tryItClicks: 1,
+    funnelEvents: 1
   };
 
   const catalogRepository = {
@@ -388,6 +390,68 @@ export function createInMemoryRepositories() {
         task_name: task?.name || null
       });
     },
+    async listRecommendationHistoryByUserId({ userId, limit, offset }) {
+      const rows = data.recommendations
+        .map((recommendation) => {
+          const session = data.recommendationSessions.find(
+            (candidate) => candidate.id === recommendation.session_id
+          );
+          if (!session || session.user_id !== userId) {
+            return null;
+          }
+
+          const task = data.tasks.find((candidate) => candidate.id === session.task_id);
+          const profile = data.profiles.find((candidate) => candidate.id === session.profile_id);
+          const primaryTool = data.tools.find((candidate) => candidate.id === recommendation.primary_tool_id);
+          const tryItClicked = data.tryItClicks.some(
+            (candidate) =>
+              candidate.recommendation_id === recommendation.id &&
+              candidate.session_id === recommendation.session_id
+          );
+
+          return {
+            recommendation_id: recommendation.id,
+            session_id: recommendation.session_id,
+            primary_tool_id: recommendation.primary_tool_id,
+            alternative_tool_ids: recommendation.alternative_tool_ids,
+            primary_reason: recommendation.primary_reason,
+            is_primary_locked: recommendation.is_primary_locked,
+            unlocked_at: recommendation.unlocked_at,
+            recommendation_created_at: recommendation.created_at,
+            selected_priority: session.selected_priority,
+            session_created_at: session.created_at,
+            task_name: task?.name || null,
+            profile_name: profile?.name || null,
+            primary_tool_name: primaryTool?.tool_name || null,
+            primary_tool_slug: primaryTool?.tool_slug || null,
+            primary_tool_logo_url: primaryTool?.logo_url || null,
+            primary_tool_website: primaryTool?.website || null,
+            primary_tool_referral_url: primaryTool?.referral_url || null,
+            try_it_clicked: tryItClicked
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const aTime = new Date(a.unlocked_at || a.recommendation_created_at).getTime();
+          const bTime = new Date(b.unlocked_at || b.recommendation_created_at).getTime();
+          if (bTime !== aTime) {
+            return bTime - aTime;
+          }
+          return b.recommendation_id - a.recommendation_id;
+        });
+
+      return clone(rows.slice(offset, offset + limit));
+    },
+    async findRecommendationHistoryByUserAndRecommendationId({ userId, recommendationId }) {
+      const rows = await this.listRecommendationHistoryByUserId({
+        userId,
+        limit: Number.MAX_SAFE_INTEGER,
+        offset: 0
+      });
+
+      const row = rows.find((candidate) => candidate.recommendation_id === recommendationId) || null;
+      return clone(row);
+    },
     async createRecommendation({ sessionId, primaryToolId, alternativeToolIds, primaryReason }) {
       const existing = data.recommendations.find((row) => row.session_id === sessionId);
       if (existing) {
@@ -482,6 +546,30 @@ export function createInMemoryRepositories() {
       };
 
       data.users.push(row);
+      return clone(row);
+    }
+  };
+
+  const metricsRepository = {
+    async createFunnelEvent({
+      eventName,
+      userId = null,
+      sessionId = null,
+      recommendationId = null,
+      eventSource = "backend",
+      eventMetadata = {}
+    }) {
+      const row = {
+        id: counters.funnelEvents++,
+        event_name: eventName,
+        user_id: userId,
+        session_id: sessionId,
+        recommendation_id: recommendationId,
+        event_source: eventSource,
+        event_metadata: clone(eventMetadata || {}),
+        created_at: now()
+      };
+      data.funnelEvents.push(row);
       return clone(row);
     }
   };
@@ -789,6 +877,7 @@ export function createInMemoryRepositories() {
     toolRepository,
     recommendationRepository,
     userRepository,
-    authRepository
+    authRepository,
+    metricsRepository
   };
 }

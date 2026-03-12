@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthVerifyPage from "../features/auth/AuthVerifyPage";
+import HistoryPage from "../features/history/HistoryPage";
 import LoginPage from "../features/auth/LoginPage";
 import RecoveryPage from "../features/auth/RecoveryPage";
 import RegisterPage from "../features/auth/RegisterPage";
@@ -16,6 +17,7 @@ export default function AppRoutes() {
       <Route path="/auth/recovery" element={<RecoveryPage />} />
       <Route path="/auth/recovery/verify" element={<AuthVerifyPage />} />
       <Route path="/auth/verify" element={<AuthVerifyPage />} />
+      <Route path="/history" element={<HistoryPage />} />
       <Route path="/wizard" element={<WizardPage />} />
       <Route path="/result" element={<ResultPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

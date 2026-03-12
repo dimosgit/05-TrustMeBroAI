@@ -1,8 +1,10 @@
+import { t } from "../../../lib/i18n";
+
 function StepHeader({ question }) {
   return (
     <header className="mb-6">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs text-slate-500">Step {question} of 3</span>
+        <span className="text-xs text-slate-500">{t("wizard.stepOf", { current: question, total: 3 })}</span>
         <span className="text-xs font-semibold text-slate-400">{Math.round((question / 3) * 100)}%</span>
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
@@ -85,7 +87,7 @@ export function StepProfile({ options, selectedId, onSelect, onNext }) {
   return (
     <StepShell>
       <StepHeader question={1} />
-      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">Who are you?</h2>
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">{t("wizard.whoAreYou")}</h2>
       <div className="grid gap-3">
         {options.map((option) => (
           <ChoiceCard
@@ -106,7 +108,7 @@ export function StepProfile({ options, selectedId, onSelect, onNext }) {
             disabled={!selectedId}
             className="w-full rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto"
           >
-            Continue
+            {t("wizard.continue")}
           </button>
         </div>
       </StepActionBar>
@@ -118,7 +120,7 @@ export function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
   return (
     <StepShell>
       <StepHeader question={2} />
-      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">What&apos;s the mission?</h2>
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">{t("wizard.mission")}</h2>
       <div className="grid gap-2.5 sm:grid-cols-2">
         {options.map((option) => (
           <ChoiceCard
@@ -138,7 +140,7 @@ export function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
             onClick={onBack}
             className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10 sm:px-8"
           >
-            Back
+            {t("wizard.back")}
           </button>
           <button
             type="button"
@@ -146,7 +148,7 @@ export function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
             disabled={!selectedId}
             className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:px-8"
           >
-            Continue
+            {t("wizard.continue")}
           </button>
         </div>
       </StepActionBar>
@@ -158,8 +160,8 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
   return (
     <StepShell>
       <StepHeader question={3} />
-      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">What matters most?</h2>
-      <p className="mb-4 text-xs text-slate-500">Pick one top priority only.</p>
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-white sm:text-2xl">{t("wizard.whatMattersMost")}</h2>
+      <p className="mb-4 text-xs text-slate-500">{t("wizard.pickOnePriority")}</p>
       <div className="grid gap-2.5 sm:grid-cols-2">
         {options.map((option) => (
           <ChoiceCard
@@ -179,7 +181,7 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
             onClick={onBack}
             className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10 sm:px-8"
           >
-            Back
+            {t("wizard.back")}
           </button>
           <button
             type="button"
@@ -187,7 +189,7 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
             disabled={!selectedId || loading}
             className="relative overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:px-8"
           >
-            <span className={loading ? "opacity-0" : "opacity-100"}>Find my match</span>
+            <span className={loading ? "opacity-0" : "opacity-100"}>{t("wizard.findMyMatch")}</span>
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -201,7 +203,11 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
 }
 
 export function LoadingStep({ stage }) {
-  const checks = ["Saving your session", "Computing recommendation", "Preparing result"];
+  const checks = [
+    t("wizard.loadingChecksSaving"),
+    t("wizard.loadingChecksComputing"),
+    t("wizard.loadingChecksPreparing")
+  ];
 
   return (
     <StepShell>
@@ -217,8 +223,8 @@ export function LoadingStep({ stage }) {
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Finding your best match...</h2>
-          <p className="text-xs text-slate-500">One moment while we process your choices.</p>
+          <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{t("wizard.loadingTitle")}</h2>
+          <p className="text-xs text-slate-500">{t("wizard.loadingSubtitle")}</p>
         </div>
 
         <div className="mx-auto max-w-xs space-y-2.5 pt-2 text-left">

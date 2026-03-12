@@ -54,6 +54,7 @@ export function createMockRuntimeDependencies() {
   });
 
   return {
+    metricsRepository: repositories.metricsRepository,
     catalogService,
     sessionService,
     recommendationService,

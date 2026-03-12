@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { t } from "../../lib/i18n";
 
 const LANDING_LOGOS = [
   { name: "ChatGPT",    src: "https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64" },
@@ -16,14 +17,14 @@ export default function LandingPage() {
 
       {/* PRIMARY: Headline — the hero */}
       <h1 className="mx-auto max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
-        There are thousands of AI tools.
+        {t("landing.headingLineOne")}
         <br />
-        We tell you exactly which one to use.
+        {t("landing.headingLineTwo")}
       </h1>
 
       {/* SECONDARY: Subtitle — clearly subordinate */}
       <p className="mx-auto mt-5 max-w-xs text-sm text-slate-500">
-        Answer 3 quick questions. Get your best match in under 60 seconds.
+        {t("landing.subtitle")}
       </p>
 
       {/* ACTION: CTA — the one thing to do */}
@@ -33,9 +34,9 @@ export default function LandingPage() {
           onClick={() => navigate("/wizard")}
           className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-base font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98]"
         >
-          Find my AI tool
+          {t("landing.cta")}
         </button>
-        <p className="mt-2 text-[11px] text-slate-600">No login required to start.</p>
+        <p className="mt-2 text-[11px] text-slate-600">{t("landing.noLoginRequired")}</p>
       </div>
 
       {/* FOOTNOTE: Logos — small, quiet, supportive */}

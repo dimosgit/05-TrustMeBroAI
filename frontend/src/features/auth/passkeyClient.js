@@ -1,3 +1,5 @@
+import { t } from "../../lib/i18n";
+
 function decodeBase64Url(value) {
   if (typeof value !== "string") {
     return value;
@@ -133,7 +135,7 @@ export function isPasskeySupported() {
 
 export async function createPasskeyCredential(options) {
   if (!isPasskeySupported()) {
-    throw new Error("Passkeys are not supported on this browser. Use email recovery instead.");
+    throw new Error(t("auth.passkeyUnsupported"));
   }
 
   const credential = await navigator.credentials.create({
@@ -141,7 +143,7 @@ export async function createPasskeyCredential(options) {
   });
 
   if (!credential) {
-    throw new Error("Passkey creation was cancelled.");
+    throw new Error(t("auth.passkeyCreationCancelled"));
   }
 
   return serializeRegistrationCredential(credential);
@@ -149,7 +151,7 @@ export async function createPasskeyCredential(options) {
 
 export async function getPasskeyCredential(options) {
   if (!isPasskeySupported()) {
-    throw new Error("Passkeys are not supported on this browser. Use email recovery instead.");
+    throw new Error(t("auth.passkeyUnsupported"));
   }
 
   const credential = await navigator.credentials.get({
@@ -157,7 +159,7 @@ export async function getPasskeyCredential(options) {
   });
 
   if (!credential) {
-    throw new Error("Passkey sign-in was cancelled.");
+    throw new Error(t("auth.passkeySigninCancelled"));
   }
 
   return serializeAuthenticationCredential(credential);

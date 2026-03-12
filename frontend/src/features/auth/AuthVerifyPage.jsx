@@ -4,6 +4,7 @@ import InlineAlert from "../../components/ui/InlineAlert";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { ApiError, ApiNetworkError, ApiTimeoutError } from "../../lib/api/client";
 import { verifyRecoveryAuth } from "../../lib/api/authApi";
+import { t } from "../../lib/i18n";
 import { useAuth } from "./AuthContext";
 import { sanitizeRedirectPath } from "./utils";
 
@@ -26,16 +27,19 @@ export default function AuthVerifyPage() {
           reason: "missing_token",
           redirect_path: redirectPath
         });
-        setError("This recovery link is invalid. Request a new recovery email.");
+        setError(t("auth.verifyMissingToken"));
         setIsVerifying(false);
         return;
       }
 
       try {
-        const authUser = await verifyRecoveryAuth({ token });
-        await setAuthenticatedUser(authUser);
+        const recoveryPayload = await verifyRecoveryAuth({ token });
+        await setAuthenticatedUser(recoveryPayload.user, {
+          requiresPasskeyEnrollment: recoveryPayload.requiresPasskeyEnrollment
+        });
         trackEvent("recovery_verify_success", {
-          redirect_path: redirectPath
+          redirect_path: redirectPath,
+          requires_passkey_enrollment: recoveryPayload.requiresPasskeyEnrollment
         });
 
         if (!isCancelled) {
@@ -53,11 +57,11 @@ export default function AuthVerifyPage() {
             verifyError instanceof ApiNetworkError ||
             (verifyError instanceof ApiError && verifyError.status >= 500)
           ) {
-            setError("Server is unavailable. Please try again.");
+            setError(t("auth.serverUnavailable"));
           } else if (verifyError instanceof ApiError) {
-            setError(verifyError.message || "This recovery link is invalid or expired.");
+            setError(verifyError.message || t("auth.verifyInvalidOrExpired"));
           } else {
-            setError("Server is unavailable. Please try again.");
+            setError(t("auth.serverUnavailable"));
           }
         }
       } finally {
@@ -77,9 +81,9 @@ export default function AuthVerifyPage() {
   if (isVerifying) {
     return (
       <div className="space-y-3 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Account Recovery</p>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Verifying your recovery link</h1>
-        <p className="text-sm text-slate-400">Please wait a moment.</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("auth.accountRecoveryLabel")}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-white">{t("auth.verifyLoadingTitle")}</h1>
+        <p className="text-sm text-slate-400">{t("auth.verifyLoadingSubtitle")}</p>
       </div>
     );
   }
@@ -87,8 +91,8 @@ export default function AuthVerifyPage() {
   return (
     <div className="space-y-4">
       <header className="space-y-1 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Account Recovery</p>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Could not sign you in</h1>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("auth.accountRecoveryLabel")}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-white">{t("auth.verifyFailureTitle")}</h1>
       </header>
 
       {error ? <InlineAlert>{error}</InlineAlert> : null}
@@ -98,13 +102,13 @@ export default function AuthVerifyPage() {
           to={`/auth/recovery?redirect=${encodeURIComponent(redirectPath)}`}
           className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
         >
-          Request another recovery email
+          {t("auth.verifyRequestAnother")}
         </Link>
         <Link
           to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
           className="text-sm font-semibold text-blue-300 hover:text-blue-200"
         >
-          Back to passkey sign-in
+          {t("auth.verifyBackToPasskey")}
         </Link>
       </div>
     </div>

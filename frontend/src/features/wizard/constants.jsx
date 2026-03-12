@@ -1,3 +1,5 @@
+import { t } from "../../lib/i18n";
+
 export const PROFILE_ICON_MAP = {
   Business: (
     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -110,5 +112,4 @@ export const initialWizardForm = {
   priorityId: null
 };
 
-export const CONSENT_COPY =
-  "I agree to receive product updates and useful AI tool recommendations by email.";
+export const CONSENT_COPY = t("consent.copy");

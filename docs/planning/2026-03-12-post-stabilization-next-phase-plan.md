@@ -8,52 +8,36 @@ Source of truth: `docs/planning/final-implementation-plan.md` remains authoritat
   - result-page hierarchy issue
   - crowded header navigation
   - weak mobile wizard progression controls
-- The team has chosen the next auth direction:
+- Phase 2 Sprint 1 auth foundation is implemented and integration-approved:
   - `passkey-first`
   - `email` remains the account identifier
   - `email fallback / recovery` remains secondary
-- Internationalization preparation has been identified as a Phase 2 foundation task.
+  - passkey registration/sign-in, recovery bootstrap, and authenticated session bootstrap are in place
+- Open mitigations from the passkey foundation closeout:
+  - preserve and expose `requires_passkey_enrollment` after recovery verify
+  - run a real-device passkey validation sweep
+- Internationalization preparation remains a Phase 2 foundation task for the next slice.
 
 ## 2. Immediate Next Goal
-Start Phase 2 cleanly without repeating product-plan drift.
+Move from Phase 2 Sprint 1 auth foundation to Phase 2 Sprint 2 product foundation without regressing auth stability.
 
 This means:
-1. align the source-of-truth plan with the passkey-first decision
-2. lock the technical design before implementation
-3. implement passkeys and recovery in a controlled sequence
-4. keep anonymous conversion flow stable throughout
+1. close the two open passkey mitigations
+2. implement authenticated recommendation history
+3. extract English UI copy into locale resources
+4. add funnel/account metrics needed to evaluate Phase 2 performance
+5. keep anonymous conversion flow stable throughout
 
 ## 3. Priority Order
 
-### P0: Source-of-Truth Alignment
-1. Intentionally update the final implementation plan so Phase 2 auth reflects:
-   - passkey-first auth
-   - email fallback / recovery
-   - no username
-   - no password-first approach
-2. Update the plan sections that currently still describe magic-link-only Phase 2.
+### P0: Passkey Foundation Mitigation Closeout
+1. Preserve and expose `requires_passkey_enrollment` after recovery verify in frontend auth state.
+2. Show a guided passkey-enrollment nudge after recovery-based sign-in.
+3. Run one real-device passkey validation sweep across desktop and mobile.
 
 Exit gate:
-- Final implementation plan and next-step planning are aligned again.
-
-### P0: Phase 2 Design Lock
-1. Finalize backend passkey data model and WebAuthn flow design.
-2. Finalize frontend passkey UX:
-   - register with passkey
-   - sign in with passkey
-   - fallback email recovery
-3. Finalize API contracts for:
-   - registration options / verification
-   - authentication options / verification
-   - email fallback / recovery
-   - authenticated history retrieval
-4. Finalize i18n extraction approach:
-   - translation key strategy
-   - locale file structure
-   - English source locale
-
-Exit gate:
-- Signed-off Phase 2 auth contract, UX contract, and i18n foundation approach.
+- Passkey-first posture is preserved even when fallback recovery is used.
+- Real-device passkey confidence gap is reduced.
 
 ## 4. Implementation Plan
 
@@ -79,34 +63,41 @@ Exit gate:
 - Anonymous wizard flow still converts cleanly.
 
 ### Sprint 2: Product Foundation
-1. Extract frontend copy into locale resources.
-2. Keep English behavior visually unchanged after extraction.
-3. Implement authenticated recommendation history.
-4. Add phase metrics needed to evaluate:
-   - unlock conversion
-   - account creation
-   - sign-in completion
-   - try-it click-through
+1. Backend:
+   - implement authenticated recommendation history API
+   - add account/auth funnel event persistence and reporting inputs
+2. Frontend:
+   - implement authenticated recommendation history UI
+   - extract active English copy into locale resources
+   - preserve current English UX after extraction
+   - implement post-recovery passkey-enrollment guidance using `requires_passkey_enrollment`
+3. QA:
+   - validate history behavior
+   - validate English-parity after i18n extraction
+   - complete real-device passkey sweep and verify mitigation behavior
+4. Integration:
+   - reconcile history contract, i18n impact, and auth non-regression before merge
 
 Exit gate:
 - English copy is externalized.
 - History is usable.
 - Phase 2 funnel metrics are measurable.
+- Recovery-based sign-in guides users back toward passkey enrollment.
 
 ## 5. Recommended Agent Sequence
-1. `Back-End Specialist` and `Front-End Specialist` can start in parallel on design lock once the final plan is updated.
-2. `QA Specialist` starts after contract lock and begins building the passkey/recovery regression matrix early.
-3. `Integration Specialist` reviews after design lock, then again before merge.
+1. `Back-End Specialist` and `Front-End Specialist` can start in parallel on Sprint 2 scope once history contract boundaries are clear.
+2. `QA Specialist` starts early on mitigation validation and then runs the Sprint 2 regression gate after FE/BE land.
+3. `Integration Specialist` reviews Sprint 2 deliverables before merge and confirms auth remains stable.
 
 ## 6. Practical Advice
-1. Do not start passkey implementation before the final implementation plan is intentionally updated.
-2. Do not combine passkey implementation and full multilingual rollout in one giant branch.
-3. Keep i18n extraction separate enough that it can be tested without auth complexity hiding regressions.
+1. Do not fold broad multilingual rollout into this slice; keep it to extraction and English parity only.
+2. Keep history API, history UI, and i18n extraction modular enough that failures are easy to isolate.
+3. Treat the passkey mitigations as part of Sprint 2 completion, not optional polish.
 4. Keep anonymous recommendation flow protected as a standing regression gate in every Phase 2 PR.
 
 ## 7. Success Criteria
-1. The plan and the implementation direction match.
-2. Passkey auth feels credible and modern.
-3. Email fallback exists without becoming the primary auth path again.
-4. English copy is ready for future localization.
+1. Passkey auth remains credible and modern after mitigation closeout.
+2. Email fallback exists without becoming the primary auth path again.
+3. Recommendation history is available to authenticated users.
+4. English copy is extracted and ready for future localization.
 5. Anonymous wizard conversion remains strong while accounts become more robust.

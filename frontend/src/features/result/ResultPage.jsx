@@ -11,6 +11,7 @@ import {
 import { useToast } from "../../components/ui/ToastProvider";
 import { useAuth } from "../auth/AuthContext";
 import UnlockForm from "../unlock/UnlockForm";
+import { t } from "../../lib/i18n";
 import { useRecommendation } from "./RecommendationContext";
 
 const REGISTERED_UNLOCK_KEY = "trustmebro.registered_unlock";
@@ -96,8 +97,8 @@ function LockedPrimaryCard() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <p className="text-sm font-semibold text-white">Your best match is ready</p>
-        <p className="text-xs text-slate-400">One quick step to reveal it</p>
+        <p className="text-sm font-semibold text-white">{t("result.lockCardTitle")}</p>
+        <p className="text-xs text-slate-400">{t("result.lockCardSubtitle")}</p>
       </div>
     </div>
   );
@@ -183,14 +184,14 @@ export default function ResultPage() {
   if (!resultState) {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-white">No result yet</h1>
-        <p className="text-sm text-slate-400">Complete the wizard first to see your recommendation.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-white">{t("result.noResultTitle")}</h1>
+        <p className="text-sm text-slate-400">{t("result.noResultBody")}</p>
         <button
           type="button"
           onClick={() => navigate("/wizard")}
           className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
         >
-          Start wizard
+          {t("result.startWizard")}
         </button>
       </div>
     );
@@ -216,21 +217,21 @@ export default function ResultPage() {
         recommendation_id: unlocked.recommendationId,
         unlock_method: "email_consent"
       });
-      notify("Recommendation unlocked.", "success");
+      notify(t("result.unlockSuccessToast"), "success");
     } catch (error) {
       if (
         error instanceof ApiTimeoutError ||
         error instanceof ApiNetworkError ||
         (error instanceof ApiError && error.status >= 500)
       ) {
-        throw new Error("Server is unavailable. Please try again.");
+        throw new Error(t("result.unlockServerUnavailable"));
       }
 
       if (error instanceof ApiError) {
-        throw new Error(error.message || "Could not unlock recommendation.");
+        throw new Error(error.message || t("result.unlockFailed"));
       }
 
-      throw new Error("Server is unavailable. Please try again.");
+      throw new Error(t("result.unlockServerUnavailable"));
     } finally {
       setManualUnlocking(false);
     }
@@ -258,7 +259,7 @@ export default function ResultPage() {
 
   async function handleFeedback(signal) {
     if (!resultState.recommendationId) {
-      notify("Feedback is unavailable for this result.", "error");
+      notify(t("result.feedbackUnavailable"), "error");
       return;
     }
 
@@ -270,9 +271,9 @@ export default function ResultPage() {
         signal
       });
       setFeedbackSignal(signal);
-      notify("Thanks for the feedback.", "success");
+      notify(t("result.feedbackThanks"), "success");
     } catch {
-      notify("Could not submit feedback right now.", "error");
+      notify(t("result.feedbackFailed"), "error");
     } finally {
       setFeedbackLoading(false);
     }
@@ -283,7 +284,7 @@ export default function ResultPage() {
       <header className="flex items-center justify-between pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            {resultState.unlocked ? "Your Best Match" : "Your result is ready 🎯"}
+            {resultState.unlocked ? t("result.unlockedHeader") : t("result.lockedHeader")}
           </h1>
         </div>
         <button
@@ -294,7 +295,7 @@ export default function ResultPage() {
           }}
           className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
         >
-          Run again
+          {t("result.runAgain")}
         </button>
       </header>
 
@@ -318,7 +319,9 @@ export default function ResultPage() {
                 </div>
               )}
               <div>
-                <h2 className="text-3xl font-bold tracking-tight text-white">{primaryTool.toolName || "Top recommendation"}</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-white">
+                  {primaryTool.toolName || t("result.defaultPrimaryToolName")}
+                </h2>
                 {resultState.primaryReason ? (
                   <p className="mt-2 text-sm text-slate-400">{resultState.primaryReason}</p>
                 ) : null}
@@ -330,14 +333,14 @@ export default function ResultPage() {
                 onClick={handleTryItClick}
                 className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
               >
-                Try it →
+                {t("result.tryIt")}
               </a>
             </div>
           </div>
 
           {/* Feedback — simple inline, not a section */}
           <div className="flex items-center justify-center gap-3">
-            <span className="text-xs text-slate-500">Was this helpful?</span>
+            <span className="text-xs text-slate-500">{t("result.feedbackQuestion")}</span>
             <button
               type="button"
               disabled={feedbackLoading}
@@ -349,7 +352,7 @@ export default function ResultPage() {
                   : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
               ].join(" ")}
             >
-              👍 Yes
+              {t("result.feedbackYes")}
             </button>
             <button
               type="button"
@@ -362,26 +365,26 @@ export default function ResultPage() {
                   : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
               ].join(" ")}
             >
-              👎 Not really
+              {t("result.feedbackNo")}
             </button>
           </div>
 
           {/* Account nudge — quiet, not a banner */}
           {!isAuthenticated ? (
             <p className="text-center text-xs text-slate-600">
-              Want to save this?{" "}
+              {t("result.accountNudgePrefix")}{" "}
               <Link
                 to={`/register?${new URLSearchParams({ redirect: "/result", ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {}) }).toString()}`}
                 className="text-slate-400 underline underline-offset-2 hover:text-white"
               >
-                Create a free account
+                {t("result.accountNudgeCreate")}
               </Link>
-              {" "}or{" "}
+              {" "}{t("result.accountNudgeOr")}{" "}
               <Link
                 to={`/login?${new URLSearchParams({ redirect: "/result", ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {}) }).toString()}`}
                 className="text-slate-400 underline underline-offset-2 hover:text-white"
               >
-                log in
+                {t("result.accountNudgeLogin")}
               </Link>
             </p>
           ) : null}
@@ -390,8 +393,8 @@ export default function ResultPage() {
       ) : (
         <section className="space-y-4" data-testid="locked-primary">
           <div>
-            <h2 className="text-lg font-bold text-white">We found your perfect AI tool</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Enter your email below to unlock the full recommendation.</p>
+            <h2 className="text-lg font-bold text-white">{t("result.lockedSectionTitle")}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{t("result.lockedSectionSubtitle")}</p>
           </div>
           <LockedPrimaryCard />
           <UnlockForm onUnlock={handleUnlock} loading={manualUnlocking} />
@@ -400,7 +403,7 @@ export default function ResultPage() {
 
       {alternatives.length ? (
         <section className="pt-2" data-testid="alternatives-section">
-          <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Also consider:</h2>
+          <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{t("result.alternativesTitle")}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {alternatives.map((tool) => (
               <div

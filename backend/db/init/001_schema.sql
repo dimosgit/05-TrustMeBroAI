@@ -395,6 +395,34 @@ ALTER TABLE recommendation_try_it_clicks ALTER COLUMN recommendation_id SET NOT 
 ALTER TABLE recommendation_try_it_clicks ALTER COLUMN session_id SET NOT NULL;
 ALTER TABLE recommendation_try_it_clicks ALTER COLUMN created_at SET NOT NULL;
 
+CREATE TABLE IF NOT EXISTS funnel_events (
+  id BIGSERIAL PRIMARY KEY,
+  event_name VARCHAR(64) NOT NULL,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  session_id BIGINT REFERENCES recommendation_sessions(id) ON DELETE SET NULL,
+  recommendation_id BIGINT REFERENCES recommendations(id) ON DELETE SET NULL,
+  event_source VARCHAR(40) NOT NULL DEFAULT 'backend',
+  event_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS event_name VARCHAR(64);
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS session_id BIGINT;
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS recommendation_id BIGINT;
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS event_source VARCHAR(40) DEFAULT 'backend';
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS event_metadata JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+UPDATE funnel_events SET event_source = COALESCE(event_source, 'backend');
+UPDATE funnel_events SET event_metadata = COALESCE(event_metadata, '{}'::jsonb);
+UPDATE funnel_events SET created_at = COALESCE(created_at, NOW());
+
+ALTER TABLE funnel_events ALTER COLUMN event_name SET NOT NULL;
+ALTER TABLE funnel_events ALTER COLUMN event_source SET NOT NULL;
+ALTER TABLE funnel_events ALTER COLUMN event_metadata SET NOT NULL;
+ALTER TABLE funnel_events ALTER COLUMN created_at SET NOT NULL;
+
 CREATE TABLE IF NOT EXISTS tools (
   id SERIAL PRIMARY KEY,
   tool_name VARCHAR(120),
@@ -564,6 +592,9 @@ CREATE INDEX IF NOT EXISTS idx_recommendation_feedback_recommendation ON recomme
 CREATE UNIQUE INDEX IF NOT EXISTS idx_try_it_clicks_recommendation_session_unique ON recommendation_try_it_clicks (recommendation_id, session_id);
 CREATE INDEX IF NOT EXISTS idx_try_it_clicks_recommendation ON recommendation_try_it_clicks (recommendation_id);
 CREATE INDEX IF NOT EXISTS idx_try_it_clicks_session ON recommendation_try_it_clicks (session_id);
+CREATE INDEX IF NOT EXISTS idx_funnel_events_name_created ON funnel_events (event_name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_funnel_events_user_created ON funnel_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_funnel_events_recommendation ON funnel_events (recommendation_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tools_tool_slug_unique ON tools (tool_slug);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tools_tool_name_unique ON tools ((LOWER(tool_name)));
 CREATE INDEX IF NOT EXISTS idx_tools_status_category ON tools (record_status, category);

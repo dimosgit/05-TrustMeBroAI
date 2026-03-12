@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InlineAlert from "../../components/ui/InlineAlert";
 import { trackEvent } from "../../lib/analytics/tracking";
+import { t } from "../../lib/i18n";
 import {
   fetchCatalogData
 } from "../../lib/api/catalogApi";
@@ -63,7 +64,7 @@ export default function WizardPage() {
         setTasks(mapWithIcons(catalog.tasks, TASK_ICON_MAP));
         setPriorities(mapWithIcons(catalog.priorities, PRIORITY_ICON_MAP));
       } catch {
-        setLookupError("Unable to load wizard options. Please retry.");
+        setLookupError(t("wizard.lookupError"));
       } finally {
         setLookupLoading(false);
       }
@@ -129,7 +130,7 @@ export default function WizardPage() {
       });
       navigate("/result", { replace: true });
     } catch {
-      setSubmitError("Could not generate recommendation. Please try again.");
+      setSubmitError(t("wizard.submitError"));
       setStep("priority");
     } finally {
       setIsSubmitting(false);
@@ -187,13 +188,13 @@ export default function WizardPage() {
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between pb-3">
-        <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Find your best AI tool</h1>
+        <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{t("wizard.title")}</h1>
         <button
           type="button"
           onClick={resetForm}
           className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
         >
-          Reset
+          {t("wizard.reset")}
         </button>
       </header>
 

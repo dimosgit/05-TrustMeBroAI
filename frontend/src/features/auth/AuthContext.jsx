@@ -2,10 +2,35 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { fetchAuthMe, logoutAuth } from "../../lib/api/authApi";
 
 const AuthContext = createContext(null);
+const PASSKEY_ENROLLMENT_NUDGE_KEY = "trustmebro.passkey_enrollment_required";
+
+function readStoredPasskeyEnrollmentNudge() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.sessionStorage.getItem(PASSKEY_ENROLLMENT_NUDGE_KEY) === "1";
+}
+
+function writeStoredPasskeyEnrollmentNudge(value) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (value) {
+    window.sessionStorage.setItem(PASSKEY_ENROLLMENT_NUDGE_KEY, "1");
+    return;
+  }
+
+  window.sessionStorage.removeItem(PASSKEY_ENROLLMENT_NUDGE_KEY);
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [requiresPasskeyEnrollment, setRequiresPasskeyEnrollment] = useState(() =>
+    readStoredPasskeyEnrollmentNudge()
+  );
   const authMutationVersionRef = useRef(0);
 
   const refreshAuth = useCallback(async ({ force = false } = {}) => {
@@ -14,6 +39,12 @@ export function AuthProvider({ children }) {
 
     if (force || requestVersion === authMutationVersionRef.current) {
       setUser(authUser);
+      if (authUser?.id) {
+        setRequiresPasskeyEnrollment(readStoredPasskeyEnrollmentNudge());
+      } else {
+        setRequiresPasskeyEnrollment(false);
+        writeStoredPasskeyEnrollmentNudge(false);
+      }
     }
 
     return authUser;
@@ -26,6 +57,8 @@ export function AuthProvider({ children }) {
       .catch(() => {
         if (!isCancelled) {
           setUser(null);
+          setRequiresPasskeyEnrollment(false);
+          writeStoredPasskeyEnrollmentNudge(false);
         }
       })
       .finally(() => {
@@ -40,10 +73,12 @@ export function AuthProvider({ children }) {
   }, [refreshAuth]);
 
   const setAuthenticatedUser = useCallback(
-    async (authUser) => {
+    async (authUser, { requiresPasskeyEnrollment: nextRequiresPasskeyEnrollment = false } = {}) => {
       if (authUser) {
         authMutationVersionRef.current += 1;
         setUser(authUser);
+        setRequiresPasskeyEnrollment(Boolean(nextRequiresPasskeyEnrollment));
+        writeStoredPasskeyEnrollmentNudge(Boolean(nextRequiresPasskeyEnrollment));
         return authUser;
       }
 
@@ -52,9 +87,16 @@ export function AuthProvider({ children }) {
     [refreshAuth]
   );
 
+  const dismissPasskeyEnrollmentNudge = useCallback(() => {
+    setRequiresPasskeyEnrollment(false);
+    writeStoredPasskeyEnrollmentNudge(false);
+  }, []);
+
   const logout = useCallback(async () => {
     authMutationVersionRef.current += 1;
     setUser(null);
+    setRequiresPasskeyEnrollment(false);
+    writeStoredPasskeyEnrollmentNudge(false);
 
     try {
       await logoutAuth();
@@ -68,11 +110,21 @@ export function AuthProvider({ children }) {
       user,
       isBootstrapping,
       isAuthenticated: Boolean(user?.id),
+      requiresPasskeyEnrollment,
       refreshAuth,
       setAuthenticatedUser,
+      dismissPasskeyEnrollmentNudge,
       logout
     }),
-    [user, isBootstrapping, refreshAuth, setAuthenticatedUser, logout]
+    [
+      user,
+      isBootstrapping,
+      requiresPasskeyEnrollment,
+      refreshAuth,
+      setAuthenticatedUser,
+      dismissPasskeyEnrollmentNudge,
+      logout
+    ]
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

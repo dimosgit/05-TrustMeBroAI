@@ -1,19 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { useAuth } from "../../features/auth/AuthContext";
+import { t } from "../../lib/i18n";
 
 function LandingFooter() {
   return (
     <footer className="mx-auto mt-4 w-full max-w-sm pb-2">
       <div className="flex items-center justify-between text-[11px] font-medium tracking-tight text-slate-600">
-        <p>© 2026 TrustMeBroAI</p>
+        <p>{t("appShell.landingFooterCopyright")}</p>
         <a
           href="https://www.linkedin.com/in/dimouzunov/"
           target="_blank"
           rel="noreferrer"
           className="underline decoration-slate-500/60 underline-offset-2 transition hover:text-slate-400"
         >
-          LinkedIn
+          {t("appShell.landingFooterLinkedIn")}
         </a>
       </div>
     </footer>
@@ -23,14 +24,14 @@ function LandingFooter() {
 function DefaultFooter() {
   return (
     <footer className="mx-auto mt-4 w-full max-w-3xl pb-2 text-center">
-      <p className="text-[10px] text-slate-600">Made by real people.</p>
+      <p className="text-[10px] text-slate-600">{t("appShell.defaultFooterMadeBy")}</p>
       <a
         href="https://www.linkedin.com/in/dimouzunov/"
         target="_blank"
         rel="noreferrer"
         className="mt-0.5 inline-block text-[10px] text-slate-500 underline decoration-slate-500/60 underline-offset-2 transition hover:text-slate-400"
       >
-        LinkedIn
+        {t("appShell.landingFooterLinkedIn")}
       </a>
     </footer>
   );
@@ -39,7 +40,14 @@ function DefaultFooter() {
 export default function AppShell({ children }) {
   const location = useLocation();
   const isLanding = location.pathname === "/";
-  const { user, isAuthenticated, isBootstrapping, logout } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    isBootstrapping,
+    requiresPasskeyEnrollment,
+    dismissPasskeyEnrollmentNudge,
+    logout
+  } = useAuth();
 
   async function handleLogout() {
     try {
@@ -72,19 +80,25 @@ export default function AppShell({ children }) {
             <div className="flex items-center gap-2">
               {isBootstrapping ? (
                 <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-400">
-                  Loading...
+                  {t("appShell.loading")}
                 </span>
               ) : isAuthenticated ? (
                 <>
+                  <Link
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition hover:border-white/20 hover:text-white"
+                    to="/history"
+                  >
+                    {t("appShell.history")}
+                  </Link>
                   <span className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 sm:inline-flex">
-                    {user?.email || "Signed in"}
+                    {user?.email || t("appShell.signedInFallback")}
                   </span>
                   <button
                     type="button"
                     onClick={handleLogout}
                     className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
                   >
-                    Logout
+                    {t("appShell.logout")}
                   </button>
                 </>
               ) : (
@@ -92,11 +106,41 @@ export default function AppShell({ children }) {
                   className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-500"
                   to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
                 >
-                  Account
+                  {t("appShell.account")}
                 </Link>
               )}
             </div>
           </nav>
+
+          {isAuthenticated && requiresPasskeyEnrollment ? (
+            <div
+              data-testid="passkey-enrollment-nudge"
+              className="mt-3 flex flex-col gap-2 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="text-xs font-semibold text-amber-200">{t("appShell.recoveryNudgeTitle")}</p>
+                <p className="text-xs text-amber-100/90">{t("appShell.recoveryNudgeBody")}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/register?${new URLSearchParams({
+                    redirect: `${location.pathname}${location.search || ""}`,
+                    enroll: "1"
+                  }).toString()}`}
+                  className="rounded-lg bg-amber-400/90 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-amber-300"
+                >
+                  {t("appShell.recoveryNudgeAction")}
+                </Link>
+                <button
+                  type="button"
+                  onClick={dismissPasskeyEnrollmentNudge}
+                  className="rounded-lg border border-amber-100/30 px-3 py-1.5 text-xs font-semibold text-amber-100 transition hover:border-amber-100/60"
+                >
+                  {t("appShell.recoveryNudgeDismiss")}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </header>
 
         <section className="mx-auto flex w-full flex-1 items-center justify-center py-4">

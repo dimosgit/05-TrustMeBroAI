@@ -20,6 +20,28 @@ function parseAlternativeToolIds(value) {
     .filter((entry) => Number.isInteger(entry) && entry > 0);
 }
 
+function mapHistoryItem(historyRow) {
+  return {
+    recommendation_id: historyRow.recommendation_id,
+    session_id: historyRow.session_id,
+    selected_priority: historyRow.selected_priority,
+    task_name: historyRow.task_name,
+    profile_name: historyRow.profile_name,
+    locked: historyRow.is_primary_locked,
+    primary_reason: historyRow.primary_reason,
+    unlocked_at: historyRow.unlocked_at,
+    created_at: historyRow.recommendation_created_at,
+    try_it_clicked: historyRow.try_it_clicked,
+    primary_tool: {
+      id: historyRow.primary_tool_id,
+      tool_name: historyRow.primary_tool_name,
+      tool_slug: historyRow.primary_tool_slug,
+      logo_url: historyRow.primary_tool_logo_url,
+      try_it_url: historyRow.primary_tool_referral_url || historyRow.primary_tool_website
+    }
+  };
+}
+
 function annotateTool(tool, weights) {
   const quality = Number(tool.quality);
   const speed = Number(tool.speed);
@@ -270,6 +292,56 @@ export function createRecommendationService({
     async buildResultFromRecommendationId(recommendationId) {
       const recommendation = await this.getRecommendationById(recommendationId);
       return buildResultFromRecommendation(recommendation);
+    },
+
+    async listHistoryForUser({ userId, limit = 20, offset = 0 }) {
+      const parsedUserId = assertPositiveInteger(userId, "user_id");
+      const parsedLimit = Math.min(Math.max(assertPositiveInteger(limit, "limit"), 1), 100);
+      const parsedOffset = Number.parseInt(offset, 10);
+      if (!Number.isInteger(parsedOffset) || parsedOffset < 0) {
+        throw new ValidationError("offset must be a non-negative integer");
+      }
+
+      const rows = await recommendationRepository.listRecommendationHistoryByUserId({
+        userId: parsedUserId,
+        limit: parsedLimit,
+        offset: parsedOffset
+      });
+
+      return rows.map(mapHistoryItem);
+    },
+
+    async getHistoryItemForUser({ userId, recommendationId }) {
+      const parsedUserId = assertPositiveInteger(userId, "user_id");
+      const parsedRecommendationId = assertPositiveInteger(recommendationId, "recommendation_id");
+
+      const row = await recommendationRepository.findRecommendationHistoryByUserAndRecommendationId({
+        userId: parsedUserId,
+        recommendationId: parsedRecommendationId
+      });
+
+      if (!row) {
+        throw new NotFoundError("Recommendation not found");
+      }
+
+      const alternativeIds = parseAlternativeToolIds(row.alternative_tool_ids);
+      const alternativeTools = await toolRepository.getToolsByIds(alternativeIds);
+      const byId = new Map(alternativeTools.map((tool) => [tool.id, tool]));
+      const orderedAlternatives = alternativeIds
+        .map((toolId) => byId.get(toolId))
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((tool) => ({
+          id: tool.id,
+          tool_name: tool.tool_name,
+          tool_slug: tool.tool_slug,
+          context_word: tool.context_word
+        }));
+
+      return {
+        ...mapHistoryItem(row),
+        alternative_tools: orderedAlternatives
+      };
     }
   };
 }

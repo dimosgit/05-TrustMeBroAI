@@ -35,7 +35,8 @@ export function createAuthRouter({
   isProduction,
   requireAuth,
   authRateLimiter,
-  meRateLimiter
+  meRateLimiter,
+  metricsService
 }) {
   const router = Router();
 
@@ -83,6 +84,14 @@ export function createAuthRouter({
         isProduction
       });
 
+      await metricsService?.captureFunnelEvent({
+        eventName: "account_created",
+        userId: result.user.id,
+        eventMetadata: {
+          method: "passkey_register"
+        }
+      });
+
       return res.status(200).json({ user: result.user });
     })
   );
@@ -126,6 +135,14 @@ export function createAuthRouter({
         isProduction
       });
 
+      await metricsService?.captureFunnelEvent({
+        eventName: "sign_in_completed",
+        userId: result.user.id,
+        eventMetadata: {
+          method: "passkey_login"
+        }
+      });
+
       return res.status(200).json({ user: result.user });
     })
   );
@@ -166,6 +183,14 @@ export function createAuthRouter({
         token: result.session.token,
         maxAgeMs: sessionTtlMs,
         isProduction
+      });
+
+      await metricsService?.captureFunnelEvent({
+        eventName: "sign_in_completed",
+        userId: result.user.id,
+        eventMetadata: {
+          method: "recovery_fallback"
+        }
       });
 
       return res.status(200).json({

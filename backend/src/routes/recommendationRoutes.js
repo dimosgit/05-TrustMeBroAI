@@ -25,6 +25,7 @@ export function createRecommendationRouter({
   recommendationService,
   leadCaptureService,
   authService,
+  requireAuth,
   sessionCookieName,
   sessionTtlMs,
   isProduction,
@@ -32,7 +33,9 @@ export function createRecommendationRouter({
   computeRateLimiter,
   unlockRateLimiter,
   feedbackRateLimiter,
-  tryItRateLimiter
+  tryItRateLimiter,
+  meRateLimiter,
+  metricsService
 }) {
   const router = Router();
 
@@ -48,6 +51,46 @@ export function createRecommendationRouter({
       });
 
       return res.status(201).json(result);
+    })
+  );
+
+  router.get(
+    "/recommendation/history",
+    meRateLimiter,
+    requireAuth,
+    asyncHandler(async (req, res) => {
+      const rawLimit = Number.parseInt(req.query?.limit, 10);
+      const rawOffset = Number.parseInt(req.query?.offset, 10);
+      const limit = Number.isInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+      const offset = Number.isInteger(rawOffset) ? Math.max(rawOffset, 0) : 0;
+
+      const items = await recommendationService.listHistoryForUser({
+        userId: req.user.id,
+        limit,
+        offset
+      });
+
+      return res.json({
+        items,
+        limit,
+        offset
+      });
+    })
+  );
+
+  router.get(
+    "/recommendation/history/:id",
+    meRateLimiter,
+    requireAuth,
+    asyncHandler(async (req, res) => {
+      const recommendationId = assertPositiveInteger(req.params.id, "id");
+
+      const item = await recommendationService.getHistoryItemForUser({
+        userId: req.user.id,
+        recommendationId
+      });
+
+      return res.json(item);
     })
   );
 
@@ -106,6 +149,16 @@ export function createRecommendationRouter({
         });
       }
 
+      await metricsService?.captureFunnelEvent({
+        eventName: "recommendation_unlocked",
+        userId: user?.id || req.user?.id || null,
+        sessionId,
+        recommendationId,
+        eventMetadata: {
+          source: "recommendation_unlock"
+        }
+      });
+
       return res.json(unlockedResult);
     })
   );
@@ -134,6 +187,17 @@ export function createRecommendationRouter({
       const event = await recommendationService.recordTryItClick({
         recommendationId,
         sessionId
+      });
+
+      const recommendation = await recommendationService.getRecommendationById(recommendationId);
+      await metricsService?.captureFunnelEvent({
+        eventName: "try_it_clicked",
+        userId: recommendation.user_id || null,
+        sessionId,
+        recommendationId,
+        eventMetadata: {
+          click_event_id: event.id
+        }
       });
 
       return res.status(201).json(event);
