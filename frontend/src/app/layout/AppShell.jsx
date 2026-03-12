@@ -10,12 +10,12 @@ function LandingFooter() {
         <div className="flex items-center gap-1">
           <span>LinkedIn :</span>
           <a
-            href="https://linkedin.com/in/YOUR-LINK-HERE"
+            href="https://www.linkedin.com/in/dimouzunov/"
             target="_blank"
             rel="noreferrer"
             className="hover:text-slate-400"
           >
-            linkedin.com/in/YOUR-LINK-HERE
+            linkedin.com/in/dimouzunov
           </a>
         </div>
       </div>
@@ -28,12 +28,12 @@ function DefaultFooter() {
     <footer className="mx-auto mt-4 w-full max-w-3xl pb-2 text-center">
       <p className="text-[10px] text-slate-600">Made by real people.</p>
       <a
-        href="https://www.linkedin.com/in/YOUR-LINK-HERE"
+        href="https://www.linkedin.com/in/dimouzunov/"
         target="_blank"
         rel="noreferrer"
         className="mt-0.5 inline-block text-[10px] text-slate-500 transition hover:text-slate-400"
       >
-        LinkedIn: [placeholder link]
+        LinkedIn: linkedin.com/in/dimouzunov
       </a>
     </footer>
   );
