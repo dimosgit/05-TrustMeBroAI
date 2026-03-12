@@ -1,5 +1,7 @@
 import { apiClient } from "./client";
 
+const pendingVerifyRequestsByToken = new Map();
+
 function normalizeUser(payload) {
   return payload?.user || null;
 }
@@ -21,10 +23,22 @@ export async function requestLoginAuth({ email }) {
 }
 
 export async function verifyLoginAuth({ token }) {
-  const payload = await apiClient.post("/auth/login/verify", {
-    token
-  });
+  const cacheKey = String(token || "");
+  let pendingRequest = pendingVerifyRequestsByToken.get(cacheKey);
 
+  if (!pendingRequest) {
+    pendingRequest = apiClient
+      .post("/auth/login/verify", {
+        token
+      })
+      .finally(() => {
+        pendingVerifyRequestsByToken.delete(cacheKey);
+      });
+
+    pendingVerifyRequestsByToken.set(cacheKey, pendingRequest);
+  }
+
+  const payload = await pendingRequest;
   return normalizeUser(payload);
 }
 

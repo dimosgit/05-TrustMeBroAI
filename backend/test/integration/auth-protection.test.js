@@ -219,6 +219,65 @@ test("returning user can unlock without re-entering email when session cookie is
   assert.ok(rememberedUnlock.headers["set-cookie"][0].includes("tmb_session="));
 });
 
+test("remembered-user unlock is deterministic: same user linkage and auto source attribution", async () => {
+  const { app, repositories } = createTestApp();
+
+  const first = await createSessionAndCompute(app);
+  const firstUnlock = await request(app)
+    .post("/api/recommendation/unlock")
+    .send({
+      session_id: first.sessionId,
+      recommendation_id: first.compute.recommendation_id,
+      email: "remembered-contract@example.com",
+      email_consent: true,
+      signup_source: "wizard"
+    })
+    .expect(200);
+
+  const sessionCookie = firstUnlock.headers["set-cookie"]?.[0];
+  assert.ok(sessionCookie);
+
+  const rememberedUser = repositories.data.users.find(
+    (row) => row.email === "remembered-contract@example.com"
+  );
+  assert.ok(rememberedUser);
+
+  const second = await createSessionAndCompute(app);
+  const secondUnlock = await request(app)
+    .post("/api/recommendation/unlock")
+    .set("Cookie", sessionCookie)
+    .send({
+      session_id: second.sessionId,
+      recommendation_id: second.compute.recommendation_id
+    })
+    .expect(200);
+
+  assert.equal(secondUnlock.body.primary_tool.locked, false);
+
+  const linkedSession = repositories.data.recommendationSessions.find(
+    (row) => row.id === second.sessionId
+  );
+  assert.equal(linkedSession.user_id, rememberedUser.id);
+
+  const updatedUser = repositories.data.users.find((row) => row.id === rememberedUser.id);
+  assert.equal(updatedUser.signup_source, "returning-user-auto-unlock");
+});
+
+test("anonymous unlock still requires email when no authenticated session is present", async () => {
+  const { app } = createTestApp();
+  const { sessionId, compute } = await createSessionAndCompute(app);
+
+  const response = await request(app)
+    .post("/api/recommendation/unlock")
+    .send({
+      session_id: sessionId,
+      recommendation_id: compute.recommendation_id
+    })
+    .expect(400);
+
+  assert.equal(response.body.message, "A valid email is required");
+});
+
 test("feedback accepts only -1 or 1", async () => {
   const { app } = createTestApp();
   const { compute } = await createSessionAndCompute(app);
