@@ -80,9 +80,11 @@ function StepActionBar({ children }) {
   return (
     <div
       data-testid="wizard-action-bar"
-      className="sticky bottom-0 z-20 -mx-2 mt-6 border-t border-white/10 bg-[#0d1117]/95 px-2 py-3 backdrop-blur sm:static sm:z-auto sm:mx-0 sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0"
+      className="sticky bottom-0 z-20 -mx-2 mt-6 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:static sm:z-auto sm:mx-0 sm:mt-6 sm:p-0"
     >
-      {children}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none sm:backdrop-blur-0">
+        {children}
+      </div>
     </div>
   );
 }
