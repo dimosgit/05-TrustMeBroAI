@@ -14,23 +14,40 @@ import UnlockForm from "../unlock/UnlockForm";
 import { useRecommendation } from "./RecommendationContext";
 
 const REGISTERED_UNLOCK_KEY = "trustmebro.registered_unlock";
-const TOOL_LOGO_TOKENS = {
-  chatgpt: "✺",
-  claude: "C",
-  copilot: "⬢",
-  perplexity: "P",
-  cursor: "▶"
+
+const TOOL_FAVICON_DOMAINS = {
+  chatgpt: "chat.openai.com",
+  claude: "claude.ai",
+  copilot: "copilot.microsoft.com",
+  perplexity: "perplexity.ai",
+  cursor: "cursor.com",
+  gemini: "gemini.google.com",
+  mistral: "mistral.ai",
+  notebooklm: "notebooklm.google.com",
+  "copy.ai": "copy.ai",
+  "canva magic write": "canva.com",
+  canva: "canva.com",
+  grok: "x.ai",
+  "jasper": "jasper.ai",
+  "writesonic": "writesonic.com",
+  "grammarly": "grammarly.com",
+  "notion ai": "notion.so",
+  notion: "notion.so",
+  "otter.ai": "otter.ai",
+  "midjourney": "midjourney.com",
+  "dall-e": "openai.com",
+  "stable diffusion": "stability.ai",
+  "github copilot": "github.com",
 };
 
+function resolveToolLogoUrl(toolName) {
+  const key = String(toolName || "").trim().toLowerCase();
+  const domain = TOOL_FAVICON_DOMAINS[key] || null;
+  if (domain) return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  return null;
+}
+
 function resolveToolLogoToken(toolName) {
-  const normalizedName = String(toolName || "")
-    .trim()
-    .toLowerCase();
-
-  if (TOOL_LOGO_TOKENS[normalizedName]) {
-    return TOOL_LOGO_TOKENS[normalizedName];
-  }
-
   return (toolName || "AI").slice(0, 2).toUpperCase();
 }
 
@@ -57,15 +74,30 @@ function setRegisteredUnlockMarker(isEnabled) {
 
 function LockedPrimaryCard() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#161b22]/70 p-6">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-      <div className="space-y-3 blur-sm">
-        <div className="h-5 w-32 rounded bg-white/20" />
-        <div className="h-4 w-full rounded bg-white/10" />
-        <div className="h-4 w-5/6 rounded bg-white/10" />
+    <div className="relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-violet-500/5 p-6">
+      {/* Glow */}
+      <div className="pointer-events-none absolute -top-10 left-1/2 h-32 w-64 -translate-x-1/2 rounded-full bg-blue-500/20 blur-3xl" />
+      {/* Blurred content placeholder */}
+      <div className="space-y-3 blur-md select-none">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-white/20" />
+          <div className="space-y-1.5">
+            <div className="h-5 w-28 rounded bg-white/30" />
+            <div className="h-3 w-44 rounded bg-white/15" />
+          </div>
+        </div>
+        <div className="h-3 w-full rounded bg-white/10" />
+        <div className="h-3 w-4/5 rounded bg-white/10" />
       </div>
-      <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-        <p className="max-w-xs text-sm font-semibold text-white">Enter your email to reveal your best match.</p>
+      {/* Lock overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-400/40 bg-blue-500/20 text-blue-400">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-white">Your best match is ready</p>
+        <p className="text-xs text-slate-400">One quick step to reveal it</p>
       </div>
     </div>
   );
@@ -91,7 +123,10 @@ export default function ResultPage() {
   const primaryTool = resultState?.primaryTool || {};
   const tryItUrl = primaryTool.tryItUrl || primaryTool.referralUrl || primaryTool.website || "#";
   const primaryLogoToken = resolveToolLogoToken(primaryTool.toolName);
-  const shouldRenderPrimaryLogoImage = Boolean(primaryTool.logoUrl) && !primaryLogoLoadFailed;
+  const faviconUrl = resolveToolLogoUrl(primaryTool.toolName);
+  const apiLogoUrl = Boolean(primaryTool.logoUrl) && !primaryLogoLoadFailed ? primaryTool.logoUrl : null;
+  const logoUrl = apiLogoUrl || faviconUrl;
+  const shouldRenderLogo = Boolean(logoUrl);
 
   useEffect(() => {
     autoUnlockAttemptRef.current = false;
@@ -245,11 +280,10 @@ export default function ResultPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between border-b border-white/5 pb-4">
+      <header className="flex items-center justify-between pb-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Result</p>
-          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-white">
-            {resultState.unlocked ? "Your Best Match" : "One step to unlock your best match"}
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {resultState.unlocked ? "Your Best Match" : "Your result is ready 🎯"}
           </h1>
         </div>
         <button
@@ -258,135 +292,140 @@ export default function ResultPage() {
             clearResult();
             navigate("/wizard");
           }}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
+          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
         >
           Run again
         </button>
       </header>
 
       {resultState.unlocked ? (
-        <section className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 sm:p-6" data-testid="unlocked-primary">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              {shouldRenderPrimaryLogoImage ? (
+        <section className="space-y-6" data-testid="unlocked-primary">
+
+          {/* Hero reveal card */}
+          <div className="relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-violet-500/5 p-6 text-center">
+            <div className="pointer-events-none absolute -top-10 left-1/2 h-32 w-64 -translate-x-1/2 rounded-full bg-blue-500/20 blur-3xl" />
+            <div className="relative flex flex-col items-center gap-3">
+              {shouldRenderLogo ? (
                 <img
-                  src={primaryTool.logoUrl}
+                  src={logoUrl}
                   alt={`${primaryTool.toolName} logo`}
-                  className="h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover"
+                  className="h-14 w-14 rounded-2xl object-contain"
                   onError={() => setPrimaryLogoLoadFailed(true)}
                 />
               ) : (
-                <div
-                  aria-label={`${primaryTool.toolName || "Tool"} logo fallback`}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl font-bold text-blue-300"
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-lg font-bold text-blue-300">
                   {primaryLogoToken}
                 </div>
               )}
               <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white">{primaryTool.toolName || "Top recommendation"}</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-white">{primaryTool.toolName || "Top recommendation"}</h2>
                 {resultState.primaryReason ? (
-                  <p className="mt-1 text-sm text-slate-300">{resultState.primaryReason}</p>
+                  <p className="mt-2 text-sm text-slate-400">{resultState.primaryReason}</p>
                 ) : null}
               </div>
+              <a
+                href={tryItUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={handleTryItClick}
+                className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
+              >
+                Try it →
+              </a>
             </div>
-            <a
-              href={tryItUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={handleTryItClick}
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
-            >
-              Try it -&gt;
-            </a>
           </div>
 
+          {/* Feedback — simple inline, not a section */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-xs text-slate-500">Was this helpful?</span>
+            <button
+              type="button"
+              disabled={feedbackLoading}
+              onClick={() => handleFeedback(1)}
+              className={[
+                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                feedbackSignal === 1
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+              ].join(" ")}
+            >
+              👍 Yes
+            </button>
+            <button
+              type="button"
+              disabled={feedbackLoading}
+              onClick={() => handleFeedback(-1)}
+              className={[
+                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                feedbackSignal === -1
+                  ? "bg-rose-500/20 text-rose-300"
+                  : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+              ].join(" ")}
+            >
+              👎 Not really
+            </button>
+          </div>
+
+          {/* Account nudge — quiet, not a banner */}
           {!isAuthenticated ? (
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-              <p className="text-sm font-semibold text-amber-200">Create an account to save and return later.</p>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                <Link
-                  to={`/register?${new URLSearchParams({
-                    redirect: "/result",
-                    ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {})
-                  }).toString()}`}
-                  className="rounded-lg bg-amber-400/20 px-3 py-1.5 font-semibold text-amber-100 hover:bg-amber-400/30"
-                >
-                  Create account
-                </Link>
-                <Link
-                  to={`/login?${new URLSearchParams({
-                    redirect: "/result",
-                    ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {})
-                  }).toString()}`}
-                  className="rounded-lg border border-amber-300/30 px-3 py-1.5 font-semibold text-amber-100 hover:bg-amber-400/10"
-                >
-                  Login
-                </Link>
-              </div>
-            </div>
+            <p className="text-center text-xs text-slate-600">
+              Want to save this?{" "}
+              <Link
+                to={`/register?${new URLSearchParams({ redirect: "/result", ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {}) }).toString()}`}
+                className="text-slate-400 underline underline-offset-2 hover:text-white"
+              >
+                Create a free account
+              </Link>
+              {" "}or{" "}
+              <Link
+                to={`/login?${new URLSearchParams({ redirect: "/result", ...(lastUnlockedEmail ? { email: lastUnlockedEmail } : {}) }).toString()}`}
+                className="text-slate-400 underline underline-offset-2 hover:text-white"
+              >
+                log in
+              </Link>
+            </p>
           ) : null}
 
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">Was this helpful?</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={feedbackLoading}
-                onClick={() => handleFeedback(1)}
-                className={[
-                  "flex h-10 w-10 items-center justify-center rounded-lg border transition",
-                  feedbackSignal === 1
-                    ? "border-emerald-500/60 bg-emerald-500/20 text-emerald-300"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                ].join(" ")}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
-                  <path d="M3 11.5A1.5 1.5 0 0 1 4.5 10h2A1.5 1.5 0 0 1 8 11.5v8A1.5 1.5 0 0 1 6.5 21h-2A1.5 1.5 0 0 1 3 19.5v-8Zm6.2-.1 2.2-5.2A1.9 1.9 0 0 1 13.1 5h.4c.9 0 1.7.8 1.6 1.7l-.2 2.6h3.5A2.6 2.6 0 0 1 21 12c0 .2 0 .4-.1.5l-1.2 5.3A3.6 3.6 0 0 1 16.2 21H10a2 2 0 0 1-2-2v-5.8c0-.7.2-1.3.5-1.8.2 0 .4-.1.7-.1Z" />
-                </svg>
-                <span className="sr-only">Thumbs up</span>
-              </button>
-              <button
-                type="button"
-                disabled={feedbackLoading}
-                onClick={() => handleFeedback(-1)}
-                className={[
-                  "flex h-10 w-10 items-center justify-center rounded-lg border transition",
-                  feedbackSignal === -1
-                    ? "border-rose-500/60 bg-rose-500/20 text-rose-300"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                ].join(" ")}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
-                  <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h2A1.5 1.5 0 0 1 8 4.5v8A1.5 1.5 0 0 1 6.5 14h-2A1.5 1.5 0 0 1 3 12.5v-8Zm6.2 8.1 2.2 5.2a1.9 1.9 0 0 0 1.7 1.2h.4c.9 0 1.7-.8 1.6-1.7l-.2-2.6h3.5A2.6 2.6 0 0 0 21 12c0-.2 0-.4-.1-.5l-1.2-5.3A3.6 3.6 0 0 0 16.2 3H10a2 2 0 0 0-2 2v5.8c0 .7.2 1.3.5 1.8.2 0 .4.1.7.1Z" />
-                </svg>
-                <span className="sr-only">Thumbs down</span>
-              </button>
-            </div>
-          </div>
         </section>
       ) : (
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6" data-testid="locked-primary">
-          <h2 className="text-lg font-bold text-white">Primary recommendation (locked)</h2>
+        <section className="space-y-4" data-testid="locked-primary">
+          <div>
+            <h2 className="text-lg font-bold text-white">We found your perfect AI tool</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Enter your email below to unlock the full recommendation.</p>
+          </div>
           <LockedPrimaryCard />
           <UnlockForm onUnlock={handleUnlock} loading={manualUnlocking} />
         </section>
       )}
 
       {alternatives.length ? (
-        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4" data-testid="alternatives-section">
+        <section className="pt-2" data-testid="alternatives-section">
           <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Also consider:</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {alternatives.map((tool) => (
               <div
                 key={`${tool.toolName}-${tool.contextWord}`}
                 data-testid="alternative-item"
-                className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition hover:border-white/10 hover:bg-white/5"
               >
-                <p className="text-sm font-semibold text-white">{tool.toolName}</p>
-                {tool.contextWord ? (
-                  <p className="mt-0.5 text-[11px] text-slate-400">{tool.contextWord}</p>
-                ) : null}
+                {resolveToolLogoUrl(tool.toolName) ? (
+                  <img
+                    src={resolveToolLogoUrl(tool.toolName)}
+                    alt={tool.toolName}
+                    className="h-8 w-8 rounded-lg object-contain"
+                    onError={(e) => { e.currentTarget.replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[10px] font-bold text-slate-400', textContent: (tool.toolName || '?').slice(0, 2).toUpperCase() })); }}
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[10px] font-bold text-slate-400">
+                    {(tool.toolName || "?").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-white">{tool.toolName}</p>
+                  {tool.contextWord ? (
+                    <p className="mt-0.5 text-[11px] text-slate-500">{tool.contextWord}</p>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>

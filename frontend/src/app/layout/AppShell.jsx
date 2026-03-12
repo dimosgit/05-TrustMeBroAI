@@ -64,8 +64,10 @@ export default function AppShell({ children }) {
 
         <header className="mx-auto w-full max-w-4xl pb-3">
           <nav className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#161b22]/80 px-4 py-3 backdrop-blur">
-            <Link className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-400" to="/">
-              TrustMeBroAI
+            <Link className="flex items-center group" to="/">
+              <span className="text-sm font-extrabold text-white tracking-normal">
+                Trust Me Bro<span className="text-blue-400 italic"> AI</span>
+              </span>
             </Link>
             <div className="flex items-center gap-2">
               {isBootstrapping ? (
@@ -80,7 +82,7 @@ export default function AppShell({ children }) {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
                   >
                     Logout
                   </button>

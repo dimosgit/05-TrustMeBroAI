@@ -1,19 +1,11 @@
 function StepHeader({ question }) {
-  const steps = ["Profile", "Mission", "Top Priority"];
-
   return (
     <header className="mb-6">
-      <div className="flex items-center justify-between pb-2">
-        <div className="space-y-0.5">
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-500/80">TrustMeBroAI</p>
-          <h2 className="text-lg font-bold tracking-tight text-white">{steps[question - 1]}</h2>
-        </div>
-        <div className="text-right">
-          <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Progress</span>
-          <span className="text-xs font-black text-white">{Math.round((question / 3) * 100)}%</span>
-        </div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs text-slate-500">Step {question} of 3</span>
+        <span className="text-xs font-semibold text-slate-400">{Math.round((question / 3) * 100)}%</span>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-white/5 p-[0.5px]">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
         <div
           className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all duration-700 ease-out"
           style={{ width: `${(question / 3) * 100}%` }}
@@ -73,16 +65,16 @@ function ChoiceCard({ title, subtitle, icon, selected, onClick }) {
 }
 
 export function StepShell({ children }) {
-  return <div className="step-in px-2 sm:px-4">{children}</div>;
+  return <div className="step-in pb-4 px-2 sm:px-4">{children}</div>;
 }
 
 function StepActionBar({ children }) {
   return (
     <div
       data-testid="wizard-action-bar"
-      className="sticky bottom-0 z-20 -mx-2 mt-6 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:static sm:z-auto sm:mx-0 sm:mt-6 sm:p-0"
+      className="sticky bottom-0 z-20 -mx-2 mt-6 px-2 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:static sm:z-auto sm:mx-0 sm:mt-6 sm:p-0"
     >
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none sm:backdrop-blur-0">
+      <div className="rounded-2xl border border-white/10 bg-[#161b22]/95 px-3 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none sm:backdrop-blur-0">
         {children}
       </div>
     </div>
@@ -195,7 +187,7 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
             disabled={!selectedId || loading}
             className="relative overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:px-8"
           >
-            <span className={loading ? "opacity-0" : "opacity-100"}>See recommendation</span>
+            <span className={loading ? "opacity-0" : "opacity-100"}>Find my match</span>
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />

@@ -39,13 +39,13 @@ export default function UnlockForm({ onUnlock, loading }) {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
+          className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
           placeholder="you@example.com"
           autoComplete="email"
         />
       </label>
 
-      <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+      <label className="flex items-start gap-3 rounded-xl bg-white/5 px-4 py-3 text-sm text-slate-300">
         <input
           type="checkbox"
           checked={emailConsent}
@@ -58,9 +58,9 @@ export default function UnlockForm({ onUnlock, loading }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 py-3.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] transition-all hover:from-blue-500 hover:to-violet-500 hover:shadow-[0_0_32px_rgba(99,102,241,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Unlocking..." : "Unlock my best match"}
+        {loading ? "Unlocking..." : "✦ Reveal my best match"}
       </button>
     </form>
   );

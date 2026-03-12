@@ -186,15 +186,12 @@ export default function WizardPage() {
 
   return (
     <div className="space-y-4">
-      <header className="flex items-center justify-between border-b border-white/5 pb-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Wizard</p>
-          <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Find your best AI tool</h1>
-        </div>
+      <header className="flex items-center justify-between pb-3">
+        <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Find your best AI tool</h1>
         <button
           type="button"
           onClick={resetForm}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10"
+          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-white"
         >
           Reset
         </button>

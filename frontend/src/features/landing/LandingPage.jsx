@@ -1,33 +1,33 @@
 import { useNavigate } from "react-router-dom";
 
 const LANDING_LOGOS = [
-  { name: "ChatGPT", token: "✺", tone: "bg-white/10" },
-  { name: "Claude", token: "C", tone: "bg-fuchsia-500/20 text-fuchsia-300" },
-  { name: "Copilot", token: "⬢", tone: "bg-sky-500/20 text-sky-300" },
-  { name: "Perplexity", token: "P", tone: "bg-slate-500/20 text-slate-300" },
-  { name: "Cursor", token: "▶", tone: "bg-teal-500/20 text-teal-300" }
+  { name: "ChatGPT",    src: "https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64" },
+  { name: "Claude",     src: "https://www.google.com/s2/favicons?domain=claude.ai&sz=64" },
+  { name: "Copilot",    src: "https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=64" },
+  { name: "Perplexity", src: "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64" },
+  { name: "Cursor",     src: "https://www.google.com/s2/favicons?domain=cursor.com&sz=64" }
 ];
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6 py-2 text-center">
-      <p className="text-sm font-medium tracking-[0.2em] text-slate-400">TrustMeBroAI</p>
+    <div className="flex flex-col items-center py-10 text-center">
 
+      {/* PRIMARY: Headline — the hero */}
       <h1 className="mx-auto max-w-2xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
         There are thousands of AI tools.
-        <br className="hidden sm:block" />
+        <br />
         We tell you exactly which one to use.
       </h1>
 
-      <p className="mx-auto max-w-xl text-base text-slate-400">
-        Complete a fast 3-step wizard.
-        <br className="hidden sm:block" />
-        Reveal your best match in under 60 seconds.
+      {/* SECONDARY: Subtitle — clearly subordinate */}
+      <p className="mx-auto mt-5 max-w-xs text-sm text-slate-500">
+        Answer 3 quick questions. Get your best match in under 60 seconds.
       </p>
 
-      <div className="mx-auto flex w-full max-w-sm flex-col gap-2.5 py-2">
+      {/* ACTION: CTA — the one thing to do */}
+      <div className="mt-10 w-full max-w-xs">
         <button
           type="button"
           onClick={() => navigate("/wizard")}
@@ -35,30 +35,24 @@ export default function LandingPage() {
         >
           Find my AI tool
         </button>
-        <p className="text-xs text-slate-500">No login required to start.</p>
+        <p className="mt-2 text-[11px] text-slate-600">No login required to start.</p>
       </div>
 
-      <div className="space-y-4 pt-2">
-        <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-white/5" />
-          <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-widest text-slate-500">
-            Works with the best AI tools
-          </p>
-          <div className="h-px flex-1 bg-white/5" />
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          {LANDING_LOGOS.map((logo) => (
-            <div key={logo.name} className="flex items-center gap-2">
-              <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${logo.tone} text-[10px] font-bold`}>
-                {logo.token}
-              </span>
-              <span className="text-lg font-semibold text-white">{logo.name}</span>
-            </div>
-          ))}
-        </div>
+      {/* FOOTNOTE: Logos — small, quiet, supportive */}
+      <div className="mt-14 flex flex-wrap items-center justify-center gap-5">
+        {LANDING_LOGOS.map((logo) => (
+          <div key={logo.name} className="flex flex-col items-center gap-1.5 opacity-50 transition-opacity hover:opacity-80">
+            <img
+              src={logo.src}
+              alt={logo.name}
+              className="h-8 w-8 rounded-lg"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
+            />
+            <span className="text-[10px] text-slate-500">{logo.name}</span>
+          </div>
+        ))}
       </div>
 
-      <p className="pt-2 text-sm font-medium text-slate-400">Fast. Focused. Zero fluff.</p>
     </div>
   );
 }
