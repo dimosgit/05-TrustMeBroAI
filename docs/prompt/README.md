@@ -1,10 +1,23 @@
 # Prompt Guardrails
 
+This folder should contain only the currently active prompt set.
+
+## Active prompts
+
+1. `2026-03-12-phase2-passkey-back-end-specialist.md`
+2. `2026-03-12-phase2-passkey-front-end-specialist.md`
+3. `2026-03-12-phase2-passkey-qa-specialist.md`
+4. `2026-03-12-phase2-passkey-integration-specialist.md`
+
+All completed or superseded prompts belong in `docs/prompt/archive/`.
+
+## Source-of-truth rule
+
 All prompts in this folder must include the rule:
 
 Do not modify `docs/planning/final-implementation-plan.md`.
 
-This repository treats `docs/planning/final-implementation-plan.md` as immutable source of truth.
+This repository treats `docs/planning/final-implementation-plan.md` as the source of truth for active product scope and architecture.
 
 ## Local protection
 
