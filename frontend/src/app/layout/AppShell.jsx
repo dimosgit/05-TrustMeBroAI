@@ -7,17 +7,14 @@ function LandingFooter() {
     <footer className="mx-auto mt-4 w-full max-w-sm pb-2">
       <div className="flex items-center justify-between text-[11px] font-medium tracking-tight text-slate-600">
         <p>© 2026 TrustMeBroAI</p>
-        <div className="flex items-center gap-1">
-          <span>LinkedIn :</span>
-          <a
-            href="https://www.linkedin.com/in/dimouzunov/"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-slate-400"
-          >
-            linkedin.com/in/dimouzunov
-          </a>
-        </div>
+        <a
+          href="https://www.linkedin.com/in/dimouzunov/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-slate-500/60 underline-offset-2 transition hover:text-slate-400"
+        >
+          LinkedIn
+        </a>
       </div>
     </footer>
   );
@@ -31,9 +28,9 @@ function DefaultFooter() {
         href="https://www.linkedin.com/in/dimouzunov/"
         target="_blank"
         rel="noreferrer"
-        className="mt-0.5 inline-block text-[10px] text-slate-500 transition hover:text-slate-400"
+        className="mt-0.5 inline-block text-[10px] text-slate-500 underline decoration-slate-500/60 underline-offset-2 transition hover:text-slate-400"
       >
-        LinkedIn: linkedin.com/in/dimouzunov
+        LinkedIn
       </a>
     </footer>
   );
