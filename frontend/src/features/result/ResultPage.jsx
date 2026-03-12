@@ -302,26 +302,32 @@ export default function ResultPage() {
                 disabled={feedbackLoading}
                 onClick={() => handleFeedback(1)}
                 className={[
-                  "rounded-lg border px-4 py-2 text-xs font-semibold transition",
+                  "flex h-10 w-10 items-center justify-center rounded-lg border transition",
                   feedbackSignal === 1
                     ? "border-emerald-500/60 bg-emerald-500/20 text-emerald-300"
                     : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                 ].join(" ")}
               >
-                Thumbs up
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                  <path d="M3 11.5A1.5 1.5 0 0 1 4.5 10h2A1.5 1.5 0 0 1 8 11.5v8A1.5 1.5 0 0 1 6.5 21h-2A1.5 1.5 0 0 1 3 19.5v-8Zm6.2-.1 2.2-5.2A1.9 1.9 0 0 1 13.1 5h.4c.9 0 1.7.8 1.6 1.7l-.2 2.6h3.5A2.6 2.6 0 0 1 21 12c0 .2 0 .4-.1.5l-1.2 5.3A3.6 3.6 0 0 1 16.2 21H10a2 2 0 0 1-2-2v-5.8c0-.7.2-1.3.5-1.8.2 0 .4-.1.7-.1Z" />
+                </svg>
+                <span className="sr-only">Thumbs up</span>
               </button>
               <button
                 type="button"
                 disabled={feedbackLoading}
                 onClick={() => handleFeedback(-1)}
                 className={[
-                  "rounded-lg border px-4 py-2 text-xs font-semibold transition",
+                  "flex h-10 w-10 items-center justify-center rounded-lg border transition",
                   feedbackSignal === -1
                     ? "border-rose-500/60 bg-rose-500/20 text-rose-300"
                     : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                 ].join(" ")}
               >
-                Thumbs down
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                  <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h2A1.5 1.5 0 0 1 8 4.5v8A1.5 1.5 0 0 1 6.5 14h-2A1.5 1.5 0 0 1 3 12.5v-8Zm6.2 8.1 2.2 5.2a1.9 1.9 0 0 0 1.7 1.2h.4c.9 0 1.7-.8 1.6-1.7l-.2-2.6h3.5A2.6 2.6 0 0 0 21 12c0-.2 0-.4-.1-.5l-1.2-5.3A3.6 3.6 0 0 0 16.2 3H10a2 2 0 0 0-2 2v5.8c0 .7.2 1.3.5 1.8.2 0 .4.1.7.1Z" />
+                </svg>
+                <span className="sr-only">Thumbs down</span>
               </button>
             </div>
           </div>
