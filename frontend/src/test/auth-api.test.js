@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { verifyLoginAuth } from "../lib/api/authApi";
+import { verifyRecoveryAuth } from "../lib/api/authApi";
 
 function jsonResponse(status, body) {
   return new Response(JSON.stringify(body), {
@@ -10,7 +10,7 @@ function jsonResponse(status, body) {
   });
 }
 
-describe("authApi.verifyLoginAuth", () => {
+describe("authApi.verifyRecoveryAuth", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -26,8 +26,8 @@ describe("authApi.verifyLoginAuth", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const first = verifyLoginAuth({ token: "same-token" });
-    const second = verifyLoginAuth({ token: "same-token" });
+    const first = verifyRecoveryAuth({ token: "same-token" });
+    const second = verifyRecoveryAuth({ token: "same-token" });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
@@ -60,8 +60,8 @@ describe("authApi.verifyLoginAuth", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await verifyLoginAuth({ token: "fresh-token" });
-    await verifyLoginAuth({ token: "fresh-token" });
+    await verifyRecoveryAuth({ token: "fresh-token" });
+    await verifyRecoveryAuth({ token: "fresh-token" });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

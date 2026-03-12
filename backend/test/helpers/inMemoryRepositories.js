@@ -258,6 +258,9 @@ function baseData() {
     users: [],
     authSessions: [],
     authMagicLinks: [],
+    authPasskeys: [],
+    authPasskeyChallenges: [],
+    authRecoveryTokens: [],
     recommendationSessions: [],
     recommendations: [],
     feedback: [],
@@ -271,6 +274,9 @@ export function createInMemoryRepositories() {
     users: 1,
     authSessions: 1,
     authMagicLinks: 1,
+    authPasskeys: 1,
+    authPasskeyChallenges: 1,
+    authRecoveryTokens: 1,
     recommendationSessions: 1,
     recommendations: 1,
     feedback: 1,
@@ -485,13 +491,6 @@ export function createInMemoryRepositories() {
       const user = data.users.find((candidate) => candidate.email.toLowerCase() === email.toLowerCase());
       return clone(user || null);
     },
-    async findRegisteredUserByEmail(email) {
-      const user = data.users.find(
-        (candidate) =>
-          candidate.email.toLowerCase() === email.toLowerCase() && candidate.registered_at
-      );
-      return clone(user || null);
-    },
     async findUserById(userId) {
       const user = data.users.find((candidate) => candidate.id === userId);
       return clone(user || null);
@@ -531,13 +530,16 @@ export function createInMemoryRepositories() {
       data.users.push(row);
       return clone(row);
     },
-    async markUserLogin({ userId, loginAt }) {
+    async markUserLogin({ userId, loginAt, ensureRegisteredAt = false }) {
       const user = data.users.find((candidate) => candidate.id === userId);
       if (!user) {
         return null;
       }
 
       user.last_login_at = loginAt;
+      if (ensureRegisteredAt) {
+        user.registered_at = user.registered_at || loginAt;
+      }
       user.updated_at = now();
       return clone(user);
     },
@@ -559,6 +561,153 @@ export function createInMemoryRepositories() {
     },
     async consumeMagicLinkChallengeByTokenHash(tokenHash) {
       const row = data.authMagicLinks.find(
+        (candidate) =>
+          candidate.token_hash === tokenHash &&
+          candidate.used_at == null &&
+          candidate.expires_at > now()
+      );
+
+      if (!row) {
+        return null;
+      }
+
+      row.used_at = now();
+      return clone(row);
+    },
+    async createPasskeyChallenge({
+      userId,
+      challengeHash,
+      purpose,
+      rpId,
+      origin,
+      expiresAt,
+      userAgent,
+      ipAddress
+    }) {
+      const row = {
+        id: counters.authPasskeyChallenges++,
+        user_id: userId,
+        challenge_hash: challengeHash,
+        purpose,
+        rp_id: rpId,
+        origin,
+        expires_at: expiresAt,
+        used_at: null,
+        user_agent: userAgent,
+        ip_address: ipAddress,
+        created_at: now()
+      };
+
+      data.authPasskeyChallenges.push(row);
+      return clone(row);
+    },
+    async consumePasskeyChallengeById({ challengeId, purpose }) {
+      const row = data.authPasskeyChallenges.find(
+        (candidate) =>
+          candidate.id === challengeId &&
+          candidate.purpose === purpose &&
+          candidate.used_at == null &&
+          candidate.expires_at > now()
+      );
+
+      if (!row) {
+        return null;
+      }
+
+      row.used_at = now();
+      return clone(row);
+    },
+    async findActivePasskeysByUserId(userId) {
+      return clone(
+        data.authPasskeys
+          .filter((candidate) => candidate.user_id === userId && candidate.revoked_at == null)
+          .sort((a, b) => a.id - b.id)
+      );
+    },
+    async findPasskeyByCredentialId(credentialId) {
+      const passkey = data.authPasskeys.find((candidate) => candidate.credential_id === credentialId);
+      return clone(passkey || null);
+    },
+    async upsertPasskeyCredential({
+      userId,
+      credentialId,
+      publicKey,
+      counter,
+      transports,
+      aaguid,
+      deviceName
+    }) {
+      const existing = data.authPasskeys.find((candidate) => candidate.credential_id === credentialId);
+
+      if (existing) {
+        existing.user_id = userId;
+        existing.public_key = publicKey;
+        existing.counter = Math.max(existing.counter, Number(counter || 0));
+        existing.transports = Array.isArray(transports) ? [...transports] : [];
+        existing.aaguid = aaguid || existing.aaguid;
+        existing.device_name = deviceName || existing.device_name;
+        existing.last_used_at = now();
+        existing.updated_at = now();
+        existing.revoked_at = null;
+        return clone(existing);
+      }
+
+      const row = {
+        id: counters.authPasskeys++,
+        user_id: userId,
+        credential_id: credentialId,
+        public_key: publicKey,
+        counter: Number(counter || 0),
+        transports: Array.isArray(transports) ? [...transports] : [],
+        aaguid: aaguid || null,
+        device_name: deviceName || null,
+        created_at: now(),
+        updated_at: now(),
+        last_used_at: now(),
+        revoked_at: null
+      };
+
+      data.authPasskeys.push(row);
+      return clone(row);
+    },
+    async markPasskeyUsed({ passkeyId, counter, usedAt }) {
+      const passkey = data.authPasskeys.find((candidate) => candidate.id === passkeyId);
+      if (!passkey) {
+        return null;
+      }
+
+      passkey.counter = Math.max(passkey.counter, Number(counter || 0));
+      passkey.last_used_at = usedAt || now();
+      passkey.updated_at = now();
+      return clone(passkey);
+    },
+    async createRecoveryToken({
+      userId,
+      tokenHash,
+      purpose,
+      expiresAt,
+      redirectPath,
+      userAgent,
+      ipAddress
+    }) {
+      const row = {
+        id: counters.authRecoveryTokens++,
+        user_id: userId,
+        token_hash: tokenHash,
+        purpose,
+        expires_at: expiresAt,
+        redirect_path: redirectPath,
+        user_agent: userAgent,
+        ip_address: ipAddress,
+        used_at: null,
+        created_at: now()
+      };
+
+      data.authRecoveryTokens.push(row);
+      return clone(row);
+    },
+    async consumeRecoveryTokenByTokenHash(tokenHash) {
+      const row = data.authRecoveryTokens.find(
         (candidate) =>
           candidate.token_hash === tokenHash &&
           candidate.used_at == null &&

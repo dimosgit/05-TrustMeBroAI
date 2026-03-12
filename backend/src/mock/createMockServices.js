@@ -1,6 +1,7 @@
 import { createAuthService } from "../services/authService.js";
 import { createCatalogService } from "../services/catalogService.js";
 import { createLeadCaptureService } from "../services/leadCaptureService.js";
+import { createPasskeyAdapter } from "../services/passkeyAdapter.js";
 import { createRecommendationService } from "../services/recommendationService.js";
 import { createResultService } from "../services/resultService.js";
 import { createSessionService } from "../services/sessionService.js";
@@ -37,11 +38,17 @@ export function createMockRuntimeDependencies() {
 
   const authService = createAuthService({
     authRepository: repositories.authRepository,
+    passkeyAdapter: createPasskeyAdapter({
+      rpId: "localhost",
+      rpName: "TrustMeBroAI Mock",
+      origins: "http://localhost:5174,http://127.0.0.1:5174"
+    }),
     sessionTtlMs: 1000 * 60 * 60 * 24 * 30,
-    magicLinkTtlMs: 1000 * 60 * 15,
-    sendMagicLink: async ({ email, token, expiresAt, flow }) => {
+    passkeyChallengeTtlMs: 1000 * 60 * 5,
+    recoveryTokenTtlMs: 1000 * 60 * 20,
+    sendRecoveryLink: async ({ email, token, expiresAt, flow }) => {
       console.log(
-        `[mock-auth] Magic link (${flow}) for ${email}: token=${token} expires=${expiresAt.toISOString()}`
+        `[mock-auth] Recovery link (${flow}) for ${email}: token=${token} expires=${expiresAt.toISOString()}`
       );
     }
   });

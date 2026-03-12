@@ -5,11 +5,13 @@ import { createLeadCaptureService } from "../../src/services/leadCaptureService.
 import { createRecommendationService } from "../../src/services/recommendationService.js";
 import { createResultService } from "../../src/services/resultService.js";
 import { createSessionService } from "../../src/services/sessionService.js";
+import { createFakePasskeyAdapter } from "./fakePasskeyAdapter.js";
 import { createInMemoryRepositories } from "./inMemoryRepositories.js";
 
 export function createTestApp(options = {}) {
   const repositories = createInMemoryRepositories();
   const authOutbox = [];
+  const passkeyAdapter = options.passkeyAdapter || createFakePasskeyAdapter();
 
   const deliveryProvider =
     options.magicLinkProvider ||
@@ -26,6 +28,11 @@ export function createTestApp(options = {}) {
     databaseUrl: "test",
     auth: {
       magicLinkTtlMs: 1000 * 60 * 15,
+      passkeyChallengeTtlMs: 1000 * 60 * 5,
+      recoveryTokenTtlMs: 1000 * 60 * 20,
+      webauthnRpId: "localhost",
+      webauthnRpName: "TrustMeBroAI Test",
+      webauthnOrigins: "http://localhost:5174,http://127.0.0.1:5174",
       magicLinkBaseUrl: "http://localhost:5174/auth/verify",
       magicLinkProvider: options.magicLinkProviderMode || "console"
     },
@@ -89,7 +96,8 @@ export function createTestApp(options = {}) {
     const app = createApp({
       ...baseAppOptions,
       authRepository: repositories.authRepository,
-      magicLinkProvider: deliveryProvider
+      magicLinkProvider: deliveryProvider,
+      passkeyAdapter
     });
 
     return {
@@ -109,9 +117,11 @@ export function createTestApp(options = {}) {
 
   authService = createAuthService({
     authRepository: repositories.authRepository,
+    passkeyAdapter,
     sessionTtlMs: config.session.ttlMs,
-    magicLinkTtlMs: config.auth.magicLinkTtlMs,
-    sendMagicLink: (payload) => deliveryProvider.sendMagicLink(payload)
+    passkeyChallengeTtlMs: config.auth.passkeyChallengeTtlMs,
+    recoveryTokenTtlMs: config.auth.recoveryTokenTtlMs,
+    sendRecoveryLink: (payload) => deliveryProvider.sendMagicLink(payload)
   });
 
   const app = createApp({

@@ -9,13 +9,19 @@ function buildMagicLinkUrl(baseUrl, token) {
 
 function buildMagicLinkCopy({ flow, magicLinkUrl, expiresAt }) {
   const expiresIso = expiresAt.toISOString();
-  const intro =
-    flow === "register"
-      ? "Finish setting up your TrustMeBroAI account."
+  const intro = flow === "register"
+    ? "Finish setting up your TrustMeBroAI account."
+    : flow === "recovery"
+      ? "Use this recovery link to access your TrustMeBroAI account."
       : "Use this link to sign in to TrustMeBroAI.";
 
   return {
-    subject: flow === "register" ? "Complete your TrustMeBroAI registration" : "Your TrustMeBroAI sign-in link",
+    subject:
+      flow === "register"
+        ? "Complete your TrustMeBroAI registration"
+        : flow === "recovery"
+          ? "Your TrustMeBroAI recovery link"
+          : "Your TrustMeBroAI sign-in link",
     text: `${intro}\n\n${magicLinkUrl}\n\nThis link expires at ${expiresIso}.`,
     html: `<p>${intro}</p><p><a href="${magicLinkUrl}">Open secure sign-in link</a></p><p>This link expires at ${expiresIso}.</p>`
   };

@@ -23,30 +23,6 @@ export function createAuthRepository({ query }) {
       return result.rows[0] || null;
     },
 
-    async findRegisteredUserByEmail(email) {
-      const result = await query(
-        `SELECT
-           id,
-           email,
-           email_consent,
-           consent_timestamp,
-           signup_source,
-           registered_at,
-           last_login_at,
-           plan,
-           subscription_status,
-           created_at,
-           updated_at
-         FROM users
-         WHERE LOWER(email) = LOWER($1)
-           AND registered_at IS NOT NULL
-         LIMIT 1`,
-        [email]
-      );
-
-      return result.rows[0] || null;
-    },
-
     async findUserById(userId) {
       const result = await query(
         `SELECT
@@ -111,10 +87,14 @@ export function createAuthRepository({ query }) {
       return result.rows[0];
     },
 
-    async markUserLogin({ userId, loginAt }) {
+    async markUserLogin({ userId, loginAt, ensureRegisteredAt = false }) {
       const result = await query(
         `UPDATE users
          SET last_login_at = $2,
+             registered_at = CASE
+               WHEN $3::boolean IS TRUE THEN COALESCE(registered_at, $2)
+               ELSE registered_at
+             END,
              updated_at = NOW()
          WHERE id = $1
          RETURNING
@@ -129,31 +109,226 @@ export function createAuthRepository({ query }) {
            subscription_status,
            created_at,
            updated_at`,
-        [userId, loginAt]
+        [userId, loginAt, ensureRegisteredAt]
       );
 
       return result.rows[0] || null;
     },
 
-    async createMagicLinkChallenge({ userId, tokenHash, expiresAt, userAgent, ipAddress, flow }) {
+    async createPasskeyChallenge({
+      userId,
+      challengeHash,
+      purpose,
+      rpId,
+      origin,
+      expiresAt,
+      userAgent,
+      ipAddress
+    }) {
       const result = await query(
-        `INSERT INTO auth_magic_links (user_id, token_hash, expires_at, user_agent, ip_address, flow)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, user_id, expires_at, created_at`,
-        [userId, tokenHash, expiresAt, userAgent, ipAddress, flow]
+        `INSERT INTO auth_passkey_challenges (
+           user_id,
+           challenge_hash,
+           purpose,
+           rp_id,
+           origin,
+           expires_at,
+           user_agent,
+           ip_address
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id, user_id, challenge_hash, purpose, expires_at, created_at`,
+        [userId, challengeHash, purpose, rpId, origin, expiresAt, userAgent, ipAddress]
       );
 
       return result.rows[0];
     },
 
-    async consumeMagicLinkChallengeByTokenHash(tokenHash) {
+    async consumePasskeyChallengeById({ challengeId, purpose }) {
       const result = await query(
-        `UPDATE auth_magic_links
+        `UPDATE auth_passkey_challenges
+         SET used_at = NOW()
+         WHERE id = $1
+           AND purpose = $2
+           AND used_at IS NULL
+           AND expires_at > NOW()
+         RETURNING
+           id,
+           user_id,
+           challenge_hash,
+           purpose,
+           rp_id,
+           origin,
+           expires_at,
+           used_at,
+           created_at`,
+        [challengeId, purpose]
+      );
+
+      return result.rows[0] || null;
+    },
+
+    async findActivePasskeysByUserId(userId) {
+      const result = await query(
+        `SELECT
+           id,
+           user_id,
+           credential_id,
+           public_key,
+           counter,
+           transports,
+           aaguid,
+           device_name,
+           created_at,
+           updated_at,
+           last_used_at,
+           revoked_at
+         FROM auth_passkeys
+         WHERE user_id = $1
+           AND revoked_at IS NULL
+         ORDER BY created_at ASC`,
+        [userId]
+      );
+
+      return result.rows;
+    },
+
+    async findPasskeyByCredentialId(credentialId) {
+      const result = await query(
+        `SELECT
+           id,
+           user_id,
+           credential_id,
+           public_key,
+           counter,
+           transports,
+           aaguid,
+           device_name,
+           created_at,
+           updated_at,
+           last_used_at,
+           revoked_at
+         FROM auth_passkeys
+         WHERE credential_id = $1
+         LIMIT 1`,
+        [credentialId]
+      );
+
+      return result.rows[0] || null;
+    },
+
+    async upsertPasskeyCredential({
+      userId,
+      credentialId,
+      publicKey,
+      counter,
+      transports,
+      aaguid,
+      deviceName
+    }) {
+      const result = await query(
+        `INSERT INTO auth_passkeys (
+           user_id,
+           credential_id,
+           public_key,
+           counter,
+           transports,
+           aaguid,
+           device_name,
+           last_used_at
+         )
+         VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, NOW())
+         ON CONFLICT (credential_id)
+         DO UPDATE SET
+           user_id = EXCLUDED.user_id,
+           public_key = EXCLUDED.public_key,
+           counter = GREATEST(auth_passkeys.counter, EXCLUDED.counter),
+           transports = EXCLUDED.transports,
+           aaguid = COALESCE(EXCLUDED.aaguid, auth_passkeys.aaguid),
+           device_name = COALESCE(EXCLUDED.device_name, auth_passkeys.device_name),
+           last_used_at = NOW(),
+           updated_at = NOW(),
+           revoked_at = NULL
+         RETURNING
+           id,
+           user_id,
+           credential_id,
+           public_key,
+           counter,
+           transports,
+           aaguid,
+           device_name,
+           created_at,
+           updated_at,
+           last_used_at,
+           revoked_at`,
+        [userId, credentialId, publicKey, counter, JSON.stringify(transports || []), aaguid, deviceName]
+      );
+
+      return result.rows[0];
+    },
+
+    async markPasskeyUsed({ passkeyId, counter, usedAt }) {
+      const result = await query(
+        `UPDATE auth_passkeys
+         SET counter = GREATEST(counter, $2),
+             last_used_at = $3,
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING
+           id,
+           user_id,
+           credential_id,
+           public_key,
+           counter,
+           transports,
+           aaguid,
+           device_name,
+           created_at,
+           updated_at,
+           last_used_at,
+           revoked_at`,
+        [passkeyId, counter, usedAt]
+      );
+
+      return result.rows[0] || null;
+    },
+
+    async createRecoveryToken({
+      userId,
+      tokenHash,
+      purpose,
+      expiresAt,
+      redirectPath,
+      userAgent,
+      ipAddress
+    }) {
+      const result = await query(
+        `INSERT INTO auth_recovery_tokens (
+           user_id,
+           token_hash,
+           purpose,
+           expires_at,
+           redirect_path,
+           user_agent,
+           ip_address
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, user_id, purpose, expires_at, created_at`,
+        [userId, tokenHash, purpose, expiresAt, redirectPath, userAgent, ipAddress]
+      );
+
+      return result.rows[0];
+    },
+
+    async consumeRecoveryTokenByTokenHash(tokenHash) {
+      const result = await query(
+        `UPDATE auth_recovery_tokens
          SET used_at = NOW()
          WHERE token_hash = $1
            AND used_at IS NULL
            AND expires_at > NOW()
-         RETURNING id, user_id, expires_at, created_at, used_at`,
+         RETURNING id, user_id, purpose, expires_at, used_at, created_at`,
         [tokenHash]
       );
 

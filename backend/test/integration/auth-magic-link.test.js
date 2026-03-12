@@ -4,6 +4,51 @@ import request from "supertest";
 import { hashSessionToken } from "../../src/utils/sessionToken.js";
 import { createTestApp } from "../helpers/createTestApp.js";
 
+function encodeClientDataJSON({ type, challenge, origin = "http://localhost:5174" }) {
+  return Buffer.from(
+    JSON.stringify({
+      type,
+      challenge,
+      origin,
+      crossOrigin: false
+    }),
+    "utf8"
+  ).toString("base64url");
+}
+
+function buildRegistrationCredential({ challenge, credentialId }) {
+  return {
+    id: credentialId,
+    type: "public-key",
+    rawId: credentialId,
+    response: {
+      clientDataJSON: encodeClientDataJSON({
+        type: "webauthn.create",
+        challenge
+      }),
+      attestationObject: "test-attestation-object",
+      transports: ["internal"]
+    }
+  };
+}
+
+function buildAuthenticationCredential({ challenge, credentialId }) {
+  return {
+    id: credentialId,
+    type: "public-key",
+    rawId: credentialId,
+    response: {
+      clientDataJSON: encodeClientDataJSON({
+        type: "webauthn.get",
+        challenge
+      }),
+      authenticatorData: "test-authenticator-data",
+      signature: "test-signature",
+      userHandle: null
+    }
+  };
+}
+
 async function createUnlockedUser(app, email) {
   const session = await request(app)
     .post("/api/recommendation/session")
@@ -34,96 +79,271 @@ async function createUnlockedUser(app, email) {
     .expect(200);
 }
 
-test("register creates a user, persists registration markers, and issues hashed magic-link challenge", async () => {
-  const { app, repositories, authOutbox } = createTestApp();
+async function registerPasskey(app, { email, credentialId = "cred-register-1" }) {
+  const options = await request(app)
+    .post("/api/auth/passkey/register/options")
+    .send({
+      email,
+      email_consent: true,
+      signup_source: "register_page"
+    })
+    .expect(200);
 
-  const response = await request(app)
-    .post("/api/auth/register")
+  const challengeId = options.body.challenge_id;
+  const challenge = options.body.public_key.challenge;
+
+  const verify = await request(app)
+    .post("/api/auth/passkey/register/verify")
+    .send({
+      challenge_id: challengeId,
+      credential: buildRegistrationCredential({
+        challenge,
+        credentialId
+      })
+    })
+    .expect(200);
+
+  return {
+    cookie: verify.headers["set-cookie"]?.[0] || null
+  };
+}
+
+test("passkey register creates/upgrades user, stores passkey, and creates a session cookie", async () => {
+  const { app, repositories } = createTestApp();
+
+  const options = await request(app)
+    .post("/api/auth/passkey/register/options")
     .send({
       email: "NewUser@example.com",
       email_consent: true,
       signup_source: "register_page"
     })
-    .expect(202);
+    .expect(200);
 
-  assert.equal(response.body.message, "If the email is valid, you will receive a link.");
+  assert.ok(options.body.challenge_id);
+  assert.ok(options.body.public_key?.challenge);
+
+  const verify = await request(app)
+    .post("/api/auth/passkey/register/verify")
+    .send({
+      challenge_id: options.body.challenge_id,
+      credential: buildRegistrationCredential({
+        challenge: options.body.public_key.challenge,
+        credentialId: "cred-new-user"
+      })
+    })
+    .expect(200);
+
+  assert.ok(verify.headers["set-cookie"]);
+  const cookie = verify.headers["set-cookie"][0];
+  assert.ok(cookie.includes("tmb_session="));
+  assert.equal(verify.body.user.email, "newuser@example.com");
+
   assert.equal(repositories.data.users.length, 1);
-  assert.equal(repositories.data.users[0].email, "newuser@example.com");
   assert.ok(repositories.data.users[0].registered_at);
 
-  assert.equal(authOutbox.length, 1);
-  assert.equal(authOutbox[0].flow, "register");
-  assert.equal(authOutbox[0].email, "newuser@example.com");
-
-  assert.equal(repositories.data.authMagicLinks.length, 1);
+  assert.equal(repositories.data.authPasskeys.length, 1);
+  assert.equal(repositories.data.authPasskeys[0].credential_id, "cred-new-user");
   assert.equal(
-    repositories.data.authMagicLinks[0].token_hash,
-    hashSessionToken(authOutbox[0].token)
+    repositories.data.authPasskeys[0].public_key,
+    Buffer.from("public-key:cred-new-user", "utf8").toString("base64url")
   );
-  assert.equal(repositories.data.authMagicLinks[0].token_hash === authOutbox[0].token, false);
+
+  const me = await request(app).get("/api/auth/me").set("Cookie", cookie).expect(200);
+  assert.equal(me.body.user.email, "newuser@example.com");
 });
 
 test("register upgrades an existing unlock-created user without duplicate account", async () => {
-  const { app, repositories, authOutbox } = createTestApp();
+  const { app, repositories } = createTestApp();
 
   await createUnlockedUser(app, "existing@example.com");
 
   assert.equal(repositories.data.users.length, 1);
   assert.equal(repositories.data.users[0].registered_at, null);
 
-  const response = await request(app)
-    .post("/api/auth/register")
+  await registerPasskey(app, {
+    email: "EXISTING@example.com",
+    credentialId: "cred-existing"
+  });
+
+  assert.equal(repositories.data.users.length, 1);
+  assert.ok(repositories.data.users[0].registered_at);
+  assert.equal(repositories.data.authPasskeys.length, 1);
+});
+
+test("passkey login success updates credential counter and supports me/logout lifecycle", async () => {
+  const { app, repositories } = createTestApp();
+
+  await registerPasskey(app, {
+    email: "signin@example.com",
+    credentialId: "cred-signin"
+  });
+
+  const loginOptions = await request(app)
+    .post("/api/auth/passkey/login/options")
+    .send({ email: "signin@example.com" })
+    .expect(200);
+
+  const loginVerify = await request(app)
+    .post("/api/auth/passkey/login/verify")
     .send({
-      email: "EXISTING@example.com",
-      email_consent: true,
-      signup_source: "register_page"
+      challenge_id: loginOptions.body.challenge_id,
+      credential: buildAuthenticationCredential({
+        challenge: loginOptions.body.public_key.challenge,
+        credentialId: "cred-signin"
+      })
+    })
+    .expect(200);
+
+  assert.equal(loginVerify.body.user.email, "signin@example.com");
+  const cookie = loginVerify.headers["set-cookie"]?.[0];
+  assert.ok(cookie);
+
+  const me = await request(app).get("/api/auth/me").set("Cookie", cookie).expect(200);
+  assert.equal(me.body.user.email, "signin@example.com");
+
+  const logout = await request(app).post("/api/auth/logout").set("Cookie", cookie).expect(204);
+  assert.ok(logout.headers["set-cookie"]);
+
+  await request(app).get("/api/auth/me").set("Cookie", cookie).expect(401);
+
+  assert.equal(repositories.data.authPasskeys[0].counter, 1);
+  assert.ok(repositories.data.users[0].last_login_at);
+});
+
+test("passkey login rejects invalid challenge and replayed challenge", async () => {
+  const { app } = createTestApp();
+
+  await registerPasskey(app, {
+    email: "challenge@example.com",
+    credentialId: "cred-challenge"
+  });
+
+  const loginOptions = await request(app)
+    .post("/api/auth/passkey/login/options")
+    .send({ email: "challenge@example.com" })
+    .expect(200);
+
+  await request(app)
+    .post("/api/auth/passkey/login/verify")
+    .send({
+      challenge_id: loginOptions.body.challenge_id,
+      credential: buildAuthenticationCredential({
+        challenge: "wrong-challenge",
+        credentialId: "cred-challenge"
+      })
+    })
+    .expect(401);
+
+  const validChallenge = await request(app)
+    .post("/api/auth/passkey/login/options")
+    .send({ email: "challenge@example.com" })
+    .expect(200);
+
+  await request(app)
+    .post("/api/auth/passkey/login/verify")
+    .send({
+      challenge_id: validChallenge.body.challenge_id,
+      credential: buildAuthenticationCredential({
+        challenge: validChallenge.body.public_key.challenge,
+        credentialId: "cred-challenge"
+      })
+    })
+    .expect(200);
+
+  await request(app)
+    .post("/api/auth/passkey/login/verify")
+    .send({
+      challenge_id: validChallenge.body.challenge_id,
+      credential: buildAuthenticationCredential({
+        challenge: validChallenge.body.public_key.challenge,
+        credentialId: "cred-challenge"
+      })
+    })
+    .expect(401);
+});
+
+test("fallback recovery request + verify works and token is hashed + one-time use", async () => {
+  const { app, repositories, authOutbox } = createTestApp();
+
+  await createUnlockedUser(app, "recovery@example.com");
+
+  const requestResponse = await request(app)
+    .post("/api/auth/recovery/request")
+    .send({
+      email: "RECOVERY@example.com",
+      redirect_path: "/wizard"
     })
     .expect(202);
 
-  assert.equal(response.body.message, "If the email is valid, you will receive a link.");
-  assert.equal(repositories.data.users.length, 1);
-  assert.ok(repositories.data.users[0].registered_at);
+  assert.equal(requestResponse.body.message, "If the email is valid, you will receive a recovery link.");
   assert.equal(authOutbox.length, 1);
-  assert.equal(authOutbox[0].flow, "register");
-});
+  assert.equal(authOutbox[0].flow, "recovery");
 
-test("login request response remains generic for both unknown and registered emails", async () => {
-  const { app, authOutbox } = createTestApp();
+  assert.equal(repositories.data.authRecoveryTokens.length, 1);
+  assert.equal(
+    repositories.data.authRecoveryTokens[0].token_hash,
+    hashSessionToken(authOutbox[0].token)
+  );
+  assert.equal(repositories.data.authRecoveryTokens[0].token_hash === authOutbox[0].token, false);
+
+  const verify = await request(app)
+    .post("/api/auth/recovery/verify")
+    .send({ token: authOutbox[0].token })
+    .expect(200);
+
+  assert.equal(verify.body.user.email, "recovery@example.com");
+  assert.equal(verify.body.requires_passkey_enrollment, true);
+  assert.ok(verify.headers["set-cookie"]);
+
+  await request(app)
+    .post("/api/auth/recovery/verify")
+    .send({ token: authOutbox[0].token })
+    .expect(401);
 
   const unknown = await request(app)
-    .post("/api/auth/login/request")
+    .post("/api/auth/recovery/request")
     .send({ email: "unknown@example.com" })
     .expect(202);
 
-  assert.equal(unknown.body.message, "If the email is valid, you will receive a link.");
-  assert.equal(authOutbox.length, 0);
-
-  await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "known@example.com",
-      email_consent: true,
-      signup_source: "register_page"
-    })
-    .expect(202);
-
-  const afterRegisterOutboxSize = authOutbox.length;
-
-  const known = await request(app)
-    .post("/api/auth/login/request")
-    .send({ email: "known@example.com" })
-    .expect(202);
-
-  assert.equal(known.body.message, "If the email is valid, you will receive a link.");
-  assert.equal(authOutbox.length, afterRegisterOutboxSize + 1);
-  assert.equal(authOutbox.at(-1).flow, "login");
+  assert.equal(unknown.body.message, "If the email is valid, you will receive a recovery link.");
+  assert.equal(authOutbox.length, 1);
 });
 
-test("runtime provider adapter is invoked on register and login request", async () => {
-  const sentMagicLinks = [];
+test("anonymous unlock still requires email when no authenticated session is present", async () => {
+  const { app } = createTestApp();
+
+  const session = await request(app)
+    .post("/api/recommendation/session")
+    .send({
+      profile_id: 1,
+      task_id: 1,
+      selected_priority: "Best quality",
+      wizard_duration_seconds: 20
+    })
+    .expect(201);
+
+  const compute = await request(app)
+    .post("/api/recommendation/compute")
+    .send({ session_id: session.body.session_id })
+    .expect(200);
+
+  const response = await request(app)
+    .post("/api/recommendation/unlock")
+    .send({
+      session_id: session.body.session_id,
+      recommendation_id: compute.body.recommendation_id
+    })
+    .expect(400);
+
+  assert.equal(response.body.message, "A valid email is required");
+});
+
+test("runtime provider adapter is invoked for recovery requests", async () => {
+  const sentRecoveryLinks = [];
   const provider = {
     async sendMagicLink(payload) {
-      sentMagicLinks.push(payload);
+      sentRecoveryLinks.push(payload);
     }
   };
 
@@ -132,108 +352,15 @@ test("runtime provider adapter is invoked on register and login request", async 
     magicLinkProvider: provider
   });
 
-  await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "provider@example.com",
-      email_consent: true,
-      signup_source: "register_page"
-    })
-    .expect(202);
+  await createUnlockedUser(app, "provider@example.com");
 
   await request(app)
-    .post("/api/auth/login/request")
+    .post("/api/auth/recovery/request")
     .send({ email: "provider@example.com" })
     .expect(202);
 
-  assert.equal(sentMagicLinks.length, 2);
-  assert.equal(sentMagicLinks[0].flow, "register");
-  assert.equal(sentMagicLinks[1].flow, "login");
-});
-
-test("verify success establishes session cookie and me/logout lifecycle works", async () => {
-  const { app, repositories, authOutbox } = createTestApp();
-
-  await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "lifecycle@example.com",
-      email_consent: true,
-      signup_source: "register_page"
-    })
-    .expect(202);
-
-  const token = authOutbox.at(-1).token;
-
-  const verify = await request(app)
-    .post("/api/auth/login/verify")
-    .send({ token })
-    .expect(200);
-
-  assert.ok(verify.body.user);
-  assert.equal(verify.body.user.email, "lifecycle@example.com");
-  assert.ok(verify.headers["set-cookie"]);
-  const cookie = verify.headers["set-cookie"][0];
-  assert.ok(cookie.includes("tmb_session="));
-
-  const me = await request(app).get("/api/auth/me").set("Cookie", cookie).expect(200);
-  assert.equal(me.body.user.email, "lifecycle@example.com");
-
-  const logout = await request(app).post("/api/auth/logout").set("Cookie", cookie).expect(204);
-  assert.ok(logout.headers["set-cookie"]);
-
-  await request(app).get("/api/auth/me").set("Cookie", cookie).expect(401);
-
-  const consumedChallenges = repositories.data.authMagicLinks.filter((row) => row.used_at != null);
-  assert.equal(consumedChallenges.length, 1);
-  assert.ok(repositories.data.users[0].last_login_at);
-});
-
-test("verify rejects invalid, expired, and reused tokens", async () => {
-  const { app, repositories, authOutbox } = createTestApp();
-
-  await request(app)
-    .post("/api/auth/login/verify")
-    .send({ token: "invalid-token-value-that-was-never-issued" })
-    .expect(401);
-
-  await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "expired@example.com",
-      email_consent: true,
-      signup_source: "register_page"
-    })
-    .expect(202);
-
-  const expiredToken = authOutbox.at(-1).token;
-  repositories.data.authMagicLinks.at(-1).expires_at = new Date(Date.now() - 1_000);
-
-  await request(app)
-    .post("/api/auth/login/verify")
-    .send({ token: expiredToken })
-    .expect(401);
-
-  await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "reused@example.com",
-      email_consent: true,
-      signup_source: "register_page"
-    })
-    .expect(202);
-
-  const reusableToken = authOutbox.at(-1).token;
-
-  await request(app)
-    .post("/api/auth/login/verify")
-    .send({ token: reusableToken })
-    .expect(200);
-
-  await request(app)
-    .post("/api/auth/login/verify")
-    .send({ token: reusableToken })
-    .expect(401);
+  assert.equal(sentRecoveryLinks.length, 1);
+  assert.equal(sentRecoveryLinks[0].flow, "recovery");
 });
 
 test("auth limiter returns 429 when threshold is exceeded", async () => {
@@ -243,12 +370,12 @@ test("auth limiter returns 429 when threshold is exceeded", async () => {
   });
 
   await request(app)
-    .post("/api/auth/login/request")
+    .post("/api/auth/passkey/login/options")
     .send({ email: "ratelimit@example.com" })
-    .expect(202);
+    .expect(200);
 
   const blocked = await request(app)
-    .post("/api/auth/login/request")
+    .post("/api/auth/passkey/login/options")
     .send({ email: "ratelimit@example.com" })
     .expect(429);
 

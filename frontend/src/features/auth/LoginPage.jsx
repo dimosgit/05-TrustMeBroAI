@@ -1,14 +1,19 @@
 import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import InlineAlert from "../../components/ui/InlineAlert";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { ApiError, ApiNetworkError, ApiTimeoutError } from "../../lib/api/client";
-import { requestLoginAuth } from "../../lib/api/authApi";
+import {
+  requestPasskeyLoginOptions,
+  verifyPasskeyLogin
+} from "../../lib/api/authApi";
+import { getPasskeyCredential } from "./passkeyClient";
 import { useAuth } from "./AuthContext";
 import { isValidEmailAddress, sanitizeRedirectPath } from "./utils";
 
 export default function LoginPage() {
-  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, setAuthenticatedUser } = useAuth();
   const [searchParams] = useSearchParams();
   const initialEmail = searchParams.get("email") || "";
   const redirectPath = sanitizeRedirectPath(searchParams.get("redirect"));
@@ -16,7 +21,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const registerHref = useMemo(() => {
     const params = new URLSearchParams();
@@ -28,6 +32,18 @@ export default function LoginPage() {
     params.set("redirect", redirectPath);
 
     return `/register?${params.toString()}`;
+  }, [email, redirectPath]);
+
+  const recoveryHref = useMemo(() => {
+    const params = new URLSearchParams();
+    const trimmedEmail = email.trim();
+
+    if (trimmedEmail) {
+      params.set("email", trimmedEmail);
+    }
+    params.set("redirect", redirectPath);
+
+    return `/auth/recovery?${params.toString()}`;
   }, [email, redirectPath]);
 
   async function handleSubmit(event) {
@@ -43,13 +59,29 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await requestLoginAuth({ email: trimmedEmail });
-      trackEvent("login_requested", {
+      const optionsPayload = await requestPasskeyLoginOptions({
+        email: trimmedEmail
+      });
+      const challengeId = optionsPayload?.challenge_id || optionsPayload?.challengeId || null;
+      const publicKeyOptions = optionsPayload?.public_key || optionsPayload?.publicKey || optionsPayload;
+      const credential = await getPasskeyCredential(publicKeyOptions);
+      const authUser = await verifyPasskeyLogin({
+        challengeId,
+        credential
+      });
+
+      await setAuthenticatedUser(authUser);
+      trackEvent("passkey_login_success", {
         email_domain: trimmedEmail.split("@")[1] || null,
         redirect_path: redirectPath
       });
-      setIsSubmitted(true);
+      navigate(redirectPath, { replace: true });
     } catch (submitError) {
+      trackEvent("passkey_login_failure", {
+        reason: submitError instanceof ApiError ? `api_${submitError.status}` : "client_error",
+        redirect_path: redirectPath
+      });
+
       if (
         submitError instanceof ApiTimeoutError ||
         submitError instanceof ApiNetworkError ||
@@ -57,9 +89,11 @@ export default function LoginPage() {
       ) {
         setError("Server is unavailable. Please try again.");
       } else if (submitError instanceof ApiError) {
-        setError(submitError.message || "Could not send login link. Please try again.");
+        setError(submitError.message || "Could not complete passkey sign-in.");
+      } else if (submitError instanceof Error) {
+        setError(submitError.message || "Could not complete passkey sign-in.");
       } else {
-        setError("Server is unavailable. Please try again.");
+        setError("Could not complete passkey sign-in.");
       }
     } finally {
       setIsSubmitting(false);
@@ -87,50 +121,48 @@ export default function LoginPage() {
     <div className="space-y-4">
       <header className="space-y-1 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Account</p>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Login</h1>
-        <p className="text-sm text-slate-400">We will send a secure magic link to your email.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-white">Sign in with passkey</h1>
+        <p className="text-sm text-slate-400">
+          Use the passkey saved on your device for fast, passwordless sign-in.
+        </p>
       </header>
 
-      {isSubmitted ? (
-        <div className="space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-center">
-          <h2 className="text-lg font-semibold text-emerald-300">Check your email</h2>
-          <p className="text-sm text-slate-200">
-            If the email is valid, a sign-in link has been sent to{" "}
-            <span className="font-semibold text-white">{email.trim()}</span>.
-          </p>
-          <p className="text-xs text-slate-300">Open the link to complete login.</p>
-        </div>
-      ) : (
-        <form className="space-y-3" onSubmit={handleSubmit}>
-          {error ? <InlineAlert>{error}</InlineAlert> : null}
+      <form className="space-y-3" onSubmit={handleSubmit}>
+        {error ? <InlineAlert>{error}</InlineAlert> : null}
 
-          <label className="block text-left text-sm font-medium text-slate-300">
-            Email
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </label>
+        <label className="block text-left text-sm font-medium text-slate-300">
+          Account email
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
+        </label>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? "Sending link..." : "Send login link"}
-          </button>
-        </form>
-      )}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? "Signing in..." : "Sign in with passkey"}
+        </button>
+      </form>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center text-xs text-slate-400">
+        Need account recovery or first-device bootstrap?{" "}
+        <Link to={recoveryHref} className="font-semibold text-blue-300 hover:text-blue-200">
+          Use email recovery
+        </Link>
+      </div>
 
       <p className="text-center text-sm text-slate-400">
         New here?{" "}
         <Link to={registerHref} className="font-semibold text-blue-300 hover:text-blue-200">
-          Register
+          Create account with passkey
         </Link>
       </p>
     </div>

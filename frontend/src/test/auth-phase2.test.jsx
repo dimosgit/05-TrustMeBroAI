@@ -4,6 +4,64 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiFetchMock } from "./mockFetch";
 import { renderApp } from "./renderApp";
 
+function toBuffer(...values) {
+  return new Uint8Array(values).buffer;
+}
+
+function createRegistrationCredential() {
+  return {
+    id: "registration-credential-id",
+    type: "public-key",
+    rawId: toBuffer(1, 2, 3, 4),
+    response: {
+      clientDataJSON: toBuffer(5, 6, 7),
+      attestationObject: toBuffer(8, 9, 10),
+      getTransports: () => ["internal"]
+    }
+  };
+}
+
+function createAuthenticationCredential() {
+  return {
+    id: "authentication-credential-id",
+    type: "public-key",
+    rawId: toBuffer(11, 12, 13, 14),
+    response: {
+      clientDataJSON: toBuffer(15, 16, 17),
+      authenticatorData: toBuffer(18, 19, 20),
+      signature: toBuffer(21, 22, 23),
+      userHandle: null
+    }
+  };
+}
+
+function stubPasskeyApis({ createCredential, getCredential } = {}) {
+  Object.defineProperty(window, "PublicKeyCredential", {
+    value: class PublicKeyCredentialMock {},
+    configurable: true
+  });
+
+  const createMock = vi.fn(async () =>
+    createCredential !== undefined ? createCredential : createRegistrationCredential()
+  );
+  const getMock = vi.fn(async () =>
+    getCredential !== undefined ? getCredential : createAuthenticationCredential()
+  );
+
+  Object.defineProperty(navigator, "credentials", {
+    value: {
+      create: createMock,
+      get: getMock
+    },
+    configurable: true
+  });
+
+  return {
+    createMock,
+    getMock
+  };
+}
+
 describe("phase2 auth ux", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -36,130 +94,296 @@ describe("phase2 auth ux", () => {
     expect(screen.queryByRole("link", { name: "Start Wizard" })).not.toBeInTheDocument();
   });
 
-  it("submits register request and shows check-email confirmation", async () => {
+  it("submits passkey registration flow and signs user in", async () => {
     const user = userEvent.setup();
-    const trackingEvents = [];
-    let registerRequestBody = null;
-    const trackingHandler = (event) => trackingEvents.push(event.detail);
-    window.addEventListener("tmb:tracking", trackingHandler);
+    let registerOptionsBody = null;
+    let registerVerifyBody = null;
+
+    const { createMock } = stubPasskeyApis();
 
     const fetchMock = createApiFetchMock({
       "GET /api/auth/me": {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/register": ({ init }) => {
-        registerRequestBody = JSON.parse(init.body);
+      "POST /api/auth/passkey/register/options": ({ init }) => {
+        registerOptionsBody = JSON.parse(init.body);
         return {
           status: 200,
-          body: { message: "If the email is valid, you will receive a link." }
+          body: {
+            challenge_id: "register-challenge-1",
+            public_key: {
+              challenge: "AAECAw",
+              rp: { name: "TrustMeBroAI", id: "localhost" },
+              user: {
+                id: "dXNlci0x",
+                name: "person@example.com",
+                displayName: "person@example.com"
+              },
+              pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+              timeout: 60000,
+              attestation: "none"
+            }
+          }
+        };
+      },
+      "POST /api/auth/passkey/register/verify": ({ init }) => {
+        registerVerifyBody = JSON.parse(init.body);
+        return {
+          status: 200,
+          body: {
+            user: {
+              id: 77,
+              email: "person@example.com"
+            }
+          }
         };
       }
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    renderApp(["/register?redirect=%2Fresult"]);
+    renderApp(["/register?redirect=%2Flogin"]);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: "Create account with passkey" }));
     expect(await screen.findByText("Consent is required to create your account.")).toBeInTheDocument();
 
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Create account with passkey" }));
 
-    expect(await screen.findByText("Check your email")).toBeInTheDocument();
-    expect(registerRequestBody).toEqual({
+    expect(await screen.findByText("You are already signed in")).toBeInTheDocument();
+    expect(registerOptionsBody).toEqual({
       email: "person@example.com",
       email_consent: true,
       signup_source: "register_page"
     });
-    expect(
-      trackingEvents.some((event) => event.eventName === "register_requested")
-    ).toBe(true);
-    window.removeEventListener("tmb:tracking", trackingHandler);
+    expect(registerVerifyBody.challenge_id).toBe("register-challenge-1");
+    expect(registerVerifyBody.credential.id).toBe("registration-credential-id");
+    expect(createMock).toHaveBeenCalledTimes(1);
   });
 
-  it("shows server-unavailable fallback for register 5xx", async () => {
+  it("shows server-unavailable fallback for register options 5xx", async () => {
     const user = userEvent.setup();
+    stubPasskeyApis();
 
     const fetchMock = createApiFetchMock({
       "GET /api/auth/me": {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/register": {
+      "POST /api/auth/passkey/register/options": {
         status: 503,
-        body: { message: "Mailer provider down" }
+        body: { message: "Passkey provider down" }
       }
     });
     vi.stubGlobal("fetch", fetchMock);
 
     renderApp(["/register"]);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Create account with passkey" }));
 
     expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
   });
 
-  it("submits login request and shows check-email confirmation", async () => {
+  it("shows explicit cancellation message when passkey registration is cancelled", async () => {
     const user = userEvent.setup();
-    let loginRequestBody = null;
+    stubPasskeyApis({ createCredential: null });
 
     const fetchMock = createApiFetchMock({
       "GET /api/auth/me": {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/login/request": ({ init }) => {
-        loginRequestBody = JSON.parse(init.body);
+      "POST /api/auth/passkey/register/options": {
+        status: 200,
+        body: {
+          challenge_id: "register-challenge-cancel",
+          public_key: {
+            challenge: "AAECAw",
+            rp: { name: "TrustMeBroAI", id: "localhost" },
+            user: {
+              id: "dXNlci0x",
+              name: "person@example.com",
+              displayName: "person@example.com"
+            },
+            pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+            timeout: 60000,
+            attestation: "none"
+          }
+        }
+      }
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/register"]);
+
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Create account with passkey" }));
+
+    expect(await screen.findByText("Passkey creation was cancelled.")).toBeInTheDocument();
+  });
+
+  it("submits passkey sign-in flow and signs user in", async () => {
+    const user = userEvent.setup();
+    let loginOptionsBody = null;
+    let loginVerifyBody = null;
+
+    const { getMock } = stubPasskeyApis();
+
+    const fetchMock = createApiFetchMock({
+      "GET /api/auth/me": {
+        status: 401,
+        body: { message: "Unauthorized" }
+      },
+      "POST /api/auth/passkey/login/options": ({ init }) => {
+        loginOptionsBody = JSON.parse(init.body);
         return {
           status: 200,
-          body: { message: "If the email is valid, you will receive a link." }
+          body: {
+            challenge_id: "login-challenge-1",
+            public_key: {
+              challenge: "BAUGBw",
+              timeout: 60000,
+              rpId: "localhost",
+              userVerification: "preferred",
+              allowCredentials: [{ id: "AQID", type: "public-key" }]
+            }
+          }
+        };
+      },
+      "POST /api/auth/passkey/login/verify": ({ init }) => {
+        loginVerifyBody = JSON.parse(init.body);
+        return {
+          status: 200,
+          body: {
+            user: {
+              id: 88,
+              email: "person@example.com"
+            }
+          }
         };
       }
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    renderApp(["/login"]);
+    renderApp(["/login?redirect=%2Flogin"]);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
-    await user.click(screen.getByRole("button", { name: "Send login link" }));
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: "Sign in with passkey" }));
 
-    expect(await screen.findByText("Check your email")).toBeInTheDocument();
-    expect(loginRequestBody).toEqual({ email: "person@example.com" });
-    const registerLinks = screen.getAllByRole("link", { name: "Register" });
-    expect(
-      registerLinks.some((link) =>
-        String(link.getAttribute("href") || "").includes("email=person%40example.com")
-      )
-    ).toBe(true);
+    expect(await screen.findByText("You are already signed in")).toBeInTheDocument();
+    expect(loginOptionsBody).toEqual({ email: "person@example.com" });
+    expect(loginVerifyBody.challenge_id).toBe("login-challenge-1");
+    expect(loginVerifyBody.credential.id).toBe("authentication-credential-id");
+    expect(getMock).toHaveBeenCalledTimes(1);
   });
 
-  it("shows server-unavailable fallback for login network failures", async () => {
+  it("shows browser-support fallback when passkeys are unavailable", async () => {
     const user = userEvent.setup();
+
+    Object.defineProperty(window, "PublicKeyCredential", {
+      value: undefined,
+      configurable: true
+    });
 
     const fetchMock = createApiFetchMock({
       "GET /api/auth/me": {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/login/request": () => {
-        throw new TypeError("Failed to fetch");
+      "POST /api/auth/passkey/login/options": {
+        status: 200,
+        body: {
+          challenge_id: "login-challenge-2",
+          public_key: {
+            challenge: "BAUGBw",
+            timeout: 60000,
+            rpId: "localhost",
+            userVerification: "preferred"
+          }
+        }
       }
     });
     vi.stubGlobal("fetch", fetchMock);
 
     renderApp(["/login"]);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
-    await user.click(screen.getByRole("button", { name: "Send login link" }));
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: "Sign in with passkey" }));
 
-    expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Passkeys are not supported on this browser. Use email recovery instead.")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Use email recovery" })).toBeInTheDocument();
   });
 
-  it("verifies token and redirects to intended route", async () => {
+  it("shows explicit cancellation message when passkey sign-in is cancelled", async () => {
+    const user = userEvent.setup();
+    stubPasskeyApis({ getCredential: null });
+
+    const fetchMock = createApiFetchMock({
+      "GET /api/auth/me": {
+        status: 401,
+        body: { message: "Unauthorized" }
+      },
+      "POST /api/auth/passkey/login/options": {
+        status: 200,
+        body: {
+          challenge_id: "login-challenge-cancel",
+          public_key: {
+            challenge: "BAUGBw",
+            timeout: 60000,
+            rpId: "localhost",
+            userVerification: "preferred"
+          }
+        }
+      }
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/login"]);
+
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: "Sign in with passkey" }));
+
+    expect(await screen.findByText("Passkey sign-in was cancelled.")).toBeInTheDocument();
+  });
+
+  it("submits recovery request and shows check-email confirmation", async () => {
+    const user = userEvent.setup();
+    let recoveryRequestBody = null;
+
+    const fetchMock = createApiFetchMock({
+      "GET /api/auth/me": {
+        status: 401,
+        body: { message: "Unauthorized" }
+      },
+      "POST /api/auth/recovery/request": ({ init }) => {
+        recoveryRequestBody = JSON.parse(init.body);
+        return {
+          status: 202,
+          body: { message: "If the email is valid, you will receive a recovery link." }
+        };
+      }
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/auth/recovery?redirect=%2Fresult"]);
+
+    await user.type(screen.getByLabelText("Account email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: "Send recovery email" }));
+
+    expect(await screen.findByText("Check your email")).toBeInTheDocument();
+    expect(recoveryRequestBody).toEqual({
+      email: "person@example.com",
+      redirect_path: "/result"
+    });
+  });
+
+  it("verifies recovery token and redirects to intended route", async () => {
     const trackingEvents = [];
     const trackingHandler = (event) => trackingEvents.push(event.detail);
     window.addEventListener("tmb:tracking", trackingHandler);
@@ -169,7 +393,7 @@ describe("phase2 auth ux", () => {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/login/verify": {
+      "POST /api/auth/recovery/verify": {
         status: 200,
         body: {
           user: {
@@ -181,16 +405,16 @@ describe("phase2 auth ux", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    renderApp(["/auth/verify?token=valid-token&redirect=%2Flogin"]);
+    renderApp(["/auth/recovery/verify?token=valid-token&redirect=%2Flogin"]);
 
     expect(await screen.findByText("You are already signed in")).toBeInTheDocument();
     expect(
-      trackingEvents.some((event) => event.eventName === "verify_success")
+      trackingEvents.some((event) => event.eventName === "recovery_verify_success")
     ).toBe(true);
     window.removeEventListener("tmb:tracking", trackingHandler);
   });
 
-  it("shows verify failure state for invalid token", async () => {
+  it("shows verify failure state for invalid recovery token", async () => {
     const trackingEvents = [];
     const trackingHandler = (event) => trackingEvents.push(event.detail);
     window.addEventListener("tmb:tracking", trackingHandler);
@@ -200,44 +424,25 @@ describe("phase2 auth ux", () => {
         status: 401,
         body: { message: "Unauthorized" }
       },
-      "POST /api/auth/login/verify": {
+      "POST /api/auth/recovery/verify": {
         status: 400,
-        body: { message: "This sign-in link is invalid or expired." }
+        body: { message: "This recovery link is invalid or expired." }
       }
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    renderApp(["/auth/verify?token=expired-token&redirect=%2Fwizard"]);
+    renderApp(["/auth/recovery/verify?token=expired-token&redirect=%2Fwizard"]);
 
     expect(await screen.findByText("Could not sign you in")).toBeInTheDocument();
-    expect(screen.getByText("This sign-in link is invalid or expired.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Request another login link" })).toHaveAttribute(
+    expect(screen.getByText("This recovery link is invalid or expired.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Request another recovery email" })).toHaveAttribute(
       "href",
-      "/login?redirect=%2Fwizard"
+      "/auth/recovery?redirect=%2Fwizard"
     );
     expect(
-      trackingEvents.some((event) => event.eventName === "verify_failure")
+      trackingEvents.some((event) => event.eventName === "recovery_verify_failure")
     ).toBe(true);
     window.removeEventListener("tmb:tracking", trackingHandler);
-  });
-
-  it("shows server-unavailable fallback for verify 5xx", async () => {
-    const fetchMock = createApiFetchMock({
-      "GET /api/auth/me": {
-        status: 401,
-        body: { message: "Unauthorized" }
-      },
-      "POST /api/auth/login/verify": {
-        status: 503,
-        body: { message: "Provider unavailable" }
-      }
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    renderApp(["/auth/verify?token=valid-token&redirect=%2Fwizard"]);
-
-    expect(await screen.findByText("Could not sign you in")).toBeInTheDocument();
-    expect(screen.getByText("Server is unavailable. Please try again.")).toBeInTheDocument();
   });
 
   it("bootstraps authenticated user and logs out", async () => {

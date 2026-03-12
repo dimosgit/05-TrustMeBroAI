@@ -23,6 +23,12 @@ export function loadRuntimeConfig(env = process.env) {
     allowedOrigins,
     auth: {
       magicLinkTtlMs: parsePositiveInt(env.AUTH_MAGIC_LINK_TTL_MS, 1000 * 60 * 15),
+      passkeyChallengeTtlMs: parsePositiveInt(env.AUTH_PASSKEY_CHALLENGE_TTL_MS, 1000 * 60 * 5),
+      recoveryTokenTtlMs: parsePositiveInt(env.AUTH_RECOVERY_TOKEN_TTL_MS, 1000 * 60 * 20),
+      webauthnRpId: env.AUTH_WEBAUTHN_RP_ID || "localhost",
+      webauthnRpName: env.AUTH_WEBAUTHN_RP_NAME || "TrustMeBroAI",
+      webauthnOrigins:
+        env.AUTH_WEBAUTHN_ORIGIN || env.FRONTEND_ORIGIN || defaultFrontendOrigins.join(","),
       magicLinkBaseUrl: env.AUTH_MAGIC_LINK_BASE_URL || "http://localhost:5174/auth/verify",
       magicLinkProvider: (env.AUTH_MAGIC_LINK_PROVIDER || "console").trim().toLowerCase(),
       magicLinkResendApiKey: env.AUTH_MAGIC_LINK_RESEND_API_KEY || "",

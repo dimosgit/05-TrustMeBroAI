@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { clearCookie, serializeCookie } from "../utils/cookies.js";
-import { assertValidEmail, normalizeEmail, parseOptionalString } from "../utils/validators.js";
+import { assertPositiveInteger, assertValidEmail, normalizeEmail, parseOptionalString } from "../utils/validators.js";
 
 function setSessionCookie({ res, cookieName, token, maxAgeMs, isProduction }) {
   res.setHeader(
@@ -40,7 +40,7 @@ export function createAuthRouter({
   const router = Router();
 
   router.post(
-    "/register",
+    "/passkey/register/options",
     authRateLimiter,
     asyncHandler(async (req, res) => {
       const email = normalizeEmail(req.body?.email);
@@ -49,7 +49,7 @@ export function createAuthRouter({
 
       assertValidEmail(email);
 
-      const result = await authService.register({
+      const result = await authService.requestPasskeyRegistrationOptions({
         email,
         emailConsent,
         signupSource,
@@ -57,36 +57,20 @@ export function createAuthRouter({
         ipAddress: req.ip || req.socket?.remoteAddress || null
       });
 
-      return res.status(202).json(result);
+      return res.status(200).json(result);
     })
   );
 
   router.post(
-    "/login/request",
+    "/passkey/register/verify",
     authRateLimiter,
     asyncHandler(async (req, res) => {
-      const email = normalizeEmail(req.body?.email);
+      const challengeId = assertPositiveInteger(req.body?.challenge_id, "challenge_id");
+      const credential = req.body?.credential;
 
-      assertValidEmail(email);
-
-      const result = await authService.requestLogin({
-        email,
-        userAgent: req.headers["user-agent"] || null,
-        ipAddress: req.ip || req.socket?.remoteAddress || null
-      });
-
-      return res.status(202).json(result);
-    })
-  );
-
-  router.post(
-    "/login/verify",
-    authRateLimiter,
-    asyncHandler(async (req, res) => {
-      const token = req.body?.token;
-
-      const result = await authService.verifyLogin({
-        token,
+      const result = await authService.verifyPasskeyRegistration({
+        challengeId,
+        credential,
         userAgent: req.headers["user-agent"] || null,
         ipAddress: req.ip || req.socket?.remoteAddress || null
       });
@@ -100,6 +84,94 @@ export function createAuthRouter({
       });
 
       return res.status(200).json({ user: result.user });
+    })
+  );
+
+  router.post(
+    "/passkey/login/options",
+    authRateLimiter,
+    asyncHandler(async (req, res) => {
+      const email = normalizeEmail(req.body?.email);
+      assertValidEmail(email);
+
+      const result = await authService.requestPasskeyAuthenticationOptions({
+        email,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || req.socket?.remoteAddress || null
+      });
+
+      return res.status(200).json(result);
+    })
+  );
+
+  router.post(
+    "/passkey/login/verify",
+    authRateLimiter,
+    asyncHandler(async (req, res) => {
+      const challengeId = assertPositiveInteger(req.body?.challenge_id, "challenge_id");
+      const credential = req.body?.credential;
+
+      const result = await authService.verifyPasskeyAuthentication({
+        challengeId,
+        credential,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || req.socket?.remoteAddress || null
+      });
+
+      setSessionCookie({
+        res,
+        cookieName,
+        token: result.session.token,
+        maxAgeMs: sessionTtlMs,
+        isProduction
+      });
+
+      return res.status(200).json({ user: result.user });
+    })
+  );
+
+  router.post(
+    "/recovery/request",
+    authRateLimiter,
+    asyncHandler(async (req, res) => {
+      const email = normalizeEmail(req.body?.email);
+      const redirectPath = req.body?.redirect_path;
+
+      assertValidEmail(email);
+
+      const result = await authService.requestRecovery({
+        email,
+        redirectPath,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || req.socket?.remoteAddress || null
+      });
+
+      return res.status(202).json(result);
+    })
+  );
+
+  router.post(
+    "/recovery/verify",
+    authRateLimiter,
+    asyncHandler(async (req, res) => {
+      const result = await authService.verifyRecovery({
+        token: req.body?.token,
+        userAgent: req.headers["user-agent"] || null,
+        ipAddress: req.ip || req.socket?.remoteAddress || null
+      });
+
+      setSessionCookie({
+        res,
+        cookieName,
+        token: result.session.token,
+        maxAgeMs: sessionTtlMs,
+        isProduction
+      });
+
+      return res.status(200).json({
+        user: result.user,
+        requires_passkey_enrollment: result.requires_passkey_enrollment
+      });
     })
   );
 

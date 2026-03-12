@@ -6,29 +6,62 @@ function normalizeUser(payload) {
   return payload?.user || null;
 }
 
-export async function registerAuth({ email, emailConsent, signupSource = "register_page" }) {
-  const payload = await apiClient.post("/auth/register", {
+export async function requestPasskeyRegisterOptions({
+  email,
+  emailConsent,
+  signupSource = "register_page"
+}) {
+  return apiClient.post("/auth/passkey/register/options", {
     email,
     email_consent: emailConsent,
     signup_source: signupSource
+  });
+}
+
+export async function verifyPasskeyRegister({
+  challengeId,
+  credential
+}) {
+  const payload = await apiClient.post("/auth/passkey/register/verify", {
+    challenge_id: challengeId,
+    credential
   });
 
   return normalizeUser(payload);
 }
 
-export async function requestLoginAuth({ email }) {
-  return apiClient.post("/auth/login/request", {
+export async function requestPasskeyLoginOptions({ email }) {
+  return apiClient.post("/auth/passkey/login/options", {
     email
   });
 }
 
-export async function verifyLoginAuth({ token }) {
+export async function verifyPasskeyLogin({
+  challengeId,
+  credential
+}) {
+  const payload = await apiClient.post("/auth/passkey/login/verify", {
+    challenge_id: challengeId,
+    credential
+  });
+
+  return normalizeUser(payload);
+}
+
+export async function requestRecoveryAuth({ email, redirectPath }) {
+  return apiClient.post("/auth/recovery/request", {
+    email,
+    redirect_path: redirectPath
+  });
+}
+
+export async function verifyRecoveryAuth({ token }) {
   const cacheKey = String(token || "");
   let pendingRequest = pendingVerifyRequestsByToken.get(cacheKey);
 
   if (!pendingRequest) {
     pendingRequest = apiClient
-      .post("/auth/login/verify", {
+      .post("/auth/recovery/verify", {
         token
       })
       .finally(() => {

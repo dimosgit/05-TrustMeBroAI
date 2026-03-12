@@ -149,6 +149,159 @@ BEGIN
 END;
 $$;
 
+CREATE TABLE IF NOT EXISTS auth_passkey_challenges (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  challenge_hash VARCHAR(64) NOT NULL,
+  purpose VARCHAR(32) NOT NULL,
+  rp_id VARCHAR(255) NOT NULL,
+  origin TEXT NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP,
+  user_agent TEXT,
+  ip_address TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS challenge_hash VARCHAR(64);
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS purpose VARCHAR(32);
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS rp_id VARCHAR(255);
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS origin TEXT;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS used_at TIMESTAMP;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE auth_passkey_challenges ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+UPDATE auth_passkey_challenges SET created_at = COALESCE(created_at, NOW());
+UPDATE auth_passkey_challenges SET purpose = COALESCE(purpose, 'authenticate') WHERE purpose IS NULL;
+UPDATE auth_passkey_challenges SET rp_id = COALESCE(rp_id, 'localhost') WHERE rp_id IS NULL;
+UPDATE auth_passkey_challenges SET origin = COALESCE(origin, 'http://localhost:5174') WHERE origin IS NULL;
+
+ALTER TABLE auth_passkey_challenges ALTER COLUMN challenge_hash SET NOT NULL;
+ALTER TABLE auth_passkey_challenges ALTER COLUMN purpose SET NOT NULL;
+ALTER TABLE auth_passkey_challenges ALTER COLUMN rp_id SET NOT NULL;
+ALTER TABLE auth_passkey_challenges ALTER COLUMN origin SET NOT NULL;
+ALTER TABLE auth_passkey_challenges ALTER COLUMN expires_at SET NOT NULL;
+ALTER TABLE auth_passkey_challenges ALTER COLUMN created_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'auth_passkey_challenges_purpose_check'
+      AND conrelid = 'auth_passkey_challenges'::regclass
+  ) THEN
+    ALTER TABLE auth_passkey_challenges
+      ADD CONSTRAINT auth_passkey_challenges_purpose_check
+      CHECK (purpose IN ('register', 'authenticate'));
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS auth_passkeys (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  credential_id TEXT NOT NULL UNIQUE,
+  public_key TEXT NOT NULL,
+  counter BIGINT NOT NULL DEFAULT 0,
+  transports JSONB NOT NULL DEFAULT '[]'::jsonb,
+  aaguid TEXT,
+  device_name VARCHAR(120),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  last_used_at TIMESTAMP,
+  revoked_at TIMESTAMP
+);
+
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS credential_id TEXT;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS public_key TEXT;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS counter BIGINT DEFAULT 0;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS transports JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS aaguid TEXT;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS device_name VARCHAR(120);
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP;
+ALTER TABLE auth_passkeys ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP;
+
+UPDATE auth_passkeys SET counter = COALESCE(counter, 0);
+UPDATE auth_passkeys SET transports = COALESCE(transports, '[]'::jsonb);
+UPDATE auth_passkeys SET created_at = COALESCE(created_at, NOW());
+UPDATE auth_passkeys SET updated_at = COALESCE(updated_at, NOW());
+
+ALTER TABLE auth_passkeys ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN credential_id SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN public_key SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN counter SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN transports SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN created_at SET NOT NULL;
+ALTER TABLE auth_passkeys ALTER COLUMN updated_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'auth_passkeys_counter_check'
+      AND conrelid = 'auth_passkeys'::regclass
+  ) THEN
+    ALTER TABLE auth_passkeys
+      ADD CONSTRAINT auth_passkeys_counter_check CHECK (counter >= 0);
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS auth_recovery_tokens (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(64) NOT NULL,
+  purpose VARCHAR(40) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP,
+  redirect_path VARCHAR(512),
+  user_agent TEXT,
+  ip_address TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS token_hash VARCHAR(64);
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS purpose VARCHAR(40);
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS used_at TIMESTAMP;
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS redirect_path VARCHAR(512);
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE auth_recovery_tokens ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+UPDATE auth_recovery_tokens SET created_at = COALESCE(created_at, NOW());
+UPDATE auth_recovery_tokens SET purpose = COALESCE(purpose, 'recovery') WHERE purpose IS NULL;
+
+ALTER TABLE auth_recovery_tokens ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE auth_recovery_tokens ALTER COLUMN token_hash SET NOT NULL;
+ALTER TABLE auth_recovery_tokens ALTER COLUMN purpose SET NOT NULL;
+ALTER TABLE auth_recovery_tokens ALTER COLUMN expires_at SET NOT NULL;
+ALTER TABLE auth_recovery_tokens ALTER COLUMN created_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'auth_recovery_tokens_purpose_check'
+      AND conrelid = 'auth_recovery_tokens'::regclass
+  ) THEN
+    ALTER TABLE auth_recovery_tokens
+      ADD CONSTRAINT auth_recovery_tokens_purpose_check
+      CHECK (purpose IN ('recovery', 'bootstrap'));
+  END IF;
+END;
+$$;
+
 CREATE TABLE IF NOT EXISTS recommendation_sessions (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -394,6 +547,15 @@ WHERE revoked_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_magic_links_token_hash_unique ON auth_magic_links (token_hash);
 CREATE INDEX IF NOT EXISTS idx_auth_magic_links_user_active ON auth_magic_links (user_id, expires_at DESC)
 WHERE used_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_passkey_challenges_hash_unique ON auth_passkey_challenges (challenge_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_passkey_challenges_active ON auth_passkey_challenges (purpose, expires_at DESC)
+WHERE used_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_passkeys_credential_unique ON auth_passkeys (credential_id);
+CREATE INDEX IF NOT EXISTS idx_auth_passkeys_user_active ON auth_passkeys (user_id, created_at DESC)
+WHERE revoked_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_recovery_tokens_hash_unique ON auth_recovery_tokens (token_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_recovery_tokens_user_active ON auth_recovery_tokens (user_id, expires_at DESC)
+WHERE used_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_task_created ON recommendation_sessions (task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_recommendation_sessions_user ON recommendation_sessions (user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_recommendations_session_unique ON recommendations (session_id);
@@ -435,6 +597,12 @@ EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS trigger_users_updated_at ON users;
 CREATE TRIGGER trigger_users_updated_at
 BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trigger_auth_passkeys_updated_at ON auth_passkeys;
+CREATE TRIGGER trigger_auth_passkeys_updated_at
+BEFORE UPDATE ON auth_passkeys
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 

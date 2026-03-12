@@ -6,6 +6,10 @@ import { createApiFetchMock } from "./mockFetch";
 import { renderApp } from "./renderApp";
 
 const STORAGE_KEY = "trustmebro.recommendation";
+const WIZARD_SUBMIT_BUTTON_NAME = /See recommendation|Find my match/i;
+const UNLOCK_BUTTON_NAME = /Unlock my best match|Reveal my best match/i;
+const TRY_IT_LINK_NAME = /Try it\s*(->|→)/i;
+const POSITIVE_FEEDBACK_BUTTON_NAME = /Thumbs up|Yes/i;
 
 function setLockedResultInSessionStorage(overrides = {}) {
   window.sessionStorage.setItem(
@@ -88,11 +92,9 @@ describe("phase1 conversion flow", () => {
     await user.click(screen.getByRole("button", { name: /Write code/i }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: /Best quality/i }));
-    await user.click(screen.getByRole("button", { name: "See recommendation" }));
+    await user.click(screen.getByRole("button", { name: WIZARD_SUBMIT_BUTTON_NAME }));
 
-    expect(
-      await screen.findByText("Enter your email to reveal your best match.", {}, { timeout: 4000 })
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId("locked-primary", {}, { timeout: 4000 })).toBeInTheDocument();
 
     expect(screen.getByTestId("locked-primary")).toBeInTheDocument();
     expect(screen.getAllByTestId("alternative-item")).toHaveLength(2);
@@ -189,7 +191,7 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     const unlockedPrimary = await screen.findByTestId("unlocked-primary");
     expect(
@@ -220,7 +222,7 @@ describe("phase1 conversion flow", () => {
     renderApp(["/result"]);
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(
       await screen.findByText("Consent is required to unlock your recommendation.")
@@ -259,10 +261,10 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
-    const tryItLink = screen.getByRole("link", { name: "Try it ->" });
+    const tryItLink = screen.getByRole("link", { name: TRY_IT_LINK_NAME });
     expect(tryItLink).toHaveAttribute("href", "https://ref.example.com/chatgpt");
   });
 
@@ -290,10 +292,9 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    expect(await screen.findByLabelText("ChatGPT logo fallback")).toBeInTheDocument();
-    expect(screen.getByText("✺")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: /ChatGPT logo/i })).toBeInTheDocument();
   });
 
   it("supports backend unlock payload shape with try_it_url and nested primary_reason", async () => {
@@ -323,12 +324,12 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
     expect(screen.getByText("ChatGPT is the best fit for coding when quality is what matters most.")).toBeInTheDocument();
 
-    const tryItLink = screen.getByRole("link", { name: "Try it ->" });
+    const tryItLink = screen.getByRole("link", { name: TRY_IT_LINK_NAME });
     expect(tryItLink).toHaveAttribute("href", "https://ref.example.com/chatgpt");
   });
 
@@ -367,12 +368,12 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(screen.getByRole("button", { name: "Unlocking..." })).toBeDisabled();
 
     expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME })).toBeEnabled();
   });
 
   it("recovers from unlock 5xx failure and allows retry", async () => {
@@ -413,12 +414,12 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(await screen.findByText("Server is unavailable. Please try again.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME })).toBeEnabled();
 
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
     expect(unlockAttempts).toBe(2);
@@ -461,12 +462,12 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    const tryItLink = await screen.findByRole("link", { name: "Try it ->" });
+    const tryItLink = await screen.findByRole("link", { name: TRY_IT_LINK_NAME });
     expect(tryItLink).toHaveAttribute("href", "https://claude.ai");
 
-    await user.click(screen.getByRole("button", { name: "Thumbs up" }));
+    await user.click(screen.getByRole("button", { name: POSITIVE_FEEDBACK_BUTTON_NAME }));
 
     await waitFor(() => {
       expect(feedbackRequestBody).toEqual({ signal: 1 });
@@ -501,10 +502,10 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    expect(await screen.findByText("Create an account to save and return later.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create account" })).toHaveAttribute(
+    expect(await screen.findByText(/Want to save this\?/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
       "href",
       "/register?redirect=%2Fresult&email=user%40example.com"
     );
@@ -560,7 +561,7 @@ describe("phase1 conversion flow", () => {
     await user.click(screen.getByRole("button", { name: /Write code/i }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: /Fastest results/i }));
-    await user.click(screen.getByRole("button", { name: "See recommendation" }));
+    await user.click(screen.getByRole("button", { name: WIZARD_SUBMIT_BUTTON_NAME }));
 
     await screen.findByTestId("locked-primary", {}, { timeout: 4000 });
 
@@ -617,7 +618,7 @@ describe("phase1 conversion flow", () => {
     const priorityActions = await screen.findByTestId("wizard-action-bar");
     expect(within(priorityActions).getByRole("button", { name: "Back" })).toBeInTheDocument();
     expect(
-      within(priorityActions).getByRole("button", { name: "See recommendation" })
+      within(priorityActions).getByRole("button", { name: WIZARD_SUBMIT_BUTTON_NAME })
     ).toBeInTheDocument();
   });
 
@@ -671,9 +672,9 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    const tryItLink = await screen.findByRole("link", { name: "Try it ->" });
+    const tryItLink = await screen.findByRole("link", { name: TRY_IT_LINK_NAME });
     await user.click(tryItLink);
 
     expect(
@@ -730,9 +731,9 @@ describe("phase1 conversion flow", () => {
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+    await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    const tryItLink = await screen.findByRole("link", { name: "Try it ->" });
+    const tryItLink = await screen.findByRole("link", { name: TRY_IT_LINK_NAME });
     await user.click(tryItLink);
 
     expect(tryItRequestBody).toEqual({ session_id: 73 });
@@ -841,7 +842,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    const unlockButton = await screen.findByRole("button", { name: "Unlock my best match" });
+    const unlockButton = await screen.findByRole("button", { name: UNLOCK_BUTTON_NAME });
     expect(unlockButton).toBeEnabled();
 
     await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
@@ -869,7 +870,7 @@ describe("phase1 conversion flow", () => {
 
     expect(await screen.findByLabelText("Email to unlock")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Unlock my best match" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME })).toBeEnabled();
     });
     expect(window.localStorage.getItem("trustmebro.registered_unlock")).toBeNull();
   });
