@@ -52,7 +52,9 @@ Business constraint: email capture is a primary product objective, not a side fe
 - Wizard flow (3 steps)
 - Result screen (locked state)
 - Result screen (unlocked state)
-- Lightweight login screen for returning users (Phase 2, not required for MVP)
+- Passkey registration screen for returning users (Phase 2)
+- Passkey sign-in screen for returning users (Phase 2)
+- Fallback email recovery / account bootstrap screen (Phase 2)
 
 ---
 
@@ -65,6 +67,9 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `ResultLocked`
 - `EmailUnlock`
 - `ResultUnlocked`
+- `RegisterPasskey` (Phase 2)
+- `LoginPasskey` (Phase 2)
+- `AccountRecovery` (Phase 2)
 - No comparison tables or score visualizations in UI.
 - UI contract enforces primary-only reveal after unlock.
 
@@ -74,6 +79,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `recommendation-service` for deterministic scoring
 - `lead-capture-service` for email unlock, consent, and user linking
 - `result-service` for locked/unlocked response shapes
+- `auth-service` for passkey registration, sign-in, recovery, and account session lifecycle (Phase 2)
 - API returns internal scoring fields but frontend never displays them.
 
 ### Database structure
@@ -123,6 +129,9 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `recommendations`
 - `users`
 - `recommendation_feedback`
+- `auth_passkeys` (Phase 2)
+- `auth_sessions` (Phase 2)
+- `auth_recovery_tokens` (Phase 2)
 
 ### Relationships
 - `recommendation_sessions.profile_id -> profiles.id`
@@ -131,6 +140,9 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `recommendations.primary_tool_id -> tools.id`
 - `users.id -> recommendation_sessions.user_id` (nullable before unlock, required after unlock)
 - `recommendation_feedback.recommendation_id -> recommendations.id`
+- `auth_passkeys.user_id -> users.id` (Phase 2)
+- `auth_sessions.user_id -> users.id` (Phase 2)
+- `auth_recovery_tokens.user_id -> users.id` (Phase 2)
 
 ### Core tables
 
@@ -176,6 +188,33 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `id` BIGSERIAL PK
 - `recommendation_id` BIGINT NOT NULL FK
 - `signal` SMALLINT CHECK (`-1|1`)
+- `created_at`
+
+#### Phase 2 auth entities
+
+#### `auth_passkeys`
+- `id` BIGSERIAL PK
+- `user_id` BIGINT NOT NULL FK
+- `credential_id` TEXT UNIQUE NOT NULL
+- `public_key` TEXT NOT NULL
+- `counter` BIGINT NOT NULL DEFAULT `0`
+- `device_name` VARCHAR(120) NULL
+- `created_at`, `updated_at`, `last_used_at`
+
+#### `auth_sessions`
+- `id` BIGSERIAL PK
+- `user_id` BIGINT NOT NULL FK
+- `session_token_hash` TEXT UNIQUE NOT NULL
+- `expires_at` TIMESTAMP NOT NULL
+- `created_at`, `updated_at`, `revoked_at`
+
+#### `auth_recovery_tokens`
+- `id` BIGSERIAL PK
+- `user_id` BIGINT NOT NULL FK
+- `token_hash` TEXT UNIQUE NOT NULL
+- `purpose` VARCHAR(40) NOT NULL
+- `expires_at` TIMESTAMP NOT NULL
+- `used_at` TIMESTAMP NULL
 - `created_at`
 
 ---
@@ -236,8 +275,10 @@ Response contract rules:
 
 ### Authentication and access model
 - MVP access model: anonymous wizard + email unlock gate.
-- Returning-user login is deferred to Phase 2.
-- Until Phase 2, no protected app area requiring password auth.
+- Returning-user account access is deferred to Phase 2.
+- Phase 2 auth model: passkey-first sign-up and sign-in, with fallback email recovery/bootstrap.
+- Email remains the account identifier; no separate username is introduced.
+- Until Phase 2, no protected app area requiring account auth.
 
 ### Data protection
 - Validate all inputs (`email`, consent, session IDs, priority values).
@@ -272,14 +313,19 @@ Exit criteria:
 
 ### Phase 2: Feature expansion
 Scope:
-- Add returning-user login (magic link or passwordless email flow preferred).
+- Add returning-user account access with passkey-first auth.
+- Add fallback email recovery/bootstrap for users who cannot use their passkey yet.
 - Add saved recommendation history by user.
-- Add richer analytics dashboards (funnel: start -> complete -> unlock -> try-it).
+- Add richer analytics dashboards (funnel: start -> complete -> unlock -> register -> sign-in -> try-it).
+- Extract frontend copy into translation resources and prepare the app for internationalization.
 - Implement safe dataset update automation (post-MVP).
 
 Exit criteria:
+- Returning users can register and sign in with passkeys.
+- Fallback email recovery/bootstrap works reliably.
 - Returning users can access past recommendations.
 - Channel-level conversion by `signup_source` is visible.
+- English copy is externalized and ready for future locales.
 
 ### Phase 3: Optimization
 Scope:
@@ -300,8 +346,8 @@ Exit criteria:
 **Should unlock require double opt-in email confirmation or unlock immediately with consent checkbox?**
 Unlock immediately on email + consent checkbox. No double opt-in for MVP. Double opt-in adds friction at the exact moment of maximum motivation and will hurt conversion. A clear consent checkbox at the gate is sufficient for GDPR compliance.
 
-**Should returning-user authentication be magic-link only or email+password?**
-Magic link only for Phase 2. No passwords. The audience (non-technical professionals) finds passwordless flows less friction, and it eliminates password reset complexity entirely. Send a login link to their registered email.
+**Should returning-user authentication be passkey-first, magic-link only, or email+password?**
+Passkey-first for Phase 2, with email fallback only for recovery/bootstrap. No passwords and no separate username. This gives the product a more credible and modern account model than magic-link-only auth, while still avoiding password reset complexity. Email remains the account identifier, and fallback email recovery exists so users are not blocked if passkey setup is incomplete or they change devices.
 
 **Should `Try it ->` clicks open direct website or referral URL when available?**
 Open `referral_url` when populated, fall back to `website` when not. This enables future monetization without any frontend change. The `referral_url` field should be added to the `tools` table now, even if empty for all MVP tools.
