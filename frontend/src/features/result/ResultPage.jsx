@@ -69,16 +69,24 @@ export default function ResultPage() {
   const [feedbackSignal, setFeedbackSignal] = useState(null);
 
   useEffect(() => {
+    autoUnlockAttemptRef.current = false;
+  }, [resultState?.sessionId, resultState?.recommendationId]);
+
+  useEffect(() => {
     if (!resultState || resultState.unlocked || autoUnlockAttemptRef.current) {
       return;
     }
 
-    if (!hasRegisteredUnlockMarker()) {
+    const hasUnlockMarker = hasRegisteredUnlockMarker();
+    const shouldAttemptAutoUnlock = isAuthenticated || hasUnlockMarker;
+
+    if (!shouldAttemptAutoUnlock) {
       return;
     }
 
     let isCancelled = false;
     autoUnlockAttemptRef.current = true;
+    const unlockMethod = isAuthenticated ? "authenticated_session" : "remembered_session";
 
     unlockRecommendation({
       sessionId: resultState.sessionId,
@@ -94,11 +102,11 @@ export default function ResultPage() {
         trackEvent("recommendation_unlocked", {
           session_id: unlocked.sessionId,
           recommendation_id: unlocked.recommendationId,
-          unlock_method: "remembered_session"
+          unlock_method: unlockMethod
         });
       })
       .catch(() => {
-        if (!isCancelled) {
+        if (!isCancelled && !isAuthenticated) {
           setRegisteredUnlockMarker(false);
         }
       });
@@ -106,7 +114,7 @@ export default function ResultPage() {
     return () => {
       isCancelled = true;
     };
-  }, [resultState, setUnlockedResult]);
+  }, [isAuthenticated, resultState, setUnlockedResult]);
 
   if (!resultState) {
     return (
@@ -231,24 +239,6 @@ export default function ResultPage() {
         </button>
       </header>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-        <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Also consider:</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {alternatives.map((tool) => (
-            <div
-              key={`${tool.toolName}-${tool.contextWord}`}
-              data-testid="alternative-item"
-              className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
-            >
-              <p className="text-sm font-semibold text-white">{tool.toolName}</p>
-              {tool.contextWord ? (
-                <p className="mt-0.5 text-[11px] text-slate-400">{tool.contextWord}</p>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </section>
-
       {resultState.unlocked ? (
         <section className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 sm:p-6" data-testid="unlocked-primary">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -343,6 +333,26 @@ export default function ResultPage() {
           <UnlockForm onUnlock={handleUnlock} loading={manualUnlocking} />
         </section>
       )}
+
+      {alternatives.length ? (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4" data-testid="alternatives-section">
+          <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Also consider:</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {alternatives.map((tool) => (
+              <div
+                key={`${tool.toolName}-${tool.contextWord}`}
+                data-testid="alternative-item"
+                className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
+              >
+                <p className="text-sm font-semibold text-white">{tool.toolName}</p>
+                {tool.contextWord ? (
+                  <p className="mt-0.5 text-[11px] text-slate-400">{tool.contextWord}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

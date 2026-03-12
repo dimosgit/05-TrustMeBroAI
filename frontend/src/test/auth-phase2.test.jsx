@@ -13,7 +13,7 @@ describe("phase2 auth ux", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows register and login navigation when unauthenticated", async () => {
+  it("shows a single account action when unauthenticated", async () => {
     const fetchMock = createApiFetchMock({
       "GET /api/auth/me": {
         status: 401,
@@ -28,9 +28,12 @@ describe("phase2 auth ux", () => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole("link", { name: "Register" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Login" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Start Wizard" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
+      "href",
+      "/login?redirect=%2F"
+    );
+    expect(screen.queryByRole("link", { name: "Register" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Start Wizard" })).not.toBeInTheDocument();
   });
 
   it("submits register request and shows check-email confirmation", async () => {
@@ -273,7 +276,7 @@ describe("phase2 auth ux", () => {
     await user.click(screen.getByRole("button", { name: "Logout" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Register" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Account" })).toBeInTheDocument();
     });
     expect(
       trackingEvents.some((event) => event.eventName === "logout")
@@ -307,7 +310,7 @@ describe("phase2 auth ux", () => {
     await user.click(screen.getByRole("button", { name: "Logout" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Register" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Account" })).toBeInTheDocument();
     });
   });
 
@@ -335,7 +338,7 @@ describe("phase2 auth ux", () => {
 
     renderApp(["/"]);
 
-    await user.click(screen.getByRole("link", { name: "Start Wizard" }));
+    await user.click(screen.getByRole("button", { name: "Find my AI tool" }));
 
     expect(await screen.findByRole("heading", { name: "Who are you?" })).toBeInTheDocument();
   });

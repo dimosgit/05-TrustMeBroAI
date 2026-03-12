@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CONSENT_COPY } from "../features/wizard/constants";
@@ -98,6 +98,45 @@ describe("phase1 conversion flow", () => {
     expect(screen.getAllByTestId("alternative-item")).toHaveLength(2);
     expect(screen.queryByText("ChatGPT")).not.toBeInTheDocument();
     expect(screen.queryByText(/score/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the primary recommendation section ahead of alternatives", async () => {
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 502, sessionId: 70 });
+
+    const fetchMock = createApiFetchMock({
+      "POST /api/recommendation/unlock": {
+        status: 200,
+        body: {
+          recommendation_id: 502,
+          session_id: 70,
+          primary_tool: {
+            tool_name: "ChatGPT",
+            website: "https://chatgpt.com"
+          },
+          primary_reason: "Best for your task."
+        }
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    const lockedPrimary = await screen.findByTestId("locked-primary");
+    const alternatives = screen.getByTestId("alternatives-section");
+    expect(
+      lockedPrimary.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    const unlockedPrimary = await screen.findByTestId("unlocked-primary");
+    expect(
+      unlockedPrimary.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
   });
 
   it("requires consent before unlock request", async () => {
@@ -451,6 +490,49 @@ describe("phase1 conversion flow", () => {
     window.removeEventListener("tmb:tracking", trackingHandler);
   });
 
+  it("keeps wizard navigation actions persistently discoverable on mobile-sized steps", async () => {
+    const user = userEvent.setup();
+
+    const fetchMock = createApiFetchMock({
+      "GET /api/profiles": {
+        status: 200,
+        body: [{ id: 2, name: "Developer", description: "Build products" }]
+      },
+      "GET /api/tasks": {
+        status: 200,
+        body: [{ id: 4, name: "Write code", description: "Ship code" }]
+      },
+      "GET /api/priorities": {
+        status: 200,
+        body: [{ id: 1, name: "Best quality", description: "Quality first" }]
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/wizard"]);
+
+    const profileActions = await screen.findByTestId("wizard-action-bar");
+    expect(profileActions.className).toContain("sticky");
+    expect(within(profileActions).getByRole("button", { name: "Continue" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Developer/i }));
+    await user.click(within(profileActions).getByRole("button", { name: "Continue" }));
+
+    const taskActions = await screen.findByTestId("wizard-action-bar");
+    expect(within(taskActions).getByRole("button", { name: "Back" })).toBeInTheDocument();
+    expect(within(taskActions).getByRole("button", { name: "Continue" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Write code/i }));
+    await user.click(within(taskActions).getByRole("button", { name: "Continue" }));
+
+    const priorityActions = await screen.findByTestId("wizard-action-bar");
+    expect(within(priorityActions).getByRole("button", { name: "Back" })).toBeInTheDocument();
+    expect(
+      within(priorityActions).getByRole("button", { name: "See recommendation" })
+    ).toBeInTheDocument();
+  });
+
   it("renders required consent copy", () => {
     setLockedResultInSessionStorage();
     vi.stubGlobal("fetch", createApiFetchMock({}));
@@ -568,13 +650,21 @@ describe("phase1 conversion flow", () => {
     expect(tryItRequestBody).toEqual({ session_id: 73 });
   });
 
-  it("auto-unlocks for returning registered users without requiring email input", async () => {
+  it("auto-unlocks for authenticated users without requiring email input", async () => {
     setLockedResultInSessionStorage({ recommendationId: 955, sessionId: 19 });
-    window.localStorage.setItem("trustmebro.registered_unlock", "1");
 
     let unlockRequestBody = null;
 
     const fetchMock = createApiFetchMock({
+      "GET /api/auth/me": {
+        status: 200,
+        body: {
+          user: {
+            id: 101,
+            email: "member@example.com"
+          }
+        }
+      },
       "POST /api/recommendation/unlock": ({ init }) => {
         unlockRequestBody = JSON.parse(init.body);
         return {

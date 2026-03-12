@@ -76,6 +76,17 @@ export function StepShell({ children }) {
   return <div className="step-in px-2 sm:px-4">{children}</div>;
 }
 
+function StepActionBar({ children }) {
+  return (
+    <div
+      data-testid="wizard-action-bar"
+      className="sticky bottom-0 z-20 -mx-2 mt-6 border-t border-white/10 bg-[#0d1117]/95 px-2 py-3 backdrop-blur sm:static sm:z-auto sm:mx-0 sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0"
+    >
+      {children}
+    </div>
+  );
+}
+
 export function StepProfile({ options, selectedId, onSelect, onNext }) {
   return (
     <StepShell>
@@ -93,16 +104,18 @@ export function StepProfile({ options, selectedId, onSelect, onNext }) {
           />
         ))}
       </div>
-      <div className="mt-6 flex items-center justify-end gap-4">
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!selectedId}
-          className="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          Continue
-        </button>
-      </div>
+      <StepActionBar>
+        <div className="sm:flex sm:justify-end">
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={!selectedId}
+            className="w-full rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto"
+          >
+            Continue
+          </button>
+        </div>
+      </StepActionBar>
     </StepShell>
   );
 }
@@ -124,23 +137,25 @@ export function StepTask({ options, selectedId, onSelect, onNext, onBack }) {
           />
         ))}
       </div>
-      <div className="mt-6 flex items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-xl border border-white/10 bg-white/5 px-8 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!selectedId}
-          className="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          Continue
-        </button>
-      </div>
+      <StepActionBar>
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10 sm:px-8"
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={!selectedId}
+            className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:px-8"
+          >
+            Continue
+          </button>
+        </div>
+      </StepActionBar>
     </StepShell>
   );
 }
@@ -163,28 +178,30 @@ export function StepPriority({ options, selectedId, onSelect, onSubmit, onBack, 
           />
         ))}
       </div>
-      <div className="mt-6 flex items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-xl border border-white/10 bg-white/5 px-8 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!selectedId || loading}
-          className="relative overflow-hidden rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          <span className={loading ? "opacity-0" : "opacity-100"}>See recommendation</span>
-          {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            </div>
-          ) : null}
-        </button>
-      </div>
+      <StepActionBar>
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-300 transition-all hover:bg-white/10 sm:px-8"
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={!selectedId || loading}
+            className="relative overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-30 sm:px-8"
+          >
+            <span className={loading ? "opacity-0" : "opacity-100"}>See recommendation</span>
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
+            ) : null}
+          </button>
+        </div>
+      </StepActionBar>
     </StepShell>
   );
 }

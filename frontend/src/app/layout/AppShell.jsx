@@ -89,24 +89,13 @@ export default function AppShell({ children }) {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link
-                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
-                    to={`/register?redirect=${encodeURIComponent(location.pathname)}`}
-                  >
-                    Register
-                  </Link>
-                  <Link
-                    className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
-                    to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
-                  >
-                    Login
-                  </Link>
-                </>
+                <Link
+                  className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-500"
+                  to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
+                >
+                  Account
+                </Link>
               )}
-              <Link className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500" to="/wizard">
-                Start Wizard
-              </Link>
             </div>
           </nav>
         </header>
