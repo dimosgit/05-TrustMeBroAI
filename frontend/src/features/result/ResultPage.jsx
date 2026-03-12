@@ -14,6 +14,25 @@ import UnlockForm from "../unlock/UnlockForm";
 import { useRecommendation } from "./RecommendationContext";
 
 const REGISTERED_UNLOCK_KEY = "trustmebro.registered_unlock";
+const TOOL_LOGO_TOKENS = {
+  chatgpt: "✺",
+  claude: "C",
+  copilot: "⬢",
+  perplexity: "P",
+  cursor: "▶"
+};
+
+function resolveToolLogoToken(toolName) {
+  const normalizedName = String(toolName || "")
+    .trim()
+    .toLowerCase();
+
+  if (TOOL_LOGO_TOKENS[normalizedName]) {
+    return TOOL_LOGO_TOKENS[normalizedName];
+  }
+
+  return (toolName || "AI").slice(0, 2).toUpperCase();
+}
 
 function hasRegisteredUnlockMarker() {
   if (typeof window === "undefined") {
@@ -67,10 +86,20 @@ export default function ResultPage() {
   const [lastUnlockedEmail, setLastUnlockedEmail] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackSignal, setFeedbackSignal] = useState(null);
+  const [primaryLogoLoadFailed, setPrimaryLogoLoadFailed] = useState(false);
+  const alternatives = (Array.isArray(resultState?.alternatives) ? resultState.alternatives : []).slice(0, 2);
+  const primaryTool = resultState?.primaryTool || {};
+  const tryItUrl = primaryTool.tryItUrl || primaryTool.referralUrl || primaryTool.website || "#";
+  const primaryLogoToken = resolveToolLogoToken(primaryTool.toolName);
+  const shouldRenderPrimaryLogoImage = Boolean(primaryTool.logoUrl) && !primaryLogoLoadFailed;
 
   useEffect(() => {
     autoUnlockAttemptRef.current = false;
   }, [resultState?.sessionId, resultState?.recommendationId]);
+
+  useEffect(() => {
+    setPrimaryLogoLoadFailed(false);
+  }, [primaryTool.logoUrl, primaryTool.toolName]);
 
   useEffect(() => {
     if (!resultState || resultState.unlocked || autoUnlockAttemptRef.current) {
@@ -131,10 +160,6 @@ export default function ResultPage() {
       </div>
     );
   }
-
-  const alternatives = (Array.isArray(resultState.alternatives) ? resultState.alternatives : []).slice(0, 2);
-  const primaryTool = resultState.primaryTool || {};
-  const tryItUrl = primaryTool.tryItUrl || primaryTool.referralUrl || primaryTool.website || "#";
 
   async function handleUnlock({ email, emailConsent }) {
     setManualUnlocking(true);
@@ -243,11 +268,19 @@ export default function ResultPage() {
         <section className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 sm:p-6" data-testid="unlocked-primary">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              {primaryTool.logoUrl ? (
-                <img src={primaryTool.logoUrl} alt={`${primaryTool.toolName} logo`} className="h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover" />
+              {shouldRenderPrimaryLogoImage ? (
+                <img
+                  src={primaryTool.logoUrl}
+                  alt={`${primaryTool.toolName} logo`}
+                  className="h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover"
+                  onError={() => setPrimaryLogoLoadFailed(true)}
+                />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl font-bold text-blue-300">
-                  {(primaryTool.toolName || "AI").slice(0, 2).toUpperCase()}
+                <div
+                  aria-label={`${primaryTool.toolName || "Tool"} logo fallback`}
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl font-bold text-blue-300"
+                >
+                  {primaryLogoToken}
                 </div>
               )}
               <div>

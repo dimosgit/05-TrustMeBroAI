@@ -100,6 +100,64 @@ describe("phase1 conversion flow", () => {
     expect(screen.queryByText(/score/i)).not.toBeInTheDocument();
   });
 
+  it("keeps primary recommendation section above alternatives in locked and unlocked result states", async () => {
+    setLockedResultInSessionStorage({ recommendationId: 501, sessionId: 88 });
+    vi.stubGlobal(
+      "fetch",
+      createApiFetchMock({
+        "GET /api/auth/me": {
+          status: 401,
+          body: { message: "Unauthorized" }
+        }
+      })
+    );
+
+    const { unmount } = renderApp(["/result"]);
+
+    const lockedPrimary = await screen.findByTestId("locked-primary");
+    const lockedAlternatives = await screen.findByTestId("alternatives-section");
+    expect(
+      Boolean(lockedPrimary.compareDocumentPosition(lockedAlternatives) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+
+    unmount();
+    vi.unstubAllGlobals();
+
+    setLockedResultInSessionStorage({
+      recommendationId: 502,
+      sessionId: 89,
+      unlocked: true,
+      primaryTool: {
+        toolName: "Claude",
+        tryItUrl: "https://try.example.com/claude",
+        website: "https://claude.ai"
+      },
+      primaryReason: "Claude best matches the selected criteria."
+    });
+    vi.stubGlobal(
+      "fetch",
+      createApiFetchMock({
+        "GET /api/auth/me": {
+          status: 200,
+          body: {
+            user: {
+              id: 77,
+              email: "member@example.com"
+            }
+          }
+        }
+      })
+    );
+
+    renderApp(["/result"]);
+
+    const unlockedPrimary = await screen.findByTestId("unlocked-primary");
+    const unlockedAlternatives = await screen.findByTestId("alternatives-section");
+    expect(
+      Boolean(unlockedPrimary.compareDocumentPosition(unlockedAlternatives) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+  });
+
   it("keeps the primary recommendation section ahead of alternatives", async () => {
     const user = userEvent.setup();
     setLockedResultInSessionStorage({ recommendationId: 502, sessionId: 70 });
@@ -206,6 +264,36 @@ describe("phase1 conversion flow", () => {
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
     const tryItLink = screen.getByRole("link", { name: "Try it ->" });
     expect(tryItLink).toHaveAttribute("href", "https://ref.example.com/chatgpt");
+  });
+
+  it("renders a ChatGPT fallback mark when logo_url is missing", async () => {
+    const user = userEvent.setup();
+    setLockedResultInSessionStorage({ recommendationId: 205 });
+
+    const fetchMock = createApiFetchMock({
+      "POST /api/recommendation/unlock": {
+        status: 200,
+        body: {
+          recommendation_id: 205,
+          primary_tool: {
+            tool_name: "ChatGPT",
+            website: "https://chatgpt.com"
+          },
+          primary_reason: "ChatGPT is the best fit for coding."
+        }
+      }
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Unlock my best match" }));
+
+    expect(await screen.findByLabelText("ChatGPT logo fallback")).toBeInTheDocument();
+    expect(screen.getByText("✺")).toBeInTheDocument();
   });
 
   it("supports backend unlock payload shape with try_it_url and nested primary_reason", async () => {
