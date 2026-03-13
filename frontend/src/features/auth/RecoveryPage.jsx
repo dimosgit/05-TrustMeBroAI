@@ -88,23 +88,22 @@ export default function RecoveryPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header className="space-y-1 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("auth.accountRecoveryLabel")}</p>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 text-2xl">📧</div>
         <h1 className="text-2xl font-bold tracking-tight text-white">{t("auth.recoveryTitle")}</h1>
-        <p className="text-sm text-slate-400">
-          {t("auth.recoverySubtitle")}
-        </p>
+        <p className="text-sm text-slate-500">{t("auth.recoverySubtitle")}</p>
       </header>
 
       {isSubmitted ? (
-        <div className="space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-center">
-          <h2 className="text-lg font-semibold text-emerald-300">{t("auth.recoveryCheckEmailTitle")}</h2>
-          <p className="text-sm text-slate-200">
+        <div className="space-y-3 rounded-2xl bg-emerald-500/10 p-5 text-center">
+          <div className="text-3xl">📬</div>
+          <h2 className="text-base font-semibold text-emerald-300">{t("auth.recoveryCheckEmailTitle")}</h2>
+          <p className="text-sm text-slate-300">
             {t("auth.recoveryCheckEmailBody", { email: email.trim() })}
           </p>
-          <p className="text-xs text-slate-300">{t("auth.recoveryCheckEmailHint")}</p>
-          <Link to={loginHref} className="text-sm font-semibold text-blue-300 hover:text-blue-200">
+          <p className="text-xs text-slate-500">{t("auth.recoveryCheckEmailHint")}</p>
+          <Link to={loginHref} className="block text-sm text-slate-400 underline underline-offset-2 hover:text-white">
             {t("auth.recoveryBackToPasskey")}
           </Link>
         </div>
@@ -119,7 +118,7 @@ export default function RecoveryPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
+              className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
               placeholder={t("auth.emailPlaceholder")}
               autoComplete="email"
             />
@@ -128,16 +127,16 @@ export default function RecoveryPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-bold text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? t("auth.recoverySending") : t("auth.recoverySubmit")}
           </button>
         </form>
       )}
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-xs text-slate-500">
         {t("auth.recoveryPreferPasskeyPrefix")}{" "}
-        <Link to={loginHref} className="font-semibold text-blue-300 hover:text-blue-200">
+        <Link to={loginHref} className="text-slate-400 underline underline-offset-2 hover:text-white">
           {t("auth.recoveryPreferPasskeyAction")}
         </Link>
       </p>

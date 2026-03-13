@@ -119,13 +119,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header className="space-y-1 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("auth.accountLabel")}</p>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-2xl">🔑</div>
         <h1 className="text-2xl font-bold tracking-tight text-white">{t("auth.loginTitle")}</h1>
-        <p className="text-sm text-slate-400">
-          {t("auth.loginSubtitle")}
-        </p>
+        <p className="text-sm text-slate-500">{t("auth.loginSubtitle")}</p>
       </header>
 
       <form className="space-y-3" onSubmit={handleSubmit}>
@@ -138,7 +136,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
+            className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
             placeholder={t("auth.emailPlaceholder")}
             autoComplete="email"
           />
@@ -153,19 +151,20 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center text-xs text-slate-400">
-        {t("auth.loginFallbackPrefix")}{" "}
-        <Link to={recoveryHref} className="font-semibold text-blue-300 hover:text-blue-200">
-          {t("auth.loginFallbackAction")}
-        </Link>
+      <div className="space-y-2 text-center text-xs text-slate-500">
+        <p>
+          {t("auth.loginFallbackPrefix")}{" "}
+          <Link to={recoveryHref} className="text-slate-400 underline underline-offset-2 hover:text-white">
+            {t("auth.loginFallbackAction")}
+          </Link>
+        </p>
+        <p>
+          {t("auth.loginNewPrefix")}{" "}
+          <Link to={registerHref} className="text-slate-400 underline underline-offset-2 hover:text-white">
+            {t("auth.loginNewAction")}
+          </Link>
+        </p>
       </div>
-
-      <p className="text-center text-sm text-slate-400">
-        {t("auth.loginNewPrefix")}{" "}
-        <Link to={registerHref} className="font-semibold text-blue-300 hover:text-blue-200">
-          {t("auth.loginNewAction")}
-        </Link>
-      </p>
     </div>
   );
 }

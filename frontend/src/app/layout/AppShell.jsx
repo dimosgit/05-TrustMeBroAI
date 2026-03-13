@@ -40,6 +40,7 @@ function DefaultFooter() {
 export default function AppShell({ children }) {
   const location = useLocation();
   const isLanding = location.pathname === "/";
+  const isAuth = ["/login", "/register", "/auth/recovery"].some(p => location.pathname.startsWith(p));
   const {
     user,
     isAuthenticated,
@@ -70,7 +71,7 @@ export default function AppShell({ children }) {
           <div className="absolute bottom-20 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-sky-400/12 blur-3xl" />
         </div>
 
-        <header className="mx-auto w-full max-w-4xl pb-3">
+        <header className={["mx-auto w-full pb-3", isLanding || isAuth ? "max-w-[42rem]" : "max-w-3xl"].join(" ")}>
           <nav className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#161b22]/80 px-4 py-3 backdrop-blur">
             <Link className="flex items-center group" to="/">
               <span className="text-sm font-extrabold text-white tracking-normal">
@@ -147,7 +148,8 @@ export default function AppShell({ children }) {
           <div
             className={[
               "card-surface w-full p-6 sm:p-10",
-              isLanding ? "landing-card max-w-[42rem]" : "max-w-3xl"
+              isLanding || isAuth ? "max-w-[42rem]" : "max-w-3xl",
+              isLanding ? "landing-card" : ""
             ].join(" ")}
           >
             {children}

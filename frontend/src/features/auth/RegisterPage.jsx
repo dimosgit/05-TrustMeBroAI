@@ -165,13 +165,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header className="space-y-1 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("auth.accountLabel")}</p>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/15 text-2xl">✨</div>
         <h1 className="text-2xl font-bold tracking-tight text-white">
           {isEnrollmentMode ? t("auth.enrollmentTitle") : t("auth.registerTitle")}
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           {isEnrollmentMode ? t("auth.enrollmentSubtitle") : t("auth.registerSubtitle")}
         </p>
       </header>
@@ -187,13 +187,13 @@ export default function RegisterPage() {
             value={email}
             readOnly={isEnrollmentMode}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30"
+            className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
             placeholder={t("auth.emailPlaceholder")}
             autoComplete="email"
           />
         </label>
 
-        <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/5 px-4 py-3 text-sm text-slate-400">
           <input
             type="checkbox"
             checked={emailConsent}
@@ -206,7 +206,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-blue-500 hover:to-violet-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting
             ? (isEnrollmentMode ? t("auth.enrollmentSubmitting") : t("auth.registerCreating"))
@@ -215,21 +215,20 @@ export default function RegisterPage() {
       </form>
 
       {!isEnrollmentMode ? (
-        <>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center text-xs text-slate-400">
+        <div className="space-y-2 text-center text-xs text-slate-500">
+          <p>
             {t("auth.registerFallbackPrefix")}{" "}
-            <Link to={recoveryHref} className="font-semibold text-blue-300 hover:text-blue-200">
+            <Link to={recoveryHref} className="text-slate-400 underline underline-offset-2 hover:text-white">
               {t("auth.registerFallbackAction")}
             </Link>
-          </div>
-
-          <p className="text-center text-sm text-slate-400">
+          </p>
+          <p>
             {t("auth.registerAlreadyPrefix")}{" "}
-            <Link to={loginHref} className="font-semibold text-blue-300 hover:text-blue-200">
+            <Link to={loginHref} className="text-slate-400 underline underline-offset-2 hover:text-white">
               {t("auth.registerAlreadyAction")}
             </Link>
           </p>
-        </>
+        </div>
       ) : null}
     </div>
   );
