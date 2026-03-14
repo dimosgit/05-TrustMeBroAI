@@ -140,7 +140,7 @@ function AlternativesGrid({ alternatives }) {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isBootstrapping } = useAuth();
   const { resultState, setUnlockedResult, clearResult } = useRecommendation();
 
   const [manualUnlocking, setManualUnlocking] = useState(false);
@@ -149,6 +149,7 @@ export default function ResultPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackSignal, setFeedbackSignal] = useState(null);
   const [primaryLogoLoadFailed, setPrimaryLogoLoadFailed] = useState(false);
+  const [autoUnlockFailed, setAutoUnlockFailed] = useState(false);
   const alternatives = (Array.isArray(resultState?.alternatives) ? resultState.alternatives : []).slice(0, 2);
   const primaryTool = resultState?.primaryTool || {};
   const tryItUrl = primaryTool.tryItUrl || primaryTool.referralUrl || primaryTool.website || "#";
@@ -157,13 +158,28 @@ export default function ResultPage() {
   const apiLogoUrl = Boolean(primaryTool.logoUrl) && !primaryLogoLoadFailed ? primaryTool.logoUrl : null;
   const logoUrl = apiLogoUrl || faviconUrl;
   const shouldRenderLogo = Boolean(logoUrl);
+  const hasUnlockMarker = hasRegisteredUnlockMarker();
+  const shouldShowAuthenticatedAutoUnlockPending = Boolean(
+    resultState &&
+      !resultState.unlocked &&
+      isAuthenticated &&
+      !autoUnlockFailed
+  );
+  const shouldHideAlternativesDuringAutoUnlock = Boolean(
+    resultState &&
+      !resultState.unlocked &&
+      !autoUnlockFailed &&
+      (isBootstrapping || isAuthenticated || hasUnlockMarker)
+  );
 
-  useEffect(() => { autoUnlockAttemptRef.current = false; }, [resultState?.sessionId, resultState?.recommendationId]);
+  useEffect(() => {
+    autoUnlockAttemptRef.current = false;
+    setAutoUnlockFailed(false);
+  }, [resultState?.sessionId, resultState?.recommendationId]);
   useEffect(() => { setPrimaryLogoLoadFailed(false); }, [primaryTool.logoUrl, primaryTool.toolName]);
 
   useEffect(() => {
     if (!resultState || resultState.unlocked || autoUnlockAttemptRef.current) return;
-    const hasUnlockMarker = hasRegisteredUnlockMarker();
     const shouldAttemptAutoUnlock = isAuthenticated || hasUnlockMarker;
     if (!shouldAttemptAutoUnlock) return;
 
@@ -178,10 +194,16 @@ export default function ResultPage() {
         setUnlockedResult(unlocked);
         trackEvent("recommendation_unlocked", { session_id: unlocked.sessionId, recommendation_id: unlocked.recommendationId, unlock_method: unlockMethod });
       })
-      .catch(() => { if (!isCancelled && !isAuthenticated) setRegisteredUnlockMarker(false); });
+      .catch(() => {
+        if (isCancelled) return;
+        setAutoUnlockFailed(true);
+        if (!isAuthenticated) {
+          setRegisteredUnlockMarker(false);
+        }
+      });
 
     return () => { isCancelled = true; };
-  }, [isAuthenticated, resultState, setUnlockedResult]);
+  }, [hasUnlockMarker, isAuthenticated, resultState, setUnlockedResult]);
 
   if (!resultState) {
     return (
@@ -299,11 +321,21 @@ export default function ResultPage() {
             </p>
           ) : null}
         </section>
+      ) : shouldShowAuthenticatedAutoUnlockPending ? (
+        <section className="space-y-4" data-testid="auto-unlock-pending">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-blue-300 border-t-transparent" />
+            <h2 className="text-base font-semibold text-white">{t("result.autoUnlockingTitle")}</h2>
+            <p className="mt-1 text-sm text-slate-400">{t("result.autoUnlockingSubtitle")}</p>
+          </div>
+        </section>
       ) : (
         <section className="space-y-4" data-testid="locked-primary">
           <LockedPrimaryCard />
           <UnlockForm onUnlock={handleUnlock} loading={manualUnlocking} />
-          <AlternativesGrid alternatives={alternatives} />
+          {!shouldHideAlternativesDuringAutoUnlock ? (
+            <AlternativesGrid alternatives={alternatives} />
+          ) : null}
         </section>
       )}
     </div>

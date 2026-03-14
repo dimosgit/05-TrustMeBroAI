@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import TasksProgressPage from "../features/internal/TasksProgressPage";
 import AuthVerifyPage from "../features/auth/AuthVerifyPage";
 import HistoryPage from "../features/history/HistoryPage";
 import LoginPage from "../features/auth/LoginPage";
@@ -18,6 +19,7 @@ export default function AppRoutes() {
       <Route path="/auth/recovery/verify" element={<AuthVerifyPage />} />
       <Route path="/auth/verify" element={<AuthVerifyPage />} />
       <Route path="/history" element={<HistoryPage />} />
+      <Route path="/tasks-progress" element={<TasksProgressPage />} />
       <Route path="/wizard" element={<WizardPage />} />
       <Route path="/result" element={<ResultPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

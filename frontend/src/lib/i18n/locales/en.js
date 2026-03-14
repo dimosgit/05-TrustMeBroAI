@@ -61,6 +61,8 @@ const en = {
     lockCardTitle: "",
     lockCardSubtitle: "One email. Your recommendation, yours to keep.",
     lockedResultSubtitle: "Enter your email to see which tool we picked for you.",
+    autoUnlockingTitle: "Loading your saved recommendation...",
+    autoUnlockingSubtitle: "One moment while we unlock your result.",
     unlockSuccessToast: "Recommendation unlocked.",
     unlockServerUnavailable: "Server is unavailable. Please try again.",
     unlockFailed: "Could not unlock recommendation.",

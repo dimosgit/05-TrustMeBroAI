@@ -94,6 +94,7 @@ Exit gate:
 2. Keep history API, history UI, and i18n extraction modular enough that failures are easy to isolate.
 3. Treat the passkey mitigations as part of Sprint 2 completion, not optional polish.
 4. Keep anonymous recommendation flow protected as a standing regression gate in every Phase 2 PR.
+5. The internal `/tasks-progress` route may exist during development for execution visibility, but it must be deleted or disabled before go-live.
 
 ## 7. Success Criteria
 1. Passkey auth remains credible and modern after mitigation closeout.
@@ -101,3 +102,30 @@ Exit gate:
 3. Recommendation history is available to authenticated users.
 4. English copy is extracted and ready for future localization.
 5. Anonymous wizard conversion remains strong while accounts become more robust.
+
+## 8. Current Execution Batch (2026-03-14)
+1. `Back-End Specialist`
+   - authenticated recommendation history API
+   - account/auth funnel metrics foundation
+   - recovery verify and enrollment signal hardening
+2. `Front-End Specialist`
+   - authenticated recommendation history UI
+   - English copy extraction into translation resources
+   - recovery-based passkey enrollment guidance
+3. `QA Specialist`
+   - real-device passkey validation sweep
+   - history regression gate
+   - English parity validation after i18n extraction
+4. `Integration Specialist`
+   - history contract reconciliation
+   - anonymous-flow non-regression review
+   - Sprint 2 closeout and merge gate
+5. `Marketing Content Specialist`
+   - current messaging audit
+   - build-in-public strategy
+   - copy recommendation package
+
+## 9. Pre-Go-Live Internal Tooling Gate
+1. `/tasks-progress` is an internal development helper only.
+2. Production release is blocked until `/tasks-progress` is removed or disabled from the shipped app.
+3. QA and Integration must explicitly verify this before go-live signoff.

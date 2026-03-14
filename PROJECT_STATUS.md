@@ -1,11 +1,18 @@
 # TrustMeBroAI Status
 
+## Status Legend
+
+- [ ] Not started
+- [~] In progress
+- [x] Completed
+
 ## Current State
 
 - Current phase: `Phase 2`
 - Current sprint: `Sprint 2`
 - Current status: `In progress`
 - Source of truth: `docs/planning/final-implementation-plan.md`
+- Internal dev helper: `/tasks-progress` is available during development only and must be removed before go-live.
 
 ## Phase 1 -> MVP
 
@@ -44,8 +51,9 @@
 - [x] Integration closeout completed
 
 ### Open Mitigations
-- [ ] Preserve and use `requires_passkey_enrollment` after recovery verify
-- [ ] Real-device passkey validation sweep on desktop and mobile
+- [~] Preserve and use `requires_passkey_enrollment` after recovery verify
+- [~] Real-device passkey validation sweep on desktop and mobile
+- [ ] Investigate and eliminate residual `/result` micro-blink for logged-in users during auto-unlock transition
 
 ## Phase 2 Sprint 2 -> Product Foundation
 
@@ -55,15 +63,28 @@
 - Add measurable account/funnel signals
 
 ### Tasks
-- [ ] Backend: authenticated recommendation history API
-- [ ] Backend: account/auth funnel metrics foundation
-- [ ] Frontend: authenticated recommendation history UI
-- [ ] Frontend: extract English copy into translation resources
-- [ ] Frontend: recovery-based passkey enrollment guidance
+- [~] Backend: authenticated recommendation history API
+- [~] Backend: account/auth funnel metrics foundation
+- [~] Frontend: authenticated recommendation history UI
+- [~] Frontend: extract English copy into translation resources
+- [~] Frontend: recovery-based passkey enrollment guidance
 - [ ] QA: history regression gate
 - [ ] QA: English parity validation after i18n extraction
-- [ ] QA: real-device passkey validation sweep
+- [~] QA: real-device passkey validation sweep
 - [ ] Integration: Sprint 2 closeout and merge gate
+
+## Support Workstream -> Marketing and Copy
+
+### Goal
+- Audit current product messaging
+- Define build-in-public strategy
+- Prepare copy direction for future implementation
+
+### Tasks
+- [x] Current live copy baseline documented
+- [~] Marketing copy audit
+- [~] Build-in-public strategy
+- [~] Copy recommendations for landing, unlock, auth, and follow-the-build capture
 
 ## Phase 3 -> Optimization
 
@@ -106,10 +127,11 @@
 
 ## Active Prompt Set
 
-- [x] `docs/prompt/2026-03-12-phase2-sprint2-back-end-specialist.md`
-- [x] `docs/prompt/2026-03-12-phase2-sprint2-front-end-specialist.md`
-- [x] `docs/prompt/2026-03-12-phase2-sprint2-qa-specialist.md`
-- [x] `docs/prompt/2026-03-12-phase2-sprint2-integration-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint2-back-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint2-front-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint2-qa-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint2-integration-specialist.md`
+- [x] `docs/prompt/2026-03-14-marketing-content-specialist.md`
 
 ## Manager View
 
@@ -124,3 +146,7 @@
 - [ ] Ship authenticated history
 - [ ] Extract English copy for i18n
 - [ ] Add funnel/account metrics foundation
+
+## Go-Live Blockers
+
+- [ ] Delete or disable `/tasks-progress` before production release
