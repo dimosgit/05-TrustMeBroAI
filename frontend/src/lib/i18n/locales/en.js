@@ -18,7 +18,17 @@ const en = {
     headingLineTwo: "We tell you exactly which one to use.",
     subtitle: "Answer 3 quick questions. Get your best match in under 60 seconds.",
     cta: "Find my AI tool",
-    noLoginRequired: "No login required to start."
+    noLoginRequired: "No login required to start.",
+    followBuild: {
+      label: "Following the build?",
+      placeholder: "you@example.com",
+      cta: "Get updates",
+      submitting: "Saving...",
+      success: "You're in. We'll keep you posted.",
+      invalidEmail: "Enter a valid email to subscribe.",
+      genericError: "Could not subscribe right now. Please try again.",
+      consentNote: "Occasional updates only. No spam, no VC money, no agenda."
+    }
   },
   wizard: {
     title: "Find your best AI tool",

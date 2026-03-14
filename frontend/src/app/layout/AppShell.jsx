@@ -37,8 +37,20 @@ function DefaultFooter() {
   );
 }
 
+function resolvePasskeyNudgeRedirect(location) {
+  if (location.pathname.startsWith("/auth/recovery/verify")) {
+    const redirectFromQuery = new URLSearchParams(location.search).get("redirect");
+    if (typeof redirectFromQuery === "string" && redirectFromQuery.startsWith("/") && !redirectFromQuery.startsWith("//")) {
+      return redirectFromQuery;
+    }
+  }
+
+  return location.pathname;
+}
+
 export default function AppShell({ children }) {
   const location = useLocation();
+  const passkeyNudgeRedirect = resolvePasskeyNudgeRedirect(location);
   const isLanding = location.pathname === "/";
   const isAuth = ["/login", "/register", "/auth/recovery"].some(p => location.pathname.startsWith(p));
   const {
@@ -125,7 +137,7 @@ export default function AppShell({ children }) {
               <div className="flex items-center gap-2">
                 <Link
                   to={`/register?${new URLSearchParams({
-                    redirect: `${location.pathname}${location.search || ""}`,
+                    redirect: passkeyNudgeRedirect,
                     enroll: "1"
                   }).toString()}`}
                   className="rounded-lg bg-amber-400/90 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-amber-300"

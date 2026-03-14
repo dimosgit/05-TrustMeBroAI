@@ -9,7 +9,7 @@
 ## Current State
 
 - Current phase: `Phase 2`
-- Current sprint: `Sprint 2`
+- Current sprint: `Sprint 3`
 - Current status: `In progress`
 - Source of truth: `docs/planning/final-implementation-plan.md`
 - Internal dev helper: `/tasks-progress` is available during development only and must be removed before go-live.
@@ -50,10 +50,11 @@
 - [x] QA gate completed
 - [x] Integration closeout completed
 
-### Open Mitigations
-- [~] Preserve and use `requires_passkey_enrollment` after recovery verify
-- [~] Real-device passkey validation sweep on desktop and mobile
+### Follow-Up UX/Auth Polish
+- [x] Preserve and use `requires_passkey_enrollment` after recovery verify
+- [x] Real-device passkey validation sweep on desktop and mobile
 - [ ] Investigate and eliminate residual `/result` micro-blink for logged-in users during auto-unlock transition
+- [ ] Fix iOS Safari post-passkey viewport zoom after passkey sign-in
 
 ## Phase 2 Sprint 2 -> Product Foundation
 
@@ -63,15 +64,33 @@
 - Add measurable account/funnel signals
 
 ### Tasks
-- [~] Backend: authenticated recommendation history API
-- [~] Backend: account/auth funnel metrics foundation
-- [~] Frontend: authenticated recommendation history UI
-- [~] Frontend: extract English copy into translation resources
-- [~] Frontend: recovery-based passkey enrollment guidance
-- [ ] QA: history regression gate
-- [ ] QA: English parity validation after i18n extraction
-- [~] QA: real-device passkey validation sweep
-- [ ] Integration: Sprint 2 closeout and merge gate
+- [x] Backend: authenticated recommendation history API
+- [x] Backend: account/auth funnel metrics foundation
+- [x] Frontend: authenticated recommendation history UI
+- [x] Frontend: extract English copy into translation resources
+- [x] Frontend: recovery-based passkey enrollment guidance
+- [x] QA: history regression gate
+- [x] QA: English parity validation after i18n extraction
+- [x] QA: real-device passkey validation sweep
+- [x] Integration: Sprint 2 closeout and merge gate
+
+## Phase 2 Sprint 3 -> Growth and Recommendation Data Foundation
+
+### Goal
+- Ship the separate `follow the build` capture surface
+- Start research ingestion implementation from the approved architecture
+- Build recommendation evaluation gates
+- Close remaining UX/auth polish before broader promotion
+
+### Tasks
+- [~] Backend: follow-the-build capture endpoint and source attribution flow
+- [~] Backend: research ingestion parser, normalizer, and dry-run artifact generation
+- [~] Frontend: landing follow-the-build capture UI
+- [~] Frontend: apply approved follow-the-build and loading-copy updates
+- [~] Frontend: fix iOS Safari passkey viewport zoom and `/result` micro-blink
+- [~] QA: recommendation benchmark suite and ingestion gate harness
+- [ ] QA: validate follow-the-build capture, source attribution, and anonymous funnel non-regression
+- [ ] Integration: Sprint 3 closeout and merge gate
 
 ## Support Workstream -> Marketing and Copy
 
@@ -85,6 +104,8 @@
 - [x] Marketing copy audit
 - [x] Build-in-public strategy
 - [x] Copy recommendations for landing, unlock, auth, and follow-the-build capture
+- [~] First 30-day content calendar and channel-ready launch assets
+- [~] Final implementation-ready copy pack for the follow-the-build surface
 
 ## Support Workstream -> Recommendation Data and Research Ingestion
 
@@ -94,12 +115,13 @@
 - Avoid premature vector-search or retrieval complexity
 
 ### Tasks
-- [~] Architect: research-to-dataset ingestion design
-- [~] Architect: curation, conflict-resolution, and confidence rules
-- [~] Architect: recommendation evaluation and quality-check framework
-- [ ] Backend: implement approved research ingestion pipeline
-- [ ] QA: validate ingestion output and recommendation quality gates
-- [ ] Decision checkpoint: confirm whether advanced retrieval is still unnecessary
+- [x] Architect: research-to-dataset ingestion design
+- [x] Architect: curation, conflict-resolution, and confidence rules
+- [x] Architect: recommendation evaluation and quality-check framework
+- [~] Backend: implement approved research ingestion pipeline foundation
+- [~] QA: implement ingestion output and recommendation quality gates
+- [ ] Controlled first candidate release against research-derived updates
+- [x] Decision checkpoint: confirm whether advanced retrieval is still unnecessary
 
 ## Phase 3 -> Optimization
 
@@ -134,35 +156,37 @@
 
 - [x] `docs/planning/final-implementation-plan.md`
 - [x] `docs/planning/2026-03-12-post-stabilization-next-phase-plan.md`
-- [x] `docs/planning/2026-03-12-phase2-passkey-auth-api-contract.md`
-- [x] `docs/planning/2026-03-12-phase2-passkey-first-backend-design-lock.md`
-- [x] `docs/planning/2026-03-12-phase2-passkey-front-end-ux-note.md`
-- [x] `docs/planning/2026-03-12-phase2-passkey-qa-release-gate-report.md`
-- [x] `docs/planning/2026-03-12-phase2-passkey-integration-closeout-report.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint2-backend-history-metrics-enrollment-note.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint2-frontend-continuation-note.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint2-qa-release-gate-report.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint2-integration-closeout-report.md`
+- [x] `docs/planning/2026-03-14-recommendation-data-architecture.md`
+- [x] `docs/planning/2026-03-14-recommendation-evaluation-framework.md`
+- [x] `docs/planning/2026-03-14-research-ingestion-rollout-plan.md`
 
 ## Active Prompt Set
 
-- [x] `docs/prompt/2026-03-14-phase2-sprint2-back-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint2-front-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint2-qa-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint2-integration-specialist.md`
-- [x] `docs/prompt/2026-03-14-marketing-content-specialist.md`
-- [x] `docs/prompt/2026-03-14-recommendation-data-architect.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint3-back-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint3-front-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint3-qa-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint3-integration-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint3-marketing-content-specialist.md`
 
 ## Manager View
 
 - [x] Phase 1 complete
 - [x] Phase 2 Sprint 1 complete with mitigations
-- [ ] Phase 2 Sprint 2 complete
+- [x] Phase 2 Sprint 2 complete
+- [ ] Phase 2 Sprint 3 complete
 - [ ] Phase 3 started
 
 ## Next Work
 
-- [ ] Close passkey mitigations
-- [ ] Ship authenticated history
-- [ ] Extract English copy for i18n
-- [ ] Add funnel/account metrics foundation
-- [~] Design recommendation-data and research-ingestion architecture
+- [~] Ship follow-the-build capture and source attribution
+- [~] Implement research ingestion foundation
+- [~] Build recommendation evaluation gates
+- [~] Close remaining FE auth/transition polish
+- [~] Prepare initial build-in-public content assets
 
 ## Go-Live Blockers
 

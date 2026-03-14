@@ -37,7 +37,7 @@ describe("tasks progress route", () => {
 
     expect(await screen.findByTestId("tasks-progress-page")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Tasks progress" })).toBeInTheDocument();
-    expect(screen.getByText("Phase 2 Sprint 2 Product Foundation")).toBeInTheDocument();
+    expect(screen.getByText("Phase 2 Sprint 3 Growth and Recommendation Data Foundation")).toBeInTheDocument();
     expect(screen.getAllByText("P0").length).toBeGreaterThan(0);
     expect(screen.getAllByText("[ ] To do").length).toBeGreaterThan(0);
     expect(screen.getAllByText("[~] In progress").length).toBeGreaterThan(0);

@@ -1,0 +1,38 @@
+{
+  "release_id": "<release-id>",
+  "baseline_id": "<baseline-id>",
+  "generated_at": "<ISO-8601>",
+  "summary": {
+    "scenario_count": 0,
+    "primary_change_count": 0,
+    "alternative_change_count": 0,
+    "contract_failure_count": 0
+  },
+  "changes": [
+    {
+      "scenario_id": "example-scenario-id",
+      "baseline": {
+        "primary_tool": "Tool A",
+        "alternatives": [
+          "Tool B",
+          "Tool C"
+        ],
+        "reason_valid": true
+      },
+      "candidate": {
+        "primary_tool": "Tool D",
+        "alternatives": [
+          "Tool B",
+          "Tool E"
+        ],
+        "reason_valid": true
+      },
+      "change_flags": {
+        "primary_changed": true,
+        "alternatives_changed": true,
+        "contract_violation": false
+      },
+      "notes": "Replace with concrete diff rationale"
+    }
+  ]
+}

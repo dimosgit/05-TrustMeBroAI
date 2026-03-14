@@ -1,0 +1,165 @@
+{
+  "version": "v1",
+  "status": "scaffold",
+  "created_at": "2026-03-14",
+  "owner": "QA Specialist",
+  "notes": [
+    "Initial benchmark scaffold aligned to docs/planning/2026-03-14-recommendation-evaluation-framework.md.",
+    "This file defines the scenario contract and starter set for ingestion regression gates."
+  ],
+  "scenario_requirements": {
+    "minimum_per_category": 5,
+    "minimum_per_priority": 5,
+    "fallback_scenarios_per_category": 1,
+    "edge_cases": [
+      "sparse_category",
+      "near_tie_scores",
+      "ambiguous_pricing",
+      "profile_sensitive_tiebreak"
+    ]
+  },
+  "scenario_schema": {
+    "id": "string",
+    "profile_name": "string",
+    "task_name": "string",
+    "selected_priority": "Best quality | Best free | Fastest setup",
+    "expected_category_set": [
+      "Document/PDF",
+      "Research",
+      "Content Creation",
+      "Coding",
+      "Automation"
+    ],
+    "expected_primary_tool": "string|null",
+    "allowed_primary_set": [
+      "string"
+    ],
+    "tags": [
+      "string"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "coding-quality-001",
+      "profile_name": "Developer",
+      "task_name": "Write production API code",
+      "selected_priority": "Best quality",
+      "expected_category_set": [
+        "Coding"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "baseline",
+        "coding"
+      ]
+    },
+    {
+      "id": "research-speed-001",
+      "profile_name": "Founder",
+      "task_name": "Summarize competitor landscape with sources",
+      "selected_priority": "Fastest setup",
+      "expected_category_set": [
+        "Research"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "baseline",
+        "research"
+      ]
+    },
+    {
+      "id": "document-free-001",
+      "profile_name": "Lawyer",
+      "task_name": "Extract clauses from long contract PDF",
+      "selected_priority": "Best free",
+      "expected_category_set": [
+        "Document/PDF"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "baseline",
+        "document"
+      ]
+    },
+    {
+      "id": "content-quality-001",
+      "profile_name": "Marketer",
+      "task_name": "Draft launch page hero copy and CTA variants",
+      "selected_priority": "Best quality",
+      "expected_category_set": [
+        "Content Creation"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "baseline",
+        "content"
+      ]
+    },
+    {
+      "id": "automation-speed-001",
+      "profile_name": "Operations",
+      "task_name": "Automate recurring team status updates",
+      "selected_priority": "Fastest setup",
+      "expected_category_set": [
+        "Automation"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "baseline",
+        "automation"
+      ]
+    },
+    {
+      "id": "fallback-coding-001",
+      "profile_name": "Developer",
+      "task_name": "Find coding helper for niche stack",
+      "selected_priority": "Best quality",
+      "expected_category_set": [
+        "Coding",
+        "Automation"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "fallback_trigger",
+        "sparse_category"
+      ]
+    },
+    {
+      "id": "tie-break-profile-001",
+      "profile_name": "Business",
+      "task_name": "Draft executive summary from notes",
+      "selected_priority": "Best quality",
+      "expected_category_set": [
+        "Content Creation",
+        "Research"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "near_tie_scores",
+        "profile_sensitive_tiebreak"
+      ]
+    },
+    {
+      "id": "pricing-ambiguity-001",
+      "profile_name": "Student",
+      "task_name": "Find low-cost assistant for mixed research and writing",
+      "selected_priority": "Best free",
+      "expected_category_set": [
+        "Research",
+        "Content Creation"
+      ],
+      "expected_primary_tool": null,
+      "allowed_primary_set": [],
+      "tags": [
+        "ambiguous_pricing"
+      ]
+    }
+  ]
+}

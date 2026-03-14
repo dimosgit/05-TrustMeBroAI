@@ -1,0 +1,30 @@
+{
+  "release_id": "<release-id>",
+  "generated_at": "<ISO-8601>",
+  "reviewers": {
+    "data_curator": "<name>",
+    "product_reviewer": "<name>",
+    "qa_reviewer": "<name>"
+  },
+  "samples": {
+    "new_tools_reviewed": 0,
+    "updated_tools_reviewed": 0,
+    "changed_primary_scenarios_reviewed": 0
+  },
+  "decisions": [
+    {
+      "item_id": "tool-or-scenario-id",
+      "item_type": "tool|scenario",
+      "decision": "accept|reject|needs_followup",
+      "severity": "critical|major|minor",
+      "rationale": "Replace with reviewer rationale",
+      "owner": "BE|QA|Integration",
+      "status": "open|resolved"
+    }
+  ],
+  "final_outcome": {
+    "decision": "approve|approve_with_exceptions|reject",
+    "critical_rejections": 0,
+    "notes": "Replace with final summary"
+  }
+}

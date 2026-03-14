@@ -4,12 +4,11 @@ This folder should contain only the currently active prompt set.
 
 ## Active prompts
 
-1. `2026-03-14-phase2-sprint2-back-end-specialist.md`
-2. `2026-03-14-phase2-sprint2-front-end-specialist.md`
-3. `2026-03-14-phase2-sprint2-qa-specialist.md`
-4. `2026-03-14-phase2-sprint2-integration-specialist.md`
-5. `2026-03-14-marketing-content-specialist.md`
-6. `2026-03-14-recommendation-data-architect.md`
+1. `2026-03-14-phase2-sprint3-back-end-specialist.md`
+2. `2026-03-14-phase2-sprint3-front-end-specialist.md`
+3. `2026-03-14-phase2-sprint3-qa-specialist.md`
+4. `2026-03-14-phase2-sprint3-integration-specialist.md`
+5. `2026-03-14-phase2-sprint3-marketing-content-specialist.md`
 
 All completed or superseded prompts belong in `docs/prompt/archive/`.
 

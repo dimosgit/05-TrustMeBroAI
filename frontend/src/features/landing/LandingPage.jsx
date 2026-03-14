@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ApiError } from "../../lib/api/client";
+import { captureFollowBuildEmail } from "../../lib/api/growthApi";
 import { t } from "../../lib/i18n";
 
 const LANDING_LOGOS = [
@@ -11,6 +14,37 @@ const LANDING_LOGOS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [followBuildEmail, setFollowBuildEmail] = useState("");
+  const [followBuildError, setFollowBuildError] = useState("");
+  const [followBuildSubmitted, setFollowBuildSubmitted] = useState(false);
+  const [isSubmittingFollowBuild, setIsSubmittingFollowBuild] = useState(false);
+
+  async function handleFollowBuildSubmit(event) {
+    event.preventDefault();
+    const normalizedEmail = followBuildEmail.trim().toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setFollowBuildError(t("landing.followBuild.invalidEmail"));
+      return;
+    }
+
+    setFollowBuildError("");
+    setIsSubmittingFollowBuild(true);
+
+    try {
+      await captureFollowBuildEmail({ email: normalizedEmail });
+      setFollowBuildSubmitted(true);
+      setFollowBuildEmail("");
+    } catch (submitError) {
+      if (submitError instanceof ApiError && submitError.status === 400) {
+        setFollowBuildError(t("landing.followBuild.invalidEmail"));
+      } else {
+        setFollowBuildError(t("landing.followBuild.genericError"));
+      }
+    } finally {
+      setIsSubmittingFollowBuild(false);
+    }
+  }
 
   return (
     <div className="flex flex-col items-center py-10 text-center">
@@ -37,6 +71,44 @@ export default function LandingPage() {
           {t("landing.cta")}
         </button>
         <p className="mt-2 text-[11px] text-slate-600">{t("landing.noLoginRequired")}</p>
+      </div>
+
+      <div className="mt-6 w-full max-w-xs rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-left">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">
+          {t("landing.followBuild.label")}
+        </p>
+
+        {followBuildSubmitted ? (
+          <p className="mt-2 text-sm text-emerald-300">{t("landing.followBuild.success")}</p>
+        ) : (
+          <form className="mt-3 flex flex-col gap-2" onSubmit={handleFollowBuildSubmit} noValidate>
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={followBuildEmail}
+                onChange={(event) => setFollowBuildEmail(event.target.value)}
+                placeholder={t("landing.followBuild.placeholder")}
+                className="h-10 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none transition focus:border-blue-400"
+                autoComplete="email"
+              />
+              <button
+                type="submit"
+                className="h-10 rounded-lg bg-slate-100 px-3 text-sm font-semibold text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={isSubmittingFollowBuild}
+              >
+                {isSubmittingFollowBuild ? t("landing.followBuild.submitting") : t("landing.followBuild.cta")}
+              </button>
+            </div>
+
+            {followBuildError ? (
+              <p className="text-xs text-rose-300" role="alert">
+                {followBuildError}
+              </p>
+            ) : null}
+
+            <p className="text-[11px] text-slate-500">{t("landing.followBuild.consentNote")}</p>
+          </form>
+        )}
       </div>
 
       {/* FOOTNOTE: Logos — small, quiet, supportive */}

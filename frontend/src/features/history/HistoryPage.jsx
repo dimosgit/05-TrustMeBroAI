@@ -93,6 +93,10 @@ export default function HistoryPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    if (isBootstrapping) {
+      return;
+    }
+
     if (!isAuthenticated) {
       setLoading(false);
       setItems([]);
@@ -141,7 +145,7 @@ export default function HistoryPage() {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthenticated, reloadKey]);
+  }, [isAuthenticated, isBootstrapping, reloadKey]);
 
   const loginHref = useMemo(
     () => `/login?redirect=${encodeURIComponent("/history")}`,
