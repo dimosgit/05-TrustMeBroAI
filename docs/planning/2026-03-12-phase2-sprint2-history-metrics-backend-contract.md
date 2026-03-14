@@ -7,6 +7,7 @@ Scope: backend-only API and persistence additions for authenticated recommendati
 
 ### `GET /api/recommendation/history`
 - Auth required (`/api/auth` session cookie).
+- Returns only recommendations already unlocked by the authenticated user.
 - Query params:
   - `limit` (optional, default `20`, max `100`)
   - `offset` (optional, default `0`)
@@ -42,6 +43,7 @@ Scope: backend-only API and persistence additions for authenticated recommendati
 ### `GET /api/recommendation/history/:id`
 - Auth required.
 - User-scoped: recommendation must belong to authenticated user (`recommendation_sessions.user_id`).
+- Only unlocked recommendations are retrievable in this endpoint.
 - Response extends history item with:
   - `alternative_tools` (up to 2, ordered)
 - Cross-user access returns `404`.
@@ -73,7 +75,13 @@ Primary emit points:
 
 Event metadata is stored as JSONB for future dashboard/reporting expansion.
 
-## 4. Non-Regression Expectations
+## 4. Recovery Enrollment Signal
+
+`POST /api/auth/recovery/verify` returns:
+- `requires_passkey_enrollment: true` when user has no active passkey
+- `requires_passkey_enrollment: false` when user already has at least one active passkey
+
+## 5. Non-Regression Expectations
 
 1. Anonymous recommendation session/compute/unlock remains available.
 2. Auth/session behavior remains passkey-first with recovery fallback.

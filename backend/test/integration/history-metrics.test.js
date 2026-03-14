@@ -126,6 +126,24 @@ test("history endpoint rejects unauthenticated access", async () => {
   await request(app).get("/api/recommendation/history").expect(401);
 });
 
+test("authenticated history returns empty items when user has no unlocked recommendations", async () => {
+  const { app } = createTestApp();
+
+  const { cookie } = await registerPasskey(app, {
+    email: "history-empty@example.com",
+    credentialId: "cred-history-empty"
+  });
+
+  await createSessionAndCompute(app);
+
+  const history = await request(app)
+    .get("/api/recommendation/history")
+    .set("Cookie", cookie)
+    .expect(200);
+
+  assert.deepEqual(history.body.items, []);
+});
+
 test("authenticated user can retrieve recommendation history in user scope", async () => {
   const { app } = createTestApp();
 

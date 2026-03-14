@@ -399,7 +399,7 @@ export function createInMemoryRepositories() {
           const session = data.recommendationSessions.find(
             (candidate) => candidate.id === recommendation.session_id
           );
-          if (!session || session.user_id !== userId) {
+          if (!session || session.user_id !== userId || recommendation.unlocked_at == null) {
             return null;
           }
 

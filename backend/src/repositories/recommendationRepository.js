@@ -78,6 +78,7 @@ export function createRecommendationRepository({ query }) {
          JOIN profiles p ON p.id = rs.profile_id
          JOIN tools tool ON tool.id = r.primary_tool_id
          WHERE rs.user_id = $1
+           AND r.unlocked_at IS NOT NULL
          ORDER BY COALESCE(r.unlocked_at, r.created_at) DESC, r.id DESC
          LIMIT $2 OFFSET $3`,
         [userId, limit, offset]
@@ -119,6 +120,7 @@ export function createRecommendationRepository({ query }) {
          JOIN tools tool ON tool.id = r.primary_tool_id
          WHERE rs.user_id = $1
            AND r.id = $2
+           AND r.unlocked_at IS NOT NULL
          LIMIT 1`,
         [userId, recommendationId]
       );

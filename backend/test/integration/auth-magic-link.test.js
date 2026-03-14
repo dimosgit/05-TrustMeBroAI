@@ -310,6 +310,34 @@ test("fallback recovery request + verify works and token is hashed + one-time us
   assert.equal(authOutbox.length, 1);
 });
 
+test("recovery verify preserves requires_passkey_enrollment=false when passkey already exists", async () => {
+  const { app, authOutbox } = createTestApp();
+
+  await registerPasskey(app, {
+    email: "recovery-passkey@example.com",
+    credentialId: "cred-recovery-passkey"
+  });
+
+  await request(app)
+    .post("/api/auth/recovery/request")
+    .send({
+      email: "recovery-passkey@example.com",
+      redirect_path: "/history"
+    })
+    .expect(202);
+
+  const recoveryToken = authOutbox.at(-1)?.token;
+  assert.ok(recoveryToken);
+
+  const verify = await request(app)
+    .post("/api/auth/recovery/verify")
+    .send({ token: recoveryToken })
+    .expect(200);
+
+  assert.equal(verify.body.user.email, "recovery-passkey@example.com");
+  assert.equal(verify.body.requires_passkey_enrollment, false);
+});
+
 test("anonymous unlock still requires email when no authenticated session is present", async () => {
   const { app } = createTestApp();
 
