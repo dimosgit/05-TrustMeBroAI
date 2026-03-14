@@ -35,6 +35,7 @@ const en = {
     findMyMatch: "Find my match",
     loadingTitle: "Finding your best match...",
     loadingSubtitle: "Matching your answers to the right tool now.",
+
     loadingChecksSaving: "Saving your session",
     loadingChecksComputing: "Computing recommendation",
     loadingChecksPreparing: "Preparing result"

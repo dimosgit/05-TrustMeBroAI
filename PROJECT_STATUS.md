@@ -82,9 +82,9 @@
 
 ### Tasks
 - [x] Current live copy baseline documented
-- [~] Marketing copy audit
-- [~] Build-in-public strategy
-- [~] Copy recommendations for landing, unlock, auth, and follow-the-build capture
+- [x] Marketing copy audit
+- [x] Build-in-public strategy
+- [x] Copy recommendations for landing, unlock, auth, and follow-the-build capture
 
 ## Support Workstream -> Recommendation Data and Research Ingestion
 
