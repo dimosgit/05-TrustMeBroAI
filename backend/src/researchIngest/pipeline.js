@@ -886,3 +886,302 @@ export async function runResearchIngestionDryRun({
     staging_dir: stagingDir
   };
 }
+
+function parseJsonLines(content) {
+  return String(content || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
+function toDecisionRows(decisionsPayload) {
+  if (Array.isArray(decisionsPayload)) {
+    return decisionsPayload;
+  }
+
+  if (Array.isArray(decisionsPayload?.decisions)) {
+    return decisionsPayload.decisions;
+  }
+
+  return [];
+}
+
+function toConflictRows(conflictsPayload) {
+  if (Array.isArray(conflictsPayload)) {
+    return conflictsPayload;
+  }
+
+  if (Array.isArray(conflictsPayload?.conflicts)) {
+    return conflictsPayload.conflicts;
+  }
+
+  return [];
+}
+
+function normalizeReleaseId(value) {
+  const normalized = normalizeWhitespace(value);
+  if (!normalized) {
+    throw new Error("release_id is required");
+  }
+
+  if (!/^[a-zA-Z0-9._-]{3,120}$/.test(normalized)) {
+    throw new Error(
+      "release_id must be 3-120 chars and contain only letters, numbers, dot, dash, underscore"
+    );
+  }
+
+  return normalized;
+}
+
+function validateApplyCandidate(candidate) {
+  const requiredFields = [
+    "tool_name",
+    "tool_slug",
+    "website",
+    "category",
+    "pricing",
+    "pricing_tier",
+    "ease_of_use",
+    "speed",
+    "quality"
+  ];
+
+  for (const field of requiredFields) {
+    if (candidate[field] == null || candidate[field] === "") {
+      throw new Error(`Approved candidate "${candidate.tool_slug || "unknown"}" missing field "${field}"`);
+    }
+  }
+
+  for (const scoreField of ["ease_of_use", "speed", "quality"]) {
+    const parsed = Number.parseInt(candidate[scoreField], 10);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 5) {
+      throw new Error(
+        `Approved candidate "${candidate.tool_slug}" has invalid ${scoreField}; expected integer 1..5`
+      );
+    }
+  }
+}
+
+export async function loadCandidateReleaseArtifacts({
+  stagingDir,
+  readFile = (filePath, encoding) => fs.readFile(filePath, encoding)
+}) {
+  const candidateToolsPath = path.join(stagingDir, "candidate_tools.jsonl");
+  const candidateConflictsPath = path.join(stagingDir, "candidate_conflicts.json");
+  const curationDecisionsPath = path.join(stagingDir, "curation_decisions.json");
+
+  const [candidateToolsRaw, candidateConflictsRaw, curationDecisionsRaw] = await Promise.all([
+    readFile(candidateToolsPath, "utf8"),
+    readFile(candidateConflictsPath, "utf8"),
+    readFile(curationDecisionsPath, "utf8")
+  ]);
+
+  const candidateTools = parseJsonLines(candidateToolsRaw);
+  const candidateConflicts = JSON.parse(candidateConflictsRaw);
+  const curationDecisions = JSON.parse(curationDecisionsRaw);
+
+  return {
+    candidateTools,
+    candidateConflicts,
+    curationDecisions
+  };
+}
+
+export function resolveApprovedCandidates({ candidateTools, candidateConflicts, curationDecisions }) {
+  const decisions = toDecisionRows(curationDecisions);
+  const conflicts = toConflictRows(candidateConflicts);
+
+  const decisionApprovedValues = new Set(["approve", "approved"]);
+  const approvedSlugs = Array.from(
+    new Set(
+      decisions
+        .filter((row) => row && decisionApprovedValues.has(String(row.decision || "").toLowerCase()))
+        .map((row) => normalizeWhitespace(row.tool_slug))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => compareLexical(a, b));
+
+  if (!approvedSlugs.length) {
+    throw new Error("No approved tools found in curation decisions");
+  }
+
+  const candidateBySlug = new Map(
+    candidateTools
+      .filter((candidate) => candidate?.tool_slug)
+      .map((candidate) => [normalizeWhitespace(candidate.tool_slug), candidate])
+  );
+
+  const approvedCandidates = [];
+  for (const slug of approvedSlugs) {
+    const candidate = candidateBySlug.get(slug);
+    if (!candidate) {
+      throw new Error(`Approved tool "${slug}" is missing from candidate_tools.jsonl`);
+    }
+    validateApplyCandidate(candidate);
+    approvedCandidates.push(candidate);
+  }
+
+  const conflictSlugs = new Set(
+    conflicts.map((conflict) => normalizeWhitespace(conflict?.tool_slug)).filter(Boolean)
+  );
+  const blocked = approvedSlugs.filter((slug) => conflictSlugs.has(slug));
+  if (blocked.length) {
+    throw new Error(
+      `Approved tools contain unresolved conflicts: ${blocked.join(", ")}`
+    );
+  }
+
+  return approvedCandidates.sort((a, b) => compareLexical(a.tool_slug, b.tool_slug));
+}
+
+export async function applyApprovedCandidatesInTransaction({
+  approvedCandidates,
+  dbPool
+}) {
+  if (!dbPool?.connect) {
+    throw new Error("Database pool is required for apply mode");
+  }
+
+  const client = await dbPool.connect();
+  try {
+    await client.query("BEGIN");
+
+    for (const candidate of approvedCandidates) {
+      await client.query(
+        `INSERT INTO tools (
+           tool_name,
+           tool_slug,
+           logo_url,
+           best_for,
+           website,
+           referral_url,
+           category,
+           pricing,
+           pricing_tier,
+           ease_of_use,
+           speed,
+           quality,
+           target_users,
+           tags,
+           context_word,
+           record_status
+         )
+         VALUES (
+           $1, $2, NULL, $3, $4, NULL, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13, $14
+         )
+         ON CONFLICT (tool_slug)
+         DO UPDATE SET
+           tool_name = EXCLUDED.tool_name,
+           best_for = EXCLUDED.best_for,
+           website = EXCLUDED.website,
+           category = EXCLUDED.category,
+           pricing = EXCLUDED.pricing,
+           pricing_tier = EXCLUDED.pricing_tier,
+           ease_of_use = EXCLUDED.ease_of_use,
+           speed = EXCLUDED.speed,
+           quality = EXCLUDED.quality,
+           target_users = EXCLUDED.target_users,
+           tags = EXCLUDED.tags,
+           context_word = EXCLUDED.context_word,
+           record_status = EXCLUDED.record_status,
+           updated_at = NOW()`,
+        [
+          candidate.tool_name,
+          candidate.tool_slug,
+          candidate.best_for || `AI support for ${String(candidate.category || "").toLowerCase()} workflows`,
+          candidate.website,
+          candidate.category,
+          candidate.pricing,
+          candidate.pricing_tier,
+          Number.parseInt(candidate.ease_of_use, 10),
+          Number.parseInt(candidate.speed, 10),
+          Number.parseInt(candidate.quality, 10),
+          JSON.stringify(candidate.target_users || []),
+          JSON.stringify(candidate.tags || []),
+          candidate.context_word || "ai",
+          candidate.record_status || "active"
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      applied_count: approvedCandidates.length,
+      applied_tool_slugs: approvedCandidates.map((candidate) => candidate.tool_slug)
+    };
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // Ignore rollback errors; original apply error remains primary.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function writeApplyEvidence({ projectRoot, releaseId, summary }) {
+  const evidenceDir = path.join(projectRoot, "docs", "planning", "release-evidence", releaseId);
+  await fs.mkdir(evidenceDir, { recursive: true });
+
+  const summaryPath = path.join(evidenceDir, "backend-apply-summary.json");
+  await fs.writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+
+  return {
+    evidence_dir: evidenceDir,
+    summary_path: summaryPath
+  };
+}
+
+export async function runResearchIngestionApplyCandidate({
+  projectRoot,
+  dbPool,
+  releaseId,
+  confirmToken,
+  expectedConfirmToken = "APPLY_CANDIDATE_RELEASE",
+  stagingDir = path.join(projectRoot, "backend", "db", "staging", "research_ingest"),
+  now = new Date()
+}) {
+  if (confirmToken !== expectedConfirmToken) {
+    throw new Error(
+      `Apply confirmation token mismatch. Pass --confirm ${expectedConfirmToken} to proceed.`
+    );
+  }
+
+  const safeReleaseId = normalizeReleaseId(releaseId);
+
+  const artifacts = await loadCandidateReleaseArtifacts({ stagingDir });
+  const approvedCandidates = resolveApprovedCandidates(artifacts);
+  const applyResult = await applyApprovedCandidatesInTransaction({
+    approvedCandidates,
+    dbPool
+  });
+
+  const summary = {
+    release_id: safeReleaseId,
+    applied_at: now.toISOString(),
+    staging_dir: stagingDir,
+    approved_tool_count: approvedCandidates.length,
+    applied_tool_count: applyResult.applied_count,
+    applied_tool_slugs: applyResult.applied_tool_slugs,
+    guardrails: {
+      confirm_token_required: expectedConfirmToken,
+      approved_decision_required: true,
+      unresolved_conflicts_block_apply: true,
+      transactional_apply: true
+    }
+  };
+  const evidence = await writeApplyEvidence({
+    projectRoot,
+    releaseId: safeReleaseId,
+    summary
+  });
+
+  return {
+    ...summary,
+    ...evidence
+  };
+}

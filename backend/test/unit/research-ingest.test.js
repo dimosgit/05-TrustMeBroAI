@@ -4,7 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  applyApprovedCandidatesInTransaction,
   buildResearchIngestionArtifacts,
+  resolveApprovedCandidates,
+  runResearchIngestionApplyCandidate,
   runResearchIngestionDryRun
 } from "../../src/researchIngest/pipeline.js";
 
@@ -91,4 +94,155 @@ test("research ingest dry-run writes staging artifacts", async () => {
     const stat = await fs.stat(absolute);
     assert.equal(stat.isFile(), true);
   }
+});
+
+test("candidate apply rejects approved slugs when conflicts are unresolved", () => {
+  assert.throws(
+    () =>
+      resolveApprovedCandidates({
+        candidateTools: [
+          {
+            tool_name: "Stable Tool",
+            tool_slug: "stable-tool",
+            website: "https://stable.dev",
+            category: "Coding",
+            pricing: "Paid",
+            pricing_tier: "paid_low",
+            ease_of_use: 4,
+            speed: 4,
+            quality: 5
+          }
+        ],
+        curationDecisions: [{ tool_slug: "stable-tool", decision: "approve" }],
+        candidateConflicts: {
+          conflicts: [{ tool_slug: "stable-tool", type: "identity_conflict", field: "website" }]
+        }
+      }),
+    /unresolved conflicts/i
+  );
+});
+
+test("candidate apply transaction rolls back on insert failure", async () => {
+  const statements = [];
+  let released = false;
+
+  const dbPool = {
+    async connect() {
+      return {
+        async query(text) {
+          statements.push(text);
+          if (/INSERT INTO tools/i.test(text)) {
+            throw new Error("insert failure");
+          }
+          return { rowCount: 1 };
+        },
+        release() {
+          released = true;
+        }
+      };
+    }
+  };
+
+  await assert.rejects(
+    () =>
+      applyApprovedCandidatesInTransaction({
+        dbPool,
+        approvedCandidates: [
+          {
+            tool_name: "Stable Tool",
+            tool_slug: "stable-tool",
+            website: "https://stable.dev",
+            category: "Coding",
+            pricing: "Paid",
+            pricing_tier: "paid_low",
+            ease_of_use: 4,
+            speed: 4,
+            quality: 5,
+            target_users: ["Developer"],
+            tags: ["coding"],
+            context_word: "coding",
+            record_status: "active"
+          }
+        ]
+      }),
+    /insert failure/
+  );
+
+  assert.equal(statements[0], "BEGIN");
+  assert.equal(statements.includes("ROLLBACK"), true);
+  assert.equal(released, true);
+});
+
+test("candidate apply succeeds only with explicit confirmation token", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "tmb-research-apply-"));
+  const stagingDir = path.join(tempRoot, "backend", "db", "staging", "research_ingest");
+
+  await fs.mkdir(stagingDir, { recursive: true });
+
+  const candidate = {
+    tool_name: "Stable Tool",
+    tool_slug: "stable-tool",
+    website: "https://stable.dev",
+    category: "Coding",
+    pricing: "Paid",
+    pricing_tier: "paid_low",
+    ease_of_use: 4,
+    speed: 4,
+    quality: 5,
+    best_for: "Engineering",
+    target_users: ["Developer"],
+    tags: ["coding"],
+    context_word: "coding",
+    record_status: "active"
+  };
+
+  await fs.writeFile(path.join(stagingDir, "candidate_tools.jsonl"), `${JSON.stringify(candidate)}\n`, "utf8");
+  await fs.writeFile(path.join(stagingDir, "candidate_conflicts.json"), `{"conflicts":[]}\n`, "utf8");
+  await fs.writeFile(
+    path.join(stagingDir, "curation_decisions.json"),
+    `${JSON.stringify([{ tool_slug: "stable-tool", decision: "approve" }], null, 2)}\n`,
+    "utf8"
+  );
+
+  await assert.rejects(
+    () =>
+      runResearchIngestionApplyCandidate({
+        projectRoot: tempRoot,
+        dbPool: { connect: async () => ({ query: async () => ({}), release() {} }) },
+        releaseId: "candidate-001",
+        confirmToken: "WRONG_TOKEN",
+        stagingDir
+      }),
+    /confirmation token mismatch/i
+  );
+
+  const statements = [];
+  const dbPool = {
+    async connect() {
+      return {
+        async query(text) {
+          statements.push(text);
+          return { rowCount: 1 };
+        },
+        release() {}
+      };
+    }
+  };
+
+  const summary = await runResearchIngestionApplyCandidate({
+    projectRoot: tempRoot,
+    dbPool,
+    releaseId: "candidate-001",
+    confirmToken: "APPLY_CANDIDATE_RELEASE",
+    stagingDir,
+    now: new Date("2026-03-14T15:00:00.000Z")
+  });
+
+  assert.equal(summary.applied_tool_count, 1);
+  assert.equal(summary.applied_tool_slugs[0], "stable-tool");
+  assert.equal(statements[0], "BEGIN");
+  assert.equal(statements.at(-1), "COMMIT");
+
+  const evidenceStat = await fs.stat(summary.summary_path);
+  assert.equal(evidenceStat.isFile(), true);
 });

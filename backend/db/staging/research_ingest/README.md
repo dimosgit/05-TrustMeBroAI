@@ -16,3 +16,10 @@ Generate/update artifacts:
 cd backend
 npm run research:ingest:dry-run
 ```
+
+Apply approved candidates (guarded):
+
+```bash
+cd backend
+npm run research:ingest:apply -- --release-id <release-id> --confirm APPLY_CANDIDATE_RELEASE
+```

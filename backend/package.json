@@ -8,6 +8,7 @@
     "dev": "node --watch src/index.js",
     "db:bootstrap": "node scripts/local-db-bootstrap.mjs",
     "research:ingest:dry-run": "node scripts/research-ingest-dry-run.mjs",
+    "research:ingest:apply": "node scripts/research-ingest-apply-candidate.mjs",
     "perf:compute": "node scripts/measure-compute-latency.mjs",
     "lint": "eslint \"src/**/*.js\" \"test/**/*.js\"",
     "typecheck": "tsc --noEmit",
