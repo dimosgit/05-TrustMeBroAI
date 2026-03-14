@@ -9,8 +9,8 @@
 ## Current State
 
 - Current phase: `Phase 2`
-- Current sprint: `Sprint 4`
-- Current status: `Sprint 4 complete with carryover`
+- Current sprint: `Sprint 5`
+- Current status: `In progress`
 - Source of truth: `docs/planning/final-implementation-plan.md`
 - Internal dev helper: `/tasks-progress` is available during development only and must be removed before go-live.
 
@@ -25,23 +25,30 @@
   - Outcome: authenticated recommendation history, funnel/account metrics foundation, English copy extraction, QA and integration closeout
 - [x] Phase 2 Sprint 3 -> Growth and Recommendation Data Foundation archived
   - Outcome: follow-the-build capture live, research-ingestion dry-run foundation, benchmark/evidence scaffolding, integration closeout
+- [x] Phase 2 Sprint 4 -> Controlled Candidate Release and FE Polish archived
+  - Outcome: first controlled candidate release executed, candidate release decision closed, FE polish mitigations shipped
+  - Carryover into Sprint 5: Safari real-device evidence closure and verified-email unlock enforcement
 
-## Phase 2 Sprint 4 -> Controlled Candidate Release and FE Polish
+## Phase 2 Sprint 5 -> Verified Email Gate and Release Hardening
 
 ### Goal
-- Run the first controlled research-ingestion candidate release
-- Attach real release evidence to recommendation-data updates
-- Close the remaining FE auth/transition polish issues
+- Enforce verified-email-only primary recommendation unlock
+- Prevent random or mistyped emails from unlocking results
+- Start newsletter foundation on top of verified-email-only records
+- Close the remaining Safari real-device validation carryover
+- Keep candidate-release governance and anonymous funnel safety intact
 
 ### Tasks
-- [x] Backend: guarded apply path and candidate-release support for research ingestion
-- [x] Frontend: fix iOS Safari passkey viewport zoom
-- [x] Frontend: eliminate residual `/result` micro-blink during auto-unlock
-- [x] QA: execute first controlled candidate release with benchmark and release-evidence bundle
-- [x] Integration: Sprint 4 closeout and candidate release decision
-
-### Carryover to Next Sprint
-- [ ] QA + FE: fresh real-device Safari validation for zoom and `/result` transition evidence pack
+- [~] Backend: add verification-link request/verify flow for recommendation unlock
+- [~] Backend: store verification status and verification-token lifecycle for unlock emails
+- [~] Frontend: add verification-pending unlock state and verification-return handling
+- [~] Frontend: update unlock messaging to make verification-link requirement explicit
+- [~] QA: verify that unverified emails cannot unlock the primary recommendation
+- [ ] Backend: add newsletter subscription state and unsubscribe flow for verified emails
+- [ ] Backend: add provider sync/export path for verified subscribed emails
+- [ ] QA: prove unverified and unsubscribed emails never receive newsletter sends
+- [~] QA + FE: run fresh iOS Safari real-device validation for passkey zoom and `/result` transition evidence pack
+- [ ] Integration: Sprint 5 closeout, verified-email gate review, and release hardening decision
 
 ## Support Workstream -> Marketing and Copy
 
@@ -107,6 +114,7 @@
 
 - [x] `docs/planning/final-implementation-plan.md`
 - [x] `docs/planning/2026-03-12-post-stabilization-next-phase-plan.md`
+- [x] `docs/planning/2026-03-14-newsletter-email-strategy.md`
 - [x] `docs/planning/2026-03-14-phase2-sprint3-backend-follow-build-ingestion-note.md`
 - [x] `docs/planning/2026-03-14-phase2-sprint3-qa-release-gate-report.md`
 - [x] `docs/planning/2026-03-14-phase2-sprint3-integration-closeout-report.md`
@@ -116,10 +124,8 @@
 
 ## Active Prompt Set
 
-- [x] `docs/prompt/2026-03-14-phase2-sprint4-back-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint4-front-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint4-qa-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint4-integration-specialist.md`
+- [x] Last implemented batch: Sprint 4 specialist prompts
+- [ ] Generate Sprint 5 specialist prompts for verified-email gate work
 
 ## Manager View
 
@@ -128,11 +134,14 @@
 - [x] Phase 2 Sprint 2 complete
 - [x] Phase 2 Sprint 3 complete
 - [x] Phase 2 Sprint 4 complete
+- [ ] Phase 2 Sprint 5 complete
 - [ ] Phase 3 started
 
 ## Next Work
 
-- [~] Execute Safari real-device validation carryover in next sprint
+- [~] Enforce verification-link ownership confirmation before primary unlock
+- [~] Add newsletter subscription foundation for verified emails, unsubscribe handling, and provider sync/export
+- [~] Execute Safari real-device validation carryover in Sprint 5
 - [~] Keep candidate-release governance exceptions tracked until scenario-level evaluator is implemented
 
 ## Go-Live Blockers

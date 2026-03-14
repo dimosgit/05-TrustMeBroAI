@@ -38,8 +38,8 @@ describe("tasks progress route", () => {
     expect(await screen.findByTestId("tasks-progress-page")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Tasks progress" })).toBeInTheDocument();
     expect(screen.getByText("Archived Completed Sprints")).toBeInTheDocument();
-    expect(screen.getByText("Phase 2 Sprint 4 Controlled Candidate Release and FE Polish")).toBeInTheDocument();
-    expect(screen.queryByText("Phase 2 Sprint 3 Growth and Recommendation Data Foundation")).not.toBeInTheDocument();
+    expect(screen.getByText("Phase 2 Sprint 5 Verified Email Gate and Release Hardening")).toBeInTheDocument();
+    expect(screen.queryByText("Phase 2 Sprint 4 Controlled Candidate Release and FE Polish")).not.toBeInTheDocument();
     expect(screen.getAllByText("P0").length).toBeGreaterThan(0);
     expect(screen.getAllByText("[ ] To do").length).toBeGreaterThan(0);
     expect(screen.getAllByText("[~] In progress").length).toBeGreaterThan(0);

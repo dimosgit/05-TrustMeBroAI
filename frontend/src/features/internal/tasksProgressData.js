@@ -3,8 +3,8 @@ export const taskProgressSections = [
     title: "Current State",
     items: [
       { label: "Current phase", value: "Phase 2" },
-      { label: "Current sprint", value: "Sprint 4" },
-      { label: "Current status", value: "Sprint 4 complete with carryover" }
+      { label: "Current sprint", value: "Sprint 5" },
+      { label: "Current status", value: "In progress" }
     ]
   },
   {
@@ -13,24 +13,23 @@ export const taskProgressSections = [
       { label: "Phase 1 MVP", value: "Archived - complete" },
       { label: "Phase 2 Sprint 1", value: "Archived - complete with mitigations carried into Sprint 4" },
       { label: "Phase 2 Sprint 2", value: "Archived - complete" },
-      { label: "Phase 2 Sprint 3", value: "Archived - complete" }
+      { label: "Phase 2 Sprint 3", value: "Archived - complete" },
+      { label: "Phase 2 Sprint 4", value: "Archived - complete with Safari evidence carried into Sprint 5" }
     ]
   },
   {
-    title: "Phase 2 Sprint 4 Controlled Candidate Release and FE Polish",
+    title: "Phase 2 Sprint 5 Verified Email Gate and Release Hardening",
     tasks: [
-      { status: "completed", priority: "P0", text: "Backend: guarded apply path and candidate-release support for research ingestion" },
-      { status: "completed", priority: "P1", text: "Frontend: fix iOS Safari passkey viewport zoom (code-level mitigation shipped)" },
-      { status: "completed", priority: "P1", text: "Frontend: eliminate residual /result micro-blink during auto-unlock" },
-      { status: "completed", priority: "P0", text: "QA: execute first controlled candidate release with benchmark and release-evidence bundle" },
-      { status: "completed", priority: "P0", text: "Integration: Sprint 4 closeout and candidate release decision" }
-    ]
-  },
-  {
-    title: "Next Sprint Carryover (Safari Real-Device Validation)",
-    tasks: [
-      { status: "in_progress", priority: "P1", text: "QA + FE: run fresh iOS Safari real-device validation for passkey zoom and /result transition" },
-      { status: "not_started", priority: "P1", text: "Attach Safari validation evidence pack and close carryover risk" }
+      { status: "in_progress", priority: "P0", text: "Backend: add verification-link request/verify flow for recommendation unlock" },
+      { status: "in_progress", priority: "P0", text: "Backend: store verification status and verification-token lifecycle for unlock emails" },
+      { status: "in_progress", priority: "P0", text: "Frontend: add verification-pending unlock state and verification-return handling" },
+      { status: "in_progress", priority: "P0", text: "Frontend: update unlock messaging to make verification-link requirement explicit" },
+      { status: "in_progress", priority: "P0", text: "QA: verify that unverified emails cannot unlock the primary recommendation" },
+      { status: "not_started", priority: "P1", text: "Backend: add newsletter subscription state and unsubscribe flow for verified emails" },
+      { status: "not_started", priority: "P1", text: "Backend: add provider sync or export path for verified subscribed emails" },
+      { status: "not_started", priority: "P1", text: "QA: prove unverified and unsubscribed emails never receive newsletter sends" },
+      { status: "in_progress", priority: "P1", text: "QA + FE: run fresh iOS Safari real-device validation for passkey zoom and /result transition evidence pack" },
+      { status: "not_started", priority: "P0", text: "Integration: Sprint 5 closeout, verified-email gate review, and release hardening decision" }
     ]
   },
   {

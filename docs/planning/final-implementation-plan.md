@@ -19,6 +19,7 @@ TrustMeBroAI removes that burden by giving one confident recommendation for a sp
 - Fast decision in under 60 seconds
 - Minimal cognitive load (no comparison UX)
 - Free product with email as the core value exchange
+- Verified email audience for product updates and newsletter growth
 
 Business constraint: email capture is a primary product objective, not a side feature.
 
@@ -34,16 +35,18 @@ Business constraint: email capture is a primary product objective, not a side fe
 5. Result screen loads in **gated mode**:
 - Primary recommendation card is locked/blurred.
 - User sees two secondary options (name + one-word context only).
-6. User enters email + explicit consent checkbox to unlock.
-7. System creates/updates user record and links the recommendation session.
-8. Primary recommendation unlocks and displays:
+6. User enters email + explicit consent checkbox and requests unlock.
+7. System creates/updates the user record in pending state and sends a verification link.
+8. User clicks the verification link to confirm inbox ownership.
+9. System links the recommendation session to the verified user and unlocks the result.
+10. Primary recommendation unlocks and displays:
 - Tool name + logo
 - One-sentence reason
 - `Try it ->` button to tool website
 
 ### Simplified workflow decisions
 - No auth gate before wizard.
-- Email gate is applied to the primary recommendation only.
+- Email verification gate is applied to the primary recommendation only.
 - Result screen is not a comparison interface.
 - Maximum visible tools: 3 total (1 primary + 2 secondary).
 
@@ -52,6 +55,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - Wizard flow (3 steps)
 - Result screen (locked state)
 - Result screen (unlocked state)
+- Email verification confirmation state
 - Passkey registration screen for returning users (Phase 2)
 - Passkey sign-in screen for returning users (Phase 2)
 - Fallback email recovery / account bootstrap screen (Phase 2)
@@ -77,7 +81,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - Node.js + Express, modular boundaries:
 - `session-service` for anonymous wizard sessions
 - `recommendation-service` for deterministic scoring
-- `lead-capture-service` for email unlock, consent, and user linking
+- `lead-capture-service` for email verification, consent, user linking, and unlock completion
 - `result-service` for locked/unlocked response shapes
 - `auth-service` for passkey registration, sign-in, recovery, and account session lifecycle (Phase 2)
 - API returns internal scoring fields but frontend never displays them.
@@ -85,13 +89,13 @@ Business constraint: email capture is a primary product objective, not a side fe
 ### Database structure
 - PostgreSQL as source of truth.
 - Anonymous session and recommendation data created before email capture.
-- User record created on unlock event.
-- Recommendation session is linked to user after unlock.
+- User record is created or updated when unlock is requested.
+- Recommendation session is linked to user only after email ownership is verified.
 
 ### External services
 - Coolify deployment
 - Docker Compose runtime
-- Optional email delivery provider (newsletter/update sends)
+- Email delivery / newsletter provider for verification, product updates, and newsletter sends
 - GitHub Actions for CI and later data-update automation
 
 ---
@@ -129,6 +133,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `recommendations`
 - `users`
 - `recommendation_feedback`
+- `email_verification_tokens`
 - `auth_passkeys` (Phase 2)
 - `auth_sessions` (Phase 2)
 - `auth_recovery_tokens` (Phase 2)
@@ -140,6 +145,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `recommendations.primary_tool_id -> tools.id`
 - `users.id -> recommendation_sessions.user_id` (nullable before unlock, required after unlock)
 - `recommendation_feedback.recommendation_id -> recommendations.id`
+- `email_verification_tokens.user_id -> users.id`
 - `auth_passkeys.user_id -> users.id` (Phase 2)
 - `auth_sessions.user_id -> users.id` (Phase 2)
 - `auth_recovery_tokens.user_id -> users.id` (Phase 2)
@@ -151,7 +157,12 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `email` VARCHAR(255) UNIQUE (case-insensitive uniqueness)
 - `email_consent` BOOLEAN NOT NULL
 - `consent_timestamp` TIMESTAMP NOT NULL
+- `email_verified_at` TIMESTAMP NULL
 - `signup_source` VARCHAR(100) NULL
+- `marketing_subscription_status` VARCHAR(30) DEFAULT `pending_verification`
+- `marketing_subscribed_at` TIMESTAMP NULL
+- `marketing_unsubscribed_at` TIMESTAMP NULL
+- `marketing_opt_in_source` VARCHAR(100) NULL
 - `plan` VARCHAR(30) DEFAULT `free`
 - `subscription_status` VARCHAR(30) DEFAULT `inactive`
 - `created_at`, `updated_at`
@@ -172,6 +183,7 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `alternative_tool_ids` JSONB NOT NULL
 - `primary_reason` TEXT NOT NULL
 - `is_primary_locked` BOOLEAN NOT NULL DEFAULT TRUE
+- `unlock_requested_at` TIMESTAMP NULL
 - `unlocked_at` TIMESTAMP NULL
 - `created_at`
 
@@ -188,6 +200,15 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `id` BIGSERIAL PK
 - `recommendation_id` BIGINT NOT NULL FK
 - `signal` SMALLINT CHECK (`-1|1`)
+- `created_at`
+
+#### `email_verification_tokens`
+- `id` BIGSERIAL PK
+- `user_id` BIGINT NOT NULL FK
+- `token_hash` TEXT UNIQUE NOT NULL
+- `purpose` VARCHAR(40) NOT NULL DEFAULT `recommendation_unlock`
+- `expires_at` TIMESTAMP NOT NULL
+- `used_at` TIMESTAMP NULL
 - `created_at`
 
 #### Phase 2 auth entities
@@ -225,10 +246,12 @@ Business constraint: email capture is a primary product objective, not a side fe
 1. 3-step wizard without pre-auth friction
 2. Deterministic recommendation engine (internal weighted scoring)
 3. Locked primary recommendation with email unlock
-4. Secondary options shown as name + one-word context only
-5. Consent-aware email capture and user creation
-6. One-click `Try it ->` primary CTA
-7. Feedback capture for quality iteration
+4. Verification-link-based email ownership confirmation before primary unlock
+5. Secondary options shown as name + one-word context only
+6. Consent-aware email capture and verified user creation
+7. Verified-email newsletter / product-update audience capture
+8. One-click `Try it ->` primary CTA
+9. Feedback capture for quality iteration
 
 ### Functional behavior
 - Wizard submission creates `recommendation_session` and recommendation record.
@@ -236,11 +259,22 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `session_id`
 - `primary_tool` metadata with `locked=true` flag
 - `alternative_tools` limited to 2, each with `tool_name` + `context_word`
-- Email unlock endpoint validates email + consent and then:
-- upserts user
+- Email unlock request endpoint validates email + consent and then:
+- upserts user in pending verification state
+- creates a time-limited verification token
+- sends a verification link
+- keeps the primary recommendation locked until verification completes
+- Email unlock verify endpoint validates token and then:
+- marks the user email verified
+- marks the user marketing subscription active when consent is present and no unsubscribe exists
 - links session to user
 - marks recommendation unlocked
 - returns full primary card payload
+- Follow-the-build subscribe endpoint validates email + consent and then:
+- upserts the user in pending verification state or refreshes the existing lead record
+- creates a time-limited verification token
+- sends a verification link
+- marks the newsletter subscription active only after verification completes
 
 ### API interactions
 - `GET /api/profiles`
@@ -248,7 +282,10 @@ Business constraint: email capture is a primary product objective, not a side fe
 - `GET /api/priorities`
 - `POST /api/recommendation/session`
 - `POST /api/recommendation/compute`
-- `POST /api/recommendation/unlock`
+- `POST /api/recommendation/unlock/request`
+- `POST /api/recommendation/unlock/verify`
+- `POST /api/follow-build/subscribe`
+- `POST /api/newsletter/unsubscribe`
 - `POST /api/recommendation/:id/feedback`
 
 Response contract rules:
@@ -284,13 +321,17 @@ Response contract rules:
 - Validate all inputs (`email`, consent, session IDs, priority values).
 - Parameterized SQL only.
 - Store explicit consent fields per user.
+- Treat unverified emails as incomplete leads; only verified emails are eligible for primary recommendation unlock and trusted account recovery.
+- Only verified and actively subscribed emails are eligible for newsletter or product-update sends.
+- Unsubscribe and suppression state must be respected across all outbound marketing sends.
 - Capture `signup_source` for attribution.
 - GDPR-aware retention and deletion support for email records.
 
 ### Rate limits
 - `POST /api/recommendation/session`: 30 req/min/IP
 - `POST /api/recommendation/compute`: 20 req/min/IP
-- `POST /api/recommendation/unlock`: 10 req/min/IP
+- `POST /api/recommendation/unlock/request`: 10 req/min/IP
+- `POST /api/recommendation/unlock/verify`: 20 req/min/IP
 - `POST /api/recommendation/:id/feedback`: 30 req/min/IP
 
 ---
@@ -301,14 +342,14 @@ Response contract rules:
 Scope:
 - Implement wizard-first flow (no pre-auth).
 - Implement locked primary recommendation UX.
-- Implement email unlock endpoint and consent capture.
-- Persist user records on unlock with source attribution.
+- Implement verification-link-based email unlock and consent capture.
+- Persist user records with verification status and source attribution.
 - Enforce result screen contract (no comparison UI, no score display).
 - Seed 20-30 curated tools.
 
 Exit criteria:
 - Wizard completion in under 60 seconds median.
-- Email unlock conversion measurable and stable.
+- Verified email unlock conversion measurable and stable.
 - `Try it ->` click-through tracked after unlock.
 
 ### Phase 2: Feature expansion
@@ -317,6 +358,7 @@ Scope:
 - Add fallback email recovery/bootstrap for users who cannot use their passkey yet.
 - Add saved recommendation history by user.
 - Add richer analytics dashboards (funnel: start -> complete -> unlock -> register -> sign-in -> try-it).
+- Add verified newsletter subscription foundation, unsubscribe handling, and provider sync/export.
 - Extract frontend copy into translation resources and prepare the app for internationalization.
 - Implement safe dataset update automation (post-MVP).
 
@@ -325,6 +367,7 @@ Exit criteria:
 - Fallback email recovery/bootstrap works reliably.
 - Returning users can access past recommendations.
 - Channel-level conversion by `signup_source` is visible.
+- Verified newsletter audience can be exported or synced safely to the sending provider.
 - English copy is externalized and ready for future locales.
 
 ### Phase 3: Optimization
@@ -344,7 +387,7 @@ Exit criteria:
 ### Answered
 
 **Should unlock require double opt-in email confirmation or unlock immediately with consent checkbox?**
-Unlock immediately on email + consent checkbox. No double opt-in for MVP. Double opt-in adds friction at the exact moment of maximum motivation and will hurt conversion. A clear consent checkbox at the gate is sufficient for GDPR compliance.
+Require inbox ownership verification through a verification link before unlocking the primary recommendation. Syntax and domain checks alone are not sufficient because they still allow random or mistyped emails. This adds friction, but verified emails are a hard product requirement and take precedence over raw unlock-volume optimization.
 
 **Should returning-user authentication be passkey-first, magic-link only, or email+password?**
 Passkey-first for Phase 2, with email fallback only for recovery/bootstrap. No passwords and no separate username. This gives the product a more credible and modern account model than magic-link-only auth, while still avoiding password reset complexity. Email remains the account identifier, and fallback email recovery exists so users are not blocked if passkey setup is incomplete or they change devices.
@@ -353,10 +396,13 @@ Passkey-first for Phase 2, with email fallback only for recovery/bootstrap. No p
 Open `referral_url` when populated, fall back to `website` when not. This enables future monetization without any frontend change. The `referral_url` field should be added to the `tools` table now, even if empty for all MVP tools.
 
 **What is the minimum acceptable unlock conversion rate for MVP go/no-go?**
-Target: 20% of wizard completions result in an email unlock. Below 10% after 200 completions indicates the result screen or the email gate copy needs reworking before further promotion. Track this from day one.
+Target: 20% of wizard completions result in a verified email unlock. Below 10% after 200 completions indicates the result screen or the verification step needs reworking before further promotion. Track this from day one.
 
 **Should the landing page include a separate "follow the build" email capture independent of the wizard flow?**
 Yes. Include a low-friction "follow the build" capture on landing, separate from the recommendation unlock gate. Store these signups with distinct `signup_source` / campaign tags so this channel does not get mixed with unlock-conversion metrics.
+
+**How should verified emails be used for newsletter and product-update sends?**
+Use the same verified email record as the source of truth for product updates and newsletter sends, but keep marketing subscription state separate from auth/recovery logic. Only verified emails with active subscription status may receive newsletter sends, and unsubscribe/suppression state must be enforced globally.
 
 ---
 

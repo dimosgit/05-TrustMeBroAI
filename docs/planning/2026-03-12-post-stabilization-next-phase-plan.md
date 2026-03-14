@@ -8,79 +8,94 @@ Source of truth: `docs/planning/final-implementation-plan.md` remains authoritat
   - result-page hierarchy issue
   - crowded header navigation
   - weak mobile wizard progression controls
-- Phase 2 Sprint 3 is now complete and integration-approved:
-  - follow-the-build capture is live end to end
-  - research-ingestion dry-run foundation is implemented
-  - benchmark and release-evidence scaffolding exists
+- Phase 2 Sprint 4 is complete and integration-approved:
+  - first controlled candidate release has been executed
+  - guarded ingestion apply path and release evidence now exist
+  - FE micro-blink mitigation shipped
   - internal route hygiene remains safe by default
 - Marketing execution assets are complete:
   - follow-the-build copy pack
   - 30-day content calendar
   - launch post pack
-- Remaining FE/auth polish follow-ups:
-  - residual `/result` micro-blink for logged-in users during auto-unlock
-  - iOS Safari post-passkey viewport zoom still needs fresh validation after a fix
+- New high-priority product decision:
+  - primary recommendation unlock must require inbox ownership verification through a verification link
+  - syntax and domain checks alone are not sufficient because they still allow random or mistyped emails
+- Newsletter/product-update foundation now needs explicit implementation planning:
+  - use verified emails as the marketing audience source of truth
+  - keep subscription state and unsubscribe handling separate from auth/recovery logic
+- Remaining FE/auth polish follow-up:
+  - iOS Safari post-passkey viewport zoom still needs fresh real-device validation evidence
 
 ## 2. Immediate Next Goal
-Move from completed Phase 2 Sprint 3 into Phase 2 Sprint 4: controlled candidate release and FE polish closeout.
+Move from completed Phase 2 Sprint 4 into Phase 2 Sprint 5: verified email gate and release hardening.
 
 This means:
-1. execute the first controlled research-ingestion candidate release
-2. generate real release evidence using the architected evaluation framework
-3. implement and re-validate the remaining FE auth polish issues
-4. keep anonymous funnel and internal route hygiene safe throughout
+1. enforce verification-link ownership confirmation before primary unlock
+2. keep anonymous funnel and internal route hygiene safe throughout
+3. close the remaining Safari real-device validation carryover
+4. retain candidate-release governance and evidence discipline
+5. include newsletter subscription foundation in the main Sprint 5 execution batch
 
 ## 3. Priority Order
 
-### P0: Controlled Candidate Release
-1. Add a guarded apply path for the first research-ingestion candidate release.
-2. Use curated decisions and dry-run artifacts as inputs.
-3. Preserve deterministic runtime behavior and transactional safety.
+### P0: Verified Email Gate
+1. Add verification-link request and verify steps to the recommendation unlock flow.
+2. Store verification state and token lifecycle instead of trusting unverified email input.
+3. Keep the primary recommendation locked until inbox ownership is confirmed.
 
-### P0: Release Evidence and QA Gate Execution
-1. Produce the first real release-evidence bundle.
-2. Compare baseline vs candidate behavior using the benchmark framework.
+### P0: QA and Release Hardening
+1. Prove that unverified emails cannot unlock the primary recommendation.
+2. Preserve anonymous wizard conversion and route safety while the new gate is added.
 
-### P1: FE/Auth Polish Closeout
-1. Fix iOS Safari post-passkey viewport zoom.
-2. Eliminate residual `/result` micro-blink during logged-in auto-unlock.
+### P1: Safari Evidence Closeout
+1. Run fresh iOS Safari real-device validation after the shipped zoom mitigation.
+2. Attach evidence for passkey flow and `/result` transition behavior.
+
+### P1: Newsletter Foundation
+1. Add subscription-state and unsubscribe requirements for verified emails.
+2. Keep provider sync/export behind the app database as source of truth.
 
 ## 4. Implementation Plan
 
-### Sprint 4: Controlled Candidate Release and FE Polish
+### Sprint 5: Verified Email Gate and Release Hardening
 1. Backend:
-   - implement a guarded apply path for approved research-ingestion artifacts
-   - support the first controlled candidate release without widening runtime scope
+   - implement verification-link request/verify endpoints for recommendation unlock
+   - store verification status and verification-token lifecycle
+   - add newsletter subscription state and unsubscribe flow for verified emails
+   - add provider sync/export path for verified subscribed emails
 2. Frontend:
-   - fix iOS Safari passkey zoom
-   - eliminate residual `/result` micro-blink
+   - add a verification-pending unlock state
+   - handle verification return and unlocked result restoration cleanly
+   - update unlock copy so the verification requirement is explicit
 3. QA:
-   - execute the first controlled candidate release against benchmark and evidence gates
-   - attach fresh Safari/device validation evidence after FE fixes
+   - prove unverified emails cannot unlock the primary recommendation
+   - prove unverified and unsubscribed emails never receive newsletter sends
+   - attach fresh Safari/device validation evidence after FE verification-gate changes
 4. Integration:
-   - reconcile candidate release safety, evidence completeness, and FE regression closure
+   - reconcile verified-email gate safety, newsletter readiness, evidence completeness, and FE regression closure
 
 Exit gate:
-- First controlled research-ingestion candidate release has evidence and a clear go/no-go decision.
-- FE auth polish issues are either fixed and validated or explicitly accepted with evidence.
+- Primary recommendation cannot be unlocked with an unverified email.
+- Verification-link flow is end-to-end reliable and does not expose unlocked results early.
+- Safari carryover evidence is attached or explicitly accepted with evidence.
 - No regression in anonymous funnel or route hygiene.
 
 ## 5. Recommended Agent Sequence
 1. `Back-End Specialist` and `Front-End Specialist` start in parallel.
-2. `QA Specialist` prepares candidate-release execution and real-device revalidation, then runs the full Sprint 4 gate after FE/BE land.
-3. `Integration Specialist` closes the batch last and decides readiness for the first controlled candidate release.
+2. `QA Specialist` prepares verification-gate execution and Safari evidence capture, then runs the full Sprint 5 gate after FE/BE land.
+3. `Integration Specialist` closes the batch last and decides readiness for verified-email enforcement.
 
 ## 6. Practical Advice
-1. Keep controlled candidate release scope intentionally small.
+1. Treat verified-email enforcement as a hard product requirement, not a copy tweak.
 2. Preserve the curation-first, artifact-first architecture decisions already approved.
 3. Do not introduce vector or semantic retrieval in this sprint.
 4. Keep anonymous recommendation flow protected as a standing regression gate in every PR.
 5. The internal `/tasks-progress` route must remain disabled by default and should still be removed before go-live.
 
 ## 7. Success Criteria
-1. First controlled candidate release is executed with evidence.
-2. Research-ingestion governance holds under a real release candidate, not just dry-run.
-3. Remaining FE auth polish issues are reduced with fresh validation evidence.
+1. Primary unlock requires verified inbox ownership through a verification link.
+2. Random or mistyped emails cannot unlock the recommendation.
+3. Safari carryover evidence is attached.
 4. Anonymous wizard conversion and route hygiene remain safe.
 
 ## 8A. Recommendation Data Architecture Result
@@ -107,19 +122,27 @@ Explicit boundaries:
 
 ## 9. Current Execution Batch (2026-03-14)
 1. `Back-End Specialist`
-   - guarded apply path for approved ingestion artifacts
-   - controlled candidate release backend support
+   - verification-link request/verify endpoints for recommendation unlock
+   - verification status and token lifecycle
+   - newsletter subscription state, unsubscribe flow, and provider sync/export foundation
 2. `Front-End Specialist`
-   - iOS Safari zoom fix
-   - residual result micro-blink fix
+   - verification-pending unlock state
+   - verification return flow
+   - explicit verification copy
 3. `QA Specialist`
-   - controlled candidate release execution
-   - release-evidence bundle
+   - unverified-email lock protection proof
+    - verification-link flow validation
+   - newsletter send eligibility proof for verified/subscribed-only users
    - fresh Safari/device validation
 4. `Integration Specialist`
-   - candidate release decision
-   - FE polish closeout review
-   - Sprint 4 merge gate
+    - verified-email gate decision
+   - newsletter readiness review
+   - FE carryover review
+   - Sprint 5 merge gate
+
+Newsletter implementation note:
+1. Detailed guidance is documented in `docs/planning/2026-03-14-newsletter-email-strategy.md`.
+2. It stays in the normal Sprint 5 backlog, but must still remain behind the verified-email gate so newsletter sends never rely on unverified input.
 
 ## 10. Pre-Go-Live Internal Tooling Gate
 1. `/tasks-progress` is an internal development helper only.
