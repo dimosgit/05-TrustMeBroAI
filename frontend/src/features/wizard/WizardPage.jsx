@@ -14,6 +14,7 @@ import {
 import { useRecommendation } from "../result/RecommendationContext";
 import {
   DEFAULT_ICON,
+  filterTasksForProfile,
   initialWizardForm,
   PRIORITY_ICON_MAP,
   PROFILE_ICON_MAP,
@@ -90,6 +91,29 @@ export default function WizardPage() {
     () => priorities.find((item) => item.id === formData.priorityId)?.name || "",
     [priorities, formData.priorityId]
   );
+  const selectedProfileName = useMemo(
+    () => profiles.find((item) => item.id === formData.profileId)?.name || "",
+    [profiles, formData.profileId]
+  );
+  const visibleTasks = useMemo(
+    () => filterTasksForProfile(tasks, selectedProfileName),
+    [tasks, selectedProfileName]
+  );
+
+  useEffect(() => {
+    if (!formData.taskId) {
+      return;
+    }
+
+    const taskStillVisible = visibleTasks.some((task) => task.id === formData.taskId);
+    if (!taskStillVisible) {
+      setFormData((current) => ({
+        ...current,
+        taskId: null,
+        priorityId: null
+      }));
+    }
+  }, [formData.taskId, visibleTasks]);
 
   async function handleSubmit() {
     if (!formData.profileId || !formData.taskId || !formData.priorityId) {
@@ -155,7 +179,14 @@ export default function WizardPage() {
         <StepProfile
           options={profiles}
           selectedId={formData.profileId}
-          onSelect={(profileId) => setFormData((current) => ({ ...current, profileId }))}
+          onSelect={(profileId) =>
+            setFormData((current) => ({
+              ...current,
+              profileId,
+              taskId: null,
+              priorityId: null
+            }))
+          }
           onNext={() => setStep("task")}
         />
       );
@@ -164,9 +195,15 @@ export default function WizardPage() {
     if (step === "task") {
       return (
         <StepTask
-          options={tasks}
+          options={visibleTasks}
           selectedId={formData.taskId}
-          onSelect={(taskId) => setFormData((current) => ({ ...current, taskId }))}
+          onSelect={(taskId) =>
+            setFormData((current) => ({
+              ...current,
+              taskId,
+              priorityId: null
+            }))
+          }
           onBack={() => setStep("profile")}
           onNext={() => setStep("priority")}
         />

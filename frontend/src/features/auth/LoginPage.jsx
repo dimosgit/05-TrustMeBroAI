@@ -136,7 +136,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
+            className="mt-1.5 w-full rounded-xl bg-white/5 px-4 py-3 text-base text-white outline-none transition focus:ring-2 focus:ring-blue-500/30"
             placeholder={t("auth.emailPlaceholder")}
             autoComplete="email"
           />

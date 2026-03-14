@@ -120,6 +120,35 @@ function serializeAuthenticationCredential(credential) {
   };
 }
 
+function isIosSafariBrowser() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const userAgent = window.navigator?.userAgent || "";
+  const platform = window.navigator?.platform || "";
+  const touchPoints = window.navigator?.maxTouchPoints || 0;
+  const isIosDevice = /iPad|iPhone|iPod/i.test(userAgent) || (platform === "MacIntel" && touchPoints > 1);
+  const isSafariWebKit =
+    /WebKit/i.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|YaBrowser/i.test(userAgent);
+
+  return isIosDevice && isSafariWebKit;
+}
+
+function normalizeIosSafariViewportAfterPasskey() {
+  if (typeof window === "undefined" || typeof document === "undefined" || !isIosSafariBrowser()) {
+    return;
+  }
+
+  if (document.activeElement instanceof HTMLElement && typeof document.activeElement.blur === "function") {
+    document.activeElement.blur();
+  }
+
+  window.requestAnimationFrame(() => {
+    window.scrollTo(window.scrollX, window.scrollY);
+  });
+}
+
 export function isPasskeySupported() {
   if (typeof window === "undefined") {
     return false;
@@ -138,9 +167,16 @@ export async function createPasskeyCredential(options) {
     throw new Error(t("auth.passkeyUnsupported"));
   }
 
-  const credential = await navigator.credentials.create({
-    publicKey: mapCreationOptions(options)
-  });
+  normalizeIosSafariViewportAfterPasskey();
+  let credential = null;
+
+  try {
+    credential = await navigator.credentials.create({
+      publicKey: mapCreationOptions(options)
+    });
+  } finally {
+    normalizeIosSafariViewportAfterPasskey();
+  }
 
   if (!credential) {
     throw new Error(t("auth.passkeyCreationCancelled"));
@@ -154,9 +190,16 @@ export async function getPasskeyCredential(options) {
     throw new Error(t("auth.passkeyUnsupported"));
   }
 
-  const credential = await navigator.credentials.get({
-    publicKey: mapRequestOptions(options)
-  });
+  normalizeIosSafariViewportAfterPasskey();
+  let credential = null;
+
+  try {
+    credential = await navigator.credentials.get({
+      publicKey: mapRequestOptions(options)
+    });
+  } finally {
+    normalizeIosSafariViewportAfterPasskey();
+  }
 
   if (!credential) {
     throw new Error(t("auth.passkeySigninCancelled"));

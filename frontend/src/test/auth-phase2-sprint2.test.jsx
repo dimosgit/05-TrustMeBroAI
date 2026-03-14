@@ -307,6 +307,74 @@ describe("phase2 sprint2 frontend", () => {
     expect(screen.queryByTestId("alternatives-section")).not.toBeInTheDocument();
   });
 
+  it("keeps locked state hidden while auth bootstrap is unresolved on /result", async () => {
+    window.sessionStorage.setItem("trustmebro.authenticated_hint", "1");
+    window.sessionStorage.setItem(
+      "trustmebro.recommendation",
+      JSON.stringify({
+        sessionId: 45,
+        recommendationId: 903,
+        primaryTool: {
+          toolName: "Hidden Tool",
+          website: "https://example.com"
+        },
+        alternatives: [
+          { toolName: "Alt One", contextWord: "free tier" },
+          { toolName: "Alt Two", contextWord: "fast" }
+        ],
+        unlocked: false
+      })
+    );
+
+    let resolveAuth = () => {};
+    const fetchMock = vi.fn((input, init = {}) => {
+      const url = typeof input === "string" ? input : input.url;
+      const pathname = new URL(url, "http://localhost").pathname;
+      const method = (init.method || "GET").toUpperCase();
+
+      if (method === "GET" && pathname === "/api/auth/me") {
+        return new Promise((resolve) => {
+          resolveAuth = () =>
+            resolve(
+              new Response(
+                JSON.stringify({
+                  user: {
+                    id: 77,
+                    email: "person@example.com"
+                  }
+                }),
+                {
+                  status: 200,
+                  headers: { "Content-Type": "application/json" }
+                }
+              )
+            );
+        });
+      }
+
+      if (method === "POST" && pathname === "/api/recommendation/unlock") {
+        return new Promise(() => {});
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ message: `No mock for ${method} ${pathname}` }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/result"]);
+
+    expect(await screen.findByTestId("auto-unlock-pending")).toBeInTheDocument();
+    expect(screen.queryByTestId("locked-primary")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("alternatives-section")).not.toBeInTheDocument();
+
+    resolveAuth();
+  });
+
   it("keeps active English copy unchanged after extraction", async () => {
     vi.stubGlobal(
       "fetch",

@@ -9,88 +9,39 @@
 ## Current State
 
 - Current phase: `Phase 2`
-- Current sprint: `Sprint 3`
-- Current status: `In progress`
+- Current sprint: `Sprint 4`
+- Current status: `Sprint 4 complete with carryover`
 - Source of truth: `docs/planning/final-implementation-plan.md`
 - Internal dev helper: `/tasks-progress` is available during development only and must be removed before go-live.
 
-## Phase 1 -> MVP
+## Archived Completed Phases and Sprints
+
+- [x] Phase 1 -> MVP archived
+  - Outcome: anonymous wizard, locked recommendation flow, email unlock gate, deterministic runtime scoring, curated seed dataset, feedback capture
+- [x] Phase 2 Sprint 1 -> Passkey Auth Foundation archived
+  - Outcome: passkey-first auth, recovery/bootstrap fallback, auth session bootstrap, anonymous funnel preserved
+  - Follow-up carried into Sprint 4: FE auth polish for iOS Safari zoom and residual `/result` micro-blink
+- [x] Phase 2 Sprint 2 -> Product Foundation archived
+  - Outcome: authenticated recommendation history, funnel/account metrics foundation, English copy extraction, QA and integration closeout
+- [x] Phase 2 Sprint 3 -> Growth and Recommendation Data Foundation archived
+  - Outcome: follow-the-build capture live, research-ingestion dry-run foundation, benchmark/evidence scaffolding, integration closeout
+
+## Phase 2 Sprint 4 -> Controlled Candidate Release and FE Polish
 
 ### Goal
-- Anonymous recommendation flow
-- Locked primary recommendation
-- Email unlock gate
-- Deterministic recommendation engine
-
-### Outcome
-- [x] Landing page
-- [x] 3-step wizard
-- [x] Locked result flow
-- [x] Email unlock flow
-- [x] Deterministic scoring in runtime
-- [x] Curated seed tool dataset in runtime
-- [x] Primary recommendation UI
-- [x] Feedback capture
-
-## Phase 2 Sprint 1 -> Passkey Auth Foundation
-
-### Goal
-- Passkey-first account access
-- Email as account identifier
-- Email fallback secondary only
-- Keep anonymous funnel intact
-
-### Outcome
-- [x] Final plan updated to passkey-first
-- [x] Passkey registration flow
-- [x] Passkey sign-in flow
-- [x] Recovery/bootstrap email fallback
-- [x] Auth session bootstrap
-- [x] Anonymous funnel still open
-- [x] QA gate completed
-- [x] Integration closeout completed
-
-### Follow-Up UX/Auth Polish
-- [x] Preserve and use `requires_passkey_enrollment` after recovery verify
-- [x] Real-device passkey validation sweep on desktop and mobile
-- [ ] Investigate and eliminate residual `/result` micro-blink for logged-in users during auto-unlock transition
-- [ ] Fix iOS Safari post-passkey viewport zoom after passkey sign-in
-
-## Phase 2 Sprint 2 -> Product Foundation
-
-### Goal
-- Add authenticated user value
-- Prepare English copy for localization
-- Add measurable account/funnel signals
+- Run the first controlled research-ingestion candidate release
+- Attach real release evidence to recommendation-data updates
+- Close the remaining FE auth/transition polish issues
 
 ### Tasks
-- [x] Backend: authenticated recommendation history API
-- [x] Backend: account/auth funnel metrics foundation
-- [x] Frontend: authenticated recommendation history UI
-- [x] Frontend: extract English copy into translation resources
-- [x] Frontend: recovery-based passkey enrollment guidance
-- [x] QA: history regression gate
-- [x] QA: English parity validation after i18n extraction
-- [x] QA: real-device passkey validation sweep
-- [x] Integration: Sprint 2 closeout and merge gate
+- [x] Backend: guarded apply path and candidate-release support for research ingestion
+- [x] Frontend: fix iOS Safari passkey viewport zoom
+- [x] Frontend: eliminate residual `/result` micro-blink during auto-unlock
+- [x] QA: execute first controlled candidate release with benchmark and release-evidence bundle
+- [x] Integration: Sprint 4 closeout and candidate release decision
 
-## Phase 2 Sprint 3 -> Growth and Recommendation Data Foundation
-
-### Goal
-- Ship the separate `follow the build` capture surface
-- Start research ingestion implementation from the approved architecture
-- Build recommendation evaluation gates
-- Close remaining UX/auth polish before broader promotion
-
-### Tasks
-- [~] Backend: follow-the-build capture endpoint and source attribution flow
-- [~] Backend: research ingestion parser, normalizer, and dry-run artifact generation
-- [~] Frontend: landing follow-the-build capture UI
-- [~] Frontend: apply approved follow-the-build and loading-copy updates
-- [~] Frontend: fix iOS Safari passkey viewport zoom and `/result` micro-blink
-- [~] QA: recommendation benchmark suite and ingestion gate harness
-- [ ] QA: validate follow-the-build capture, source attribution, and anonymous funnel non-regression
-- [ ] Integration: Sprint 3 closeout and merge gate
+### Carryover to Next Sprint
+- [ ] QA + FE: fresh real-device Safari validation for zoom and `/result` transition evidence pack
 
 ## Support Workstream -> Marketing and Copy
 
@@ -104,8 +55,8 @@
 - [x] Marketing copy audit
 - [x] Build-in-public strategy
 - [x] Copy recommendations for landing, unlock, auth, and follow-the-build capture
-- [~] First 30-day content calendar and channel-ready launch assets
-- [~] Final implementation-ready copy pack for the follow-the-build surface
+- [x] First 30-day content calendar and channel-ready launch assets
+- [x] Final implementation-ready copy pack for the follow-the-build surface
 
 ## Support Workstream -> Recommendation Data and Research Ingestion
 
@@ -118,9 +69,9 @@
 - [x] Architect: research-to-dataset ingestion design
 - [x] Architect: curation, conflict-resolution, and confidence rules
 - [x] Architect: recommendation evaluation and quality-check framework
-- [~] Backend: implement approved research ingestion pipeline foundation
-- [~] QA: implement ingestion output and recommendation quality gates
-- [ ] Controlled first candidate release against research-derived updates
+- [x] Backend: implement approved research ingestion pipeline foundation
+- [x] QA: implement ingestion output and recommendation quality gates
+- [x] Controlled first candidate release against research-derived updates
 - [x] Decision checkpoint: confirm whether advanced retrieval is still unnecessary
 
 ## Phase 3 -> Optimization
@@ -156,37 +107,33 @@
 
 - [x] `docs/planning/final-implementation-plan.md`
 - [x] `docs/planning/2026-03-12-post-stabilization-next-phase-plan.md`
-- [x] `docs/planning/2026-03-14-phase2-sprint2-backend-history-metrics-enrollment-note.md`
-- [x] `docs/planning/2026-03-14-phase2-sprint2-frontend-continuation-note.md`
-- [x] `docs/planning/2026-03-14-phase2-sprint2-qa-release-gate-report.md`
-- [x] `docs/planning/2026-03-14-phase2-sprint2-integration-closeout-report.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint3-backend-follow-build-ingestion-note.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint3-qa-release-gate-report.md`
+- [x] `docs/planning/2026-03-14-phase2-sprint3-integration-closeout-report.md`
 - [x] `docs/planning/2026-03-14-recommendation-data-architecture.md`
 - [x] `docs/planning/2026-03-14-recommendation-evaluation-framework.md`
 - [x] `docs/planning/2026-03-14-research-ingestion-rollout-plan.md`
 
 ## Active Prompt Set
 
-- [x] `docs/prompt/2026-03-14-phase2-sprint3-back-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint3-front-end-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint3-qa-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint3-integration-specialist.md`
-- [x] `docs/prompt/2026-03-14-phase2-sprint3-marketing-content-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint4-back-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint4-front-end-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint4-qa-specialist.md`
+- [x] `docs/prompt/2026-03-14-phase2-sprint4-integration-specialist.md`
 
 ## Manager View
 
 - [x] Phase 1 complete
 - [x] Phase 2 Sprint 1 complete with mitigations
 - [x] Phase 2 Sprint 2 complete
-- [ ] Phase 2 Sprint 3 complete
+- [x] Phase 2 Sprint 3 complete
+- [x] Phase 2 Sprint 4 complete
 - [ ] Phase 3 started
 
 ## Next Work
 
-- [~] Ship follow-the-build capture and source attribution
-- [~] Implement research ingestion foundation
-- [~] Build recommendation evaluation gates
-- [~] Close remaining FE auth/transition polish
-- [~] Prepare initial build-in-public content assets
+- [~] Execute Safari real-device validation carryover in next sprint
+- [~] Keep candidate-release governance exceptions tracked until scenario-level evaluator is implemented
 
 ## Go-Live Blockers
 

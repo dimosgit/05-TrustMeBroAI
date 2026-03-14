@@ -1,11 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
+import FollowBuildFooterCapture from "../../features/landing/FollowBuildFooterCapture";
 import { trackEvent } from "../../lib/analytics/tracking";
 import { useAuth } from "../../features/auth/AuthContext";
 import { t } from "../../lib/i18n";
 
 function LandingFooter() {
   return (
-    <footer className="mx-auto mt-4 w-full max-w-sm pb-2">
+    <footer className="mx-auto mt-3 w-full max-w-[42rem] space-y-3 pb-2">
+      <FollowBuildFooterCapture />
       <div className="flex items-center justify-between text-[11px] font-medium tracking-tight text-slate-600">
         <p>{t("appShell.landingFooterCopyright")}</p>
         <a

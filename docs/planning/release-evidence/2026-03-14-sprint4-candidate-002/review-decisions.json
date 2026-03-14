@@ -1,0 +1,48 @@
+{
+  "release_id": "2026-03-14-sprint4-candidate-002",
+  "generated_at": "2026-03-14T16:50:00Z",
+  "reviewers": {
+    "data_curator": "backend-curation-flow",
+    "product_reviewer": "pending",
+    "qa_reviewer": "QA Specialist"
+  },
+  "samples": {
+    "new_tools_reviewed": 3,
+    "updated_tools_reviewed": 0,
+    "changed_primary_scenarios_reviewed": 0
+  },
+  "decisions": [
+    {
+      "item_id": "n8n",
+      "item_type": "tool",
+      "decision": "accept",
+      "severity": "minor",
+      "rationale": "Approved and applied in controlled batch.",
+      "owner": "BE",
+      "status": "resolved"
+    },
+    {
+      "item_id": "notebooklm",
+      "item_type": "tool",
+      "decision": "accept",
+      "severity": "minor",
+      "rationale": "Approved and applied in controlled batch.",
+      "owner": "BE",
+      "status": "resolved"
+    },
+    {
+      "item_id": "notion-ai",
+      "item_type": "tool",
+      "decision": "accept",
+      "severity": "minor",
+      "rationale": "Approved and applied in controlled batch.",
+      "owner": "BE",
+      "status": "resolved"
+    }
+  ],
+  "final_outcome": {
+    "decision": "approve_with_exceptions",
+    "critical_rejections": 0,
+    "notes": "Controlled apply passed. Scenario-level benchmark diff automation remains pending."
+  }
+}

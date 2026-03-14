@@ -1,0 +1,30 @@
+{
+  "release_id": "2026-03-14-sprint4-candidate-001",
+  "generated_at": "2026-03-14T16:40:00Z",
+  "reviewers": {
+    "data_curator": "pending",
+    "product_reviewer": "pending",
+    "qa_reviewer": "QA Specialist"
+  },
+  "samples": {
+    "new_tools_reviewed": 0,
+    "updated_tools_reviewed": 0,
+    "changed_primary_scenarios_reviewed": 0
+  },
+  "decisions": [
+    {
+      "item_id": "candidate-release-gating",
+      "item_type": "release",
+      "decision": "reject",
+      "severity": "critical",
+      "rationale": "Apply command blocked candidate because no approved tools exist in curation decisions.",
+      "owner": "BE",
+      "status": "open"
+    }
+  ],
+  "final_outcome": {
+    "decision": "reject",
+    "critical_rejections": 1,
+    "notes": "Candidate cannot proceed until approved decisions exist and conflict/quality gates are resolved."
+  }
+}

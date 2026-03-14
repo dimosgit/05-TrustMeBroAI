@@ -1,0 +1,13 @@
+{
+  "release_id": "2026-03-14-sprint4-candidate-001",
+  "baseline_id": "current-runtime-seed",
+  "generated_at": "2026-03-14T16:40:00Z",
+  "summary": {
+    "scenario_count": 0,
+    "primary_change_count": 0,
+    "alternative_change_count": 0,
+    "contract_failure_count": 0,
+    "note": "No scenario-level diff run because candidate was blocked before apply (0 approved tools)."
+  },
+  "changes": []
+}

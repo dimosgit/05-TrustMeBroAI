@@ -138,7 +138,7 @@
   {
     "tool_slug": "n8n",
     "decision": "approve",
-    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "rationale": "Approved for candidate release 2026-03-14-sprint4-candidate-002 after curator review.",
     "source_files": [
       "docs/research/ai_productivity_tools_knowledge_workers.md"
     ]
@@ -146,7 +146,7 @@
   {
     "tool_slug": "notebooklm",
     "decision": "approve",
-    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "rationale": "Approved for candidate release 2026-03-14-sprint4-candidate-002 after curator review.",
     "source_files": [
       "docs/research/ai_productivity_tools_knowledge_workers.md"
     ]
@@ -154,7 +154,7 @@
   {
     "tool_slug": "notion-ai",
     "decision": "approve",
-    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "rationale": "Approved for candidate release 2026-03-14-sprint4-candidate-002 after curator review.",
     "source_files": [
       "docs/research/ai_productivity_tools_knowledge_workers.md"
     ]

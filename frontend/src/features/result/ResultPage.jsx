@@ -140,7 +140,7 @@ function AlternativesGrid({ alternatives }) {
 export default function ResultPage() {
   const navigate = useNavigate();
   const { notify } = useToast();
-  const { isAuthenticated, isBootstrapping } = useAuth();
+  const { isAuthenticated, isBootstrapping, hasAuthenticatedHint } = useAuth();
   const { resultState, setUnlockedResult, clearResult } = useRecommendation();
 
   const [manualUnlocking, setManualUnlocking] = useState(false);
@@ -159,10 +159,17 @@ export default function ResultPage() {
   const logoUrl = apiLogoUrl || faviconUrl;
   const shouldRenderLogo = Boolean(logoUrl);
   const hasUnlockMarker = hasRegisteredUnlockMarker();
+  const shouldShowAuthBootstrapPending = Boolean(
+    resultState &&
+      !resultState.unlocked &&
+      !autoUnlockFailed &&
+      isBootstrapping &&
+      (hasAuthenticatedHint || hasUnlockMarker)
+  );
   const shouldShowAuthenticatedAutoUnlockPending = Boolean(
     resultState &&
       !resultState.unlocked &&
-      isAuthenticated &&
+      (isAuthenticated || shouldShowAuthBootstrapPending) &&
       !autoUnlockFailed
   );
   const shouldHideAlternativesDuringAutoUnlock = Boolean(
@@ -273,7 +280,7 @@ export default function ResultPage() {
             {t("result.runAgain")}
           </button>
         </div>
-        {!resultState.unlocked ? (
+        {!resultState.unlocked && !shouldShowAuthenticatedAutoUnlockPending ? (
           <p className="mt-1.5 text-sm text-slate-400">{t("result.lockedResultSubtitle")}</p>
         ) : null}
       </header>

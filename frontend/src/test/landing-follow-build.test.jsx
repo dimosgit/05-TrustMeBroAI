@@ -26,6 +26,7 @@ describe("landing follow-the-build capture", () => {
   });
 
   it("renders the follow-the-build secondary capture without regressing primary CTA", async () => {
+    const user = userEvent.setup();
     vi.stubGlobal(
       "fetch",
       createApiFetchMock({
@@ -38,6 +39,10 @@ describe("landing follow-the-build capture", () => {
     expect(await screen.findByRole("heading", { name: /there are thousands of ai tools/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Find my AI tool" })).toBeInTheDocument();
     expect(screen.getByText("Following the build?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Get updates" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /following the build\?/i }));
+
     expect(screen.getByRole("button", { name: "Get updates" })).toBeInTheDocument();
     expect(screen.getByText("Occasional updates only. No spam, no VC money, no agenda.")).toBeInTheDocument();
   });
@@ -52,6 +57,7 @@ describe("landing follow-the-build capture", () => {
     renderApp(["/"]);
 
     await screen.findByRole("heading", { name: /there are thousands of ai tools/i });
+    await user.click(screen.getByRole("button", { name: /following the build\?/i }));
 
     await user.type(screen.getByPlaceholderText("you@example.com"), "not-an-email");
     await user.click(screen.getByRole("button", { name: "Get updates" }));
@@ -86,6 +92,7 @@ describe("landing follow-the-build capture", () => {
     renderApp(["/"]);
 
     await screen.findByRole("heading", { name: /there are thousands of ai tools/i });
+    await user.click(screen.getByRole("button", { name: /following the build\?/i }));
 
     await user.type(screen.getByPlaceholderText("you@example.com"), "follow@example.com");
     await user.click(screen.getByRole("button", { name: "Get updates" }));
@@ -113,6 +120,7 @@ describe("landing follow-the-build capture", () => {
     renderApp(["/"]);
 
     await screen.findByRole("heading", { name: /there are thousands of ai tools/i });
+    await user.click(screen.getByRole("button", { name: /following the build\?/i }));
 
     await user.type(screen.getByPlaceholderText("you@example.com"), "follow@example.com");
     await user.click(screen.getByRole("button", { name: "Get updates" }));

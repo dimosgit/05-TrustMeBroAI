@@ -3,6 +3,7 @@ import { fetchAuthMe, logoutAuth } from "../../lib/api/authApi";
 
 const AuthContext = createContext(null);
 const PASSKEY_ENROLLMENT_NUDGE_KEY = "trustmebro.passkey_enrollment_required";
+const AUTHENTICATED_HINT_KEY = "trustmebro.authenticated_hint";
 
 function readStoredPasskeyEnrollmentNudge() {
   if (typeof window === "undefined") {
@@ -25,9 +26,31 @@ function writeStoredPasskeyEnrollmentNudge(value) {
   window.sessionStorage.removeItem(PASSKEY_ENROLLMENT_NUDGE_KEY);
 }
 
+function readStoredAuthenticatedHint() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.sessionStorage.getItem(AUTHENTICATED_HINT_KEY) === "1";
+}
+
+function writeStoredAuthenticatedHint(value) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (value) {
+    window.sessionStorage.setItem(AUTHENTICATED_HINT_KEY, "1");
+    return;
+  }
+
+  window.sessionStorage.removeItem(AUTHENTICATED_HINT_KEY);
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [hasAuthenticatedHint, setHasAuthenticatedHint] = useState(() => readStoredAuthenticatedHint());
   const [requiresPasskeyEnrollment, setRequiresPasskeyEnrollment] = useState(() =>
     readStoredPasskeyEnrollmentNudge()
   );
@@ -40,8 +63,12 @@ export function AuthProvider({ children }) {
     if (force || requestVersion === authMutationVersionRef.current) {
       setUser(authUser);
       if (authUser?.id) {
+        setHasAuthenticatedHint(true);
+        writeStoredAuthenticatedHint(true);
         setRequiresPasskeyEnrollment(readStoredPasskeyEnrollmentNudge());
       } else {
+        setHasAuthenticatedHint(false);
+        writeStoredAuthenticatedHint(false);
         setRequiresPasskeyEnrollment(false);
         writeStoredPasskeyEnrollmentNudge(false);
       }
@@ -57,6 +84,8 @@ export function AuthProvider({ children }) {
       .catch(() => {
         if (!isCancelled) {
           setUser(null);
+          setHasAuthenticatedHint(false);
+          writeStoredAuthenticatedHint(false);
           setRequiresPasskeyEnrollment(false);
           writeStoredPasskeyEnrollmentNudge(false);
         }
@@ -77,6 +106,8 @@ export function AuthProvider({ children }) {
       if (authUser) {
         authMutationVersionRef.current += 1;
         setUser(authUser);
+        setHasAuthenticatedHint(true);
+        writeStoredAuthenticatedHint(true);
         setRequiresPasskeyEnrollment(Boolean(nextRequiresPasskeyEnrollment));
         writeStoredPasskeyEnrollmentNudge(Boolean(nextRequiresPasskeyEnrollment));
         return authUser;
@@ -95,6 +126,8 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     authMutationVersionRef.current += 1;
     setUser(null);
+    setHasAuthenticatedHint(false);
+    writeStoredAuthenticatedHint(false);
     setRequiresPasskeyEnrollment(false);
     writeStoredPasskeyEnrollmentNudge(false);
 
@@ -110,6 +143,7 @@ export function AuthProvider({ children }) {
       user,
       isBootstrapping,
       isAuthenticated: Boolean(user?.id),
+      hasAuthenticatedHint,
       requiresPasskeyEnrollment,
       refreshAuth,
       setAuthenticatedUser,
@@ -119,6 +153,7 @@ export function AuthProvider({ children }) {
     [
       user,
       isBootstrapping,
+      hasAuthenticatedHint,
       requiresPasskeyEnrollment,
       refreshAuth,
       setAuthenticatedUser,

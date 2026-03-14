@@ -96,6 +96,83 @@ test("research ingest dry-run writes staging artifacts", async () => {
   }
 });
 
+test("research ingest dry-run preserves approved decisions and keeps approved_count above zero", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "tmb-research-preserve-"));
+  const researchDir = path.join(tempRoot, "docs", "research");
+  const stagingDir = path.join(tempRoot, "backend", "db", "staging", "research_ingest");
+
+  await fs.mkdir(researchDir, { recursive: true });
+  await fs.mkdir(stagingDir, { recursive: true });
+
+  await fs.writeFile(
+    path.join(researchDir, "candidate.md"),
+    [
+      "**Tool Name:** Sticky Tool",
+      "**Category:** Knowledge management",
+      "**Website:** sticky.dev",
+      "**Pricing Model:** Freemium",
+      "**Ease of Use (1–5):** 4",
+      "**Quality (1–5):** 4",
+      "**Speed (1–5):** 4",
+      "**Typical Users:** Knowledge workers"
+    ].join("\n"),
+    "utf8"
+  );
+
+  await fs.writeFile(
+    path.join(stagingDir, "curation_decisions.json"),
+    `${JSON.stringify(
+      [
+        {
+          tool_slug: "sticky-tool",
+          decision: "approve",
+          rationale: "Previously curated approval for controlled candidate release.",
+          source_files: ["docs/research/candidate.md"]
+        }
+      ],
+      null,
+      2
+    )}\n`,
+    "utf8"
+  );
+
+  const summary = await runResearchIngestionDryRun({
+    projectRoot: tempRoot,
+    researchDir,
+    stagingDir
+  });
+
+  assert.equal(summary.approved_count, 1);
+
+  const decisions = JSON.parse(
+    await fs.readFile(path.join(stagingDir, "curation_decisions.json"), "utf8")
+  );
+  const stickyDecision = decisions.find((row) => row.tool_slug === "sticky-tool");
+  assert.equal(stickyDecision.decision, "approve");
+
+  const conflicts = JSON.parse(
+    await fs.readFile(path.join(stagingDir, "candidate_conflicts.json"), "utf8")
+  );
+  assert.equal(conflicts.conflicts.some((row) => row.tool_slug === "sticky-tool"), false);
+  assert.equal(
+    Array.isArray(conflicts.suppressed_by_curation) &&
+      conflicts.suppressed_by_curation.some((row) => row.tool_slug === "sticky-tool"),
+    true
+  );
+
+  const candidateRow = (
+    await fs
+      .readFile(path.join(stagingDir, "candidate_tools.jsonl"), "utf8")
+      .then((raw) =>
+        raw
+          .trim()
+          .split(/\n+/)
+          .map((line) => JSON.parse(line))
+      )
+  ).find((row) => row.tool_slug === "sticky-tool");
+  assert.equal(candidateRow.status, "approved");
+});
+
 test("candidate apply rejects approved slugs when conflicts are unresolved", () => {
   assert.throws(
     () =>

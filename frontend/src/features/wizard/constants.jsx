@@ -112,4 +112,24 @@ export const initialWizardForm = {
   priorityId: null
 };
 
+export const PROFILE_TASK_NAMES = {
+  Business: ["Analyze a PDF", "Summarize documents", "Do research", "Write content", "Automate work"],
+  Developer: ["Write code", "Build an app", "Automate work", "Do research"],
+  Consultant: ["Analyze a PDF", "Summarize documents", "Do research", "Write content", "Automate work"],
+  Student: ["Analyze a PDF", "Summarize documents", "Do research", "Write content"],
+  Creator: ["Write content", "Create images", "Do research", "Automate work", "Summarize documents"]
+};
+
+export function filterTasksForProfile(tasks, profileName) {
+  const allowedTaskNames = PROFILE_TASK_NAMES[profileName];
+
+  if (!Array.isArray(tasks) || tasks.length === 0 || !Array.isArray(allowedTaskNames) || allowedTaskNames.length === 0) {
+    return Array.isArray(tasks) ? tasks : [];
+  }
+
+  const filteredTasks = tasks.filter((task) => allowedTaskNames.includes(task.name));
+
+  return filteredTasks.length > 0 ? filteredTasks : tasks;
+}
+
 export const CONSENT_COPY = t("consent.copy");

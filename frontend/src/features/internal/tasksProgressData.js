@@ -3,60 +3,34 @@ export const taskProgressSections = [
     title: "Current State",
     items: [
       { label: "Current phase", value: "Phase 2" },
-      { label: "Current sprint", value: "Sprint 3" },
-      { label: "Current status", value: "In progress" }
+      { label: "Current sprint", value: "Sprint 4" },
+      { label: "Current status", value: "Sprint 4 complete with carryover" }
     ]
   },
   {
-    title: "Phase 2 Sprint 1 Follow-Up UX/Auth Polish",
-    tasks: [
-      {
-        status: "completed",
-        priority: "P0",
-        text: "Preserve and use requires_passkey_enrollment after recovery verify"
-      },
-      {
-        status: "completed",
-        priority: "P0",
-        text: "Real-device passkey validation sweep on desktop and mobile"
-      },
-      { status: "not_started", priority: "P1", text: "Investigate and eliminate residual /result micro-blink" },
-      { status: "not_started", priority: "P1", text: "Fix iOS Safari post-passkey viewport zoom" }
+    title: "Archived Completed Sprints",
+    items: [
+      { label: "Phase 1 MVP", value: "Archived - complete" },
+      { label: "Phase 2 Sprint 1", value: "Archived - complete with mitigations carried into Sprint 4" },
+      { label: "Phase 2 Sprint 2", value: "Archived - complete" },
+      { label: "Phase 2 Sprint 3", value: "Archived - complete" }
     ]
   },
   {
-    title: "Phase 2 Sprint 2 Product Foundation",
+    title: "Phase 2 Sprint 4 Controlled Candidate Release and FE Polish",
     tasks: [
-      { status: "completed", priority: "P0", text: "Backend: authenticated recommendation history API" },
-      { status: "completed", priority: "P1", text: "Backend: account/auth funnel metrics foundation" },
-      { status: "completed", priority: "P0", text: "Frontend: authenticated recommendation history UI" },
-      { status: "completed", priority: "P0", text: "Frontend: extract English copy into translation resources" },
-      { status: "completed", priority: "P0", text: "Frontend: recovery-based passkey enrollment guidance" },
-      { status: "completed", priority: "P0", text: "QA: history regression gate" },
-      { status: "completed", priority: "P0", text: "QA: English parity validation after i18n extraction" },
-      { status: "completed", priority: "P0", text: "QA: real-device passkey validation sweep" },
-      { status: "completed", priority: "P0", text: "Integration: Sprint 2 closeout and merge gate" }
+      { status: "completed", priority: "P0", text: "Backend: guarded apply path and candidate-release support for research ingestion" },
+      { status: "completed", priority: "P1", text: "Frontend: fix iOS Safari passkey viewport zoom (code-level mitigation shipped)" },
+      { status: "completed", priority: "P1", text: "Frontend: eliminate residual /result micro-blink during auto-unlock" },
+      { status: "completed", priority: "P0", text: "QA: execute first controlled candidate release with benchmark and release-evidence bundle" },
+      { status: "completed", priority: "P0", text: "Integration: Sprint 4 closeout and candidate release decision" }
     ]
   },
   {
-    title: "Phase 2 Sprint 3 Growth and Recommendation Data Foundation",
+    title: "Next Sprint Carryover (Safari Real-Device Validation)",
     tasks: [
-      { status: "in_progress", priority: "P0", text: "Backend: follow-the-build capture endpoint and source attribution flow" },
-      {
-        status: "in_progress",
-        priority: "P0",
-        text: "Backend: research ingestion parser, normalizer, and dry-run artifact generation"
-      },
-      { status: "in_progress", priority: "P0", text: "Frontend: landing follow-the-build capture UI" },
-      { status: "in_progress", priority: "P1", text: "Frontend: apply approved follow-the-build and loading-copy updates" },
-      { status: "in_progress", priority: "P1", text: "Frontend: fix iOS Safari passkey viewport zoom and /result micro-blink" },
-      { status: "in_progress", priority: "P0", text: "QA: recommendation benchmark suite and ingestion gate harness" },
-      {
-        status: "not_started",
-        priority: "P0",
-        text: "QA: validate follow-the-build capture, source attribution, and anonymous funnel non-regression"
-      },
-      { status: "not_started", priority: "P0", text: "Integration: Sprint 3 closeout and merge gate" }
+      { status: "in_progress", priority: "P1", text: "QA + FE: run fresh iOS Safari real-device validation for passkey zoom and /result transition" },
+      { status: "not_started", priority: "P1", text: "Attach Safari validation evidence pack and close carryover risk" }
     ]
   },
   {
@@ -70,8 +44,8 @@ export const taskProgressSections = [
         priority: "P1",
         text: "Copy recommendations for landing, unlock, auth, and follow-the-build capture"
       },
-      { status: "in_progress", priority: "P1", text: "First 30-day content calendar and channel-ready launch assets" },
-      { status: "in_progress", priority: "P1", text: "Final implementation-ready copy pack for the follow-the-build surface" }
+      { status: "completed", priority: "P1", text: "First 30-day content calendar and channel-ready launch assets" },
+      { status: "completed", priority: "P1", text: "Final implementation-ready copy pack for the follow-the-build surface" }
     ]
   },
   {
@@ -80,9 +54,9 @@ export const taskProgressSections = [
       { status: "completed", priority: "P1", text: "Architect: research-to-dataset ingestion design" },
       { status: "completed", priority: "P1", text: "Architect: curation, conflict-resolution, and confidence rules" },
       { status: "completed", priority: "P1", text: "Architect: recommendation evaluation and quality-check framework" },
-      { status: "in_progress", priority: "P1", text: "Backend: implement approved research ingestion pipeline foundation" },
-      { status: "in_progress", priority: "P1", text: "QA: implement ingestion output and recommendation quality gates" },
-      { status: "not_started", priority: "P1", text: "Controlled first candidate release against research-derived updates" },
+      { status: "completed", priority: "P1", text: "Backend: implement approved research ingestion pipeline foundation" },
+      { status: "completed", priority: "P1", text: "QA: implement ingestion output and recommendation quality gates" },
+      { status: "completed", priority: "P1", text: "Controlled first candidate release against research-derived updates" },
       { status: "completed", priority: "P2", text: "Decision checkpoint: confirm whether advanced retrieval is still unnecessary" }
     ]
   },

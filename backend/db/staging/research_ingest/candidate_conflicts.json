@@ -784,5 +784,19 @@
         "docs/research/ai_productivity_tools_knowledge_workers.md"
       ]
     }
+  ],
+  "suppressed_by_curation": [
+    {
+      "tool_slug": "n8n",
+      "suppressed_conflict_count": 1
+    },
+    {
+      "tool_slug": "notebooklm",
+      "suppressed_conflict_count": 1
+    },
+    {
+      "tool_slug": "notion-ai",
+      "suppressed_conflict_count": 1
+    }
   ]
 }

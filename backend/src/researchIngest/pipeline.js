@@ -848,6 +848,79 @@ async function writeJsonl(filePath, rows) {
   await fs.writeFile(filePath, content ? `${content}\n` : "", "utf8");
 }
 
+async function readOptionalJson(filePath) {
+  try {
+    const raw = await fs.readFile(filePath, "utf8");
+    return JSON.parse(raw);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function mergeCurationDecisionsBySlug({ generatedDecisions, existingDecisions }) {
+  const previous = new Map(
+    toDecisionRows(existingDecisions)
+      .filter((row) => row?.tool_slug)
+      .map((row) => [normalizeWhitespace(row.tool_slug), row])
+  );
+
+  return generatedDecisions.map((decision) => {
+    const prior = previous.get(normalizeWhitespace(decision.tool_slug));
+    if (!prior) {
+      return decision;
+    }
+
+    const priorDecision = String(prior.decision || "").trim();
+    if (!priorDecision) {
+      return decision;
+    }
+
+    return {
+      ...decision,
+      decision: priorDecision,
+      rationale: normalizeWhitespace(prior.rationale) || decision.rationale
+    };
+  });
+}
+
+function applyApprovedConflictSuppression({ conflicts, curationDecisions }) {
+  const approvedSlugs = new Set(
+    toDecisionRows(curationDecisions)
+      .filter((row) => {
+        const decision = String(row?.decision || "").toLowerCase().trim();
+        return decision === "approve" || decision === "approved";
+      })
+      .map((row) => normalizeWhitespace(row.tool_slug))
+      .filter(Boolean)
+  );
+
+  const suppressedBySlug = new Map();
+  const kept = [];
+
+  for (const conflict of conflicts) {
+    const slug = normalizeWhitespace(conflict?.tool_slug);
+    if (approvedSlugs.has(slug)) {
+      suppressedBySlug.set(slug, (suppressedBySlug.get(slug) || 0) + 1);
+      continue;
+    }
+    kept.push(conflict);
+  }
+
+  return {
+    approvedSlugs,
+    keptConflicts: kept,
+    suppressedByCuration: Array.from(suppressedBySlug.entries())
+      .map(([tool_slug, suppressed_conflict_count]) => ({
+        tool_slug,
+        suppressed_conflict_count
+      }))
+      .sort((left, right) => compareLexical(left.tool_slug, right.tool_slug))
+  };
+}
+
 export async function runResearchIngestionDryRun({
   projectRoot,
   researchDir = path.join(projectRoot, "docs", "research"),
@@ -862,27 +935,50 @@ export async function runResearchIngestionDryRun({
   );
 
   const artifacts = buildResearchIngestionArtifacts({ sourceDocuments });
+  const existingDecisionsPath = path.join(stagingDir, "curation_decisions.json");
+  const existingDecisions = await readOptionalJson(existingDecisionsPath);
+  const mergedDecisions = mergeCurationDecisionsBySlug({
+    generatedDecisions: artifacts.curationDecisions,
+    existingDecisions
+  });
+  const { approvedSlugs, keptConflicts, suppressedByCuration } = applyApprovedConflictSuppression({
+    conflicts: artifacts.candidateConflicts.conflicts,
+    curationDecisions: mergedDecisions
+  });
+  const candidateToolsWithMergedStatus = artifacts.candidateTools.map((candidate) => ({
+    ...candidate,
+    status: approvedSlugs.has(candidate.tool_slug) ? "approved" : "review_required"
+  }));
+  const mergedApprovedSql = generateApprovedSql(candidateToolsWithMergedStatus);
 
   await fs.mkdir(stagingDir, { recursive: true });
-  await writeJsonl(path.join(stagingDir, "candidate_tools.jsonl"), artifacts.candidateTools);
+  await writeJsonl(path.join(stagingDir, "candidate_tools.jsonl"), candidateToolsWithMergedStatus);
   await writeJsonl(path.join(stagingDir, "candidate_evidence.jsonl"), artifacts.candidateEvidence);
   await fs.writeFile(
     path.join(stagingDir, "candidate_conflicts.json"),
-    `${JSON.stringify(artifacts.candidateConflicts, null, 2)}\n`,
+    `${JSON.stringify(
+      {
+        total_conflicts: keptConflicts.length,
+        conflicts: keptConflicts,
+        suppressed_by_curation: suppressedByCuration
+      },
+      null,
+      2
+    )}\n`,
     "utf8"
   );
   await fs.writeFile(
     path.join(stagingDir, "curation_decisions.json"),
-    `${JSON.stringify(artifacts.curationDecisions, null, 2)}\n`,
+    `${JSON.stringify(mergedDecisions, null, 2)}\n`,
     "utf8"
   );
-  await fs.writeFile(path.join(stagingDir, "approved_tool_updates.sql"), `${artifacts.approvedSql}\n`, "utf8");
+  await fs.writeFile(path.join(stagingDir, "approved_tool_updates.sql"), `${mergedApprovedSql}\n`, "utf8");
 
   return {
     source_count: sourceDocuments.length,
-    candidate_count: artifacts.candidateTools.length,
-    conflict_count: artifacts.candidateConflicts.total_conflicts,
-    approved_count: artifacts.candidateTools.filter((item) => item.status === "approved").length,
+    candidate_count: candidateToolsWithMergedStatus.length,
+    conflict_count: keptConflicts.length,
+    approved_count: candidateToolsWithMergedStatus.filter((item) => item.status === "approved").length,
     staging_dir: stagingDir
   };
 }

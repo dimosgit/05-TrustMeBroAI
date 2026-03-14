@@ -8,98 +8,80 @@ Source of truth: `docs/planning/final-implementation-plan.md` remains authoritat
   - result-page hierarchy issue
   - crowded header navigation
   - weak mobile wizard progression controls
-- Phase 2 Sprint 2 is now complete and integration-approved:
-  - authenticated recommendation history is live
-  - English copy is extracted for i18n readiness
-  - account/auth funnel metrics foundation is in place
-  - recovery-based passkey-enrollment guidance is wired through
-- Marketing strategy work is complete:
-  - copy audit
-  - build-in-public strategy
-  - copy recommendations
-- Recommendation-data architecture work is complete:
-  - research ingestion architecture
-  - recommendation evaluation framework
-  - rollout plan
-- Remaining UX/auth polish follow-ups:
+- Phase 2 Sprint 3 is now complete and integration-approved:
+  - follow-the-build capture is live end to end
+  - research-ingestion dry-run foundation is implemented
+  - benchmark and release-evidence scaffolding exists
+  - internal route hygiene remains safe by default
+- Marketing execution assets are complete:
+  - follow-the-build copy pack
+  - 30-day content calendar
+  - launch post pack
+- Remaining FE/auth polish follow-ups:
   - residual `/result` micro-blink for logged-in users during auto-unlock
-  - iOS Safari post-passkey viewport zoom
+  - iOS Safari post-passkey viewport zoom still needs fresh validation after a fix
 
 ## 2. Immediate Next Goal
-Move from completed Phase 2 Sprint 2 into Phase 2 Sprint 3: growth and recommendation-data foundation.
+Move from completed Phase 2 Sprint 3 into Phase 2 Sprint 4: controlled candidate release and FE polish closeout.
 
 This means:
-1. implement the separate `follow the build` capture required by the final plan
-2. carry the architected research-ingestion design into backend foundation work
-3. build QA benchmark and release-gate scaffolding for dataset updates
-4. apply the highest-priority marketing copy recommendations in product surfaces
-5. close remaining auth/transition polish without regressing the anonymous funnel
+1. execute the first controlled research-ingestion candidate release
+2. generate real release evidence using the architected evaluation framework
+3. implement and re-validate the remaining FE auth polish issues
+4. keep anonymous funnel and internal route hygiene safe throughout
 
 ## 3. Priority Order
 
-### P0: Follow-the-Build Capture
-1. Add the landing-page `follow the build` capture surface.
-2. Persist separate `signup_source` attribution for this path.
-3. Keep it analytically distinct from recommendation unlock conversion.
+### P0: Controlled Candidate Release
+1. Add a guarded apply path for the first research-ingestion candidate release.
+2. Use curated decisions and dry-run artifacts as inputs.
+3. Preserve deterministic runtime behavior and transactional safety.
 
-### P0: Research Ingestion Foundation
-1. Implement the curation-first ingestion pipeline foundation from the architect docs.
-2. Generate deterministic staging artifacts and dry-run output.
-3. Keep raw research out of runtime and preserve the current deterministic recommendation contract.
+### P0: Release Evidence and QA Gate Execution
+1. Produce the first real release-evidence bundle.
+2. Compare baseline vs candidate behavior using the benchmark framework.
 
-### P1: Recommendation Evaluation Gates
-1. Create benchmark scenarios and release-evidence scaffolding.
-2. Add QA harnesses to compare baseline vs candidate dataset behavior.
-
-### P1: UX/Auth Polish
+### P1: FE/Auth Polish Closeout
 1. Fix iOS Safari post-passkey viewport zoom.
 2. Eliminate residual `/result` micro-blink during logged-in auto-unlock.
 
 ## 4. Implementation Plan
 
-### Sprint 3: Growth and Recommendation Data Foundation
+### Sprint 4: Controlled Candidate Release and FE Polish
 1. Backend:
-   - implement a dedicated follow-the-build capture endpoint and persistence path
-   - implement research-ingestion parser/normalizer foundation
-   - generate deterministic staging artifacts and dry-run output
+   - implement a guarded apply path for approved research-ingestion artifacts
+   - support the first controlled candidate release without widening runtime scope
 2. Frontend:
-   - implement the landing follow-the-build capture surface
-   - apply approved follow-the-build copy and wizard loading-copy refinement
-   - fix iOS Safari passkey zoom and residual result micro-blink
+   - fix iOS Safari passkey zoom
+   - eliminate residual `/result` micro-blink
 3. QA:
-   - validate follow-the-build capture and source attribution
-   - create benchmark suite and release-gate scaffolding from the evaluation framework
-   - protect anonymous funnel and passkey stability
+   - execute the first controlled candidate release against benchmark and evidence gates
+   - attach fresh Safari/device validation evidence after FE fixes
 4. Integration:
-   - reconcile capture contract, ingestion artifacts, and QA evidence
-   - block merge on funnel regression or ingestion-governance drift
-5. Marketing:
-   - convert strategy into channel-ready launch assets and implementation-ready follow-the-build copy
+   - reconcile candidate release safety, evidence completeness, and FE regression closure
 
 Exit gate:
-- Follow-the-build capture is live and separately attributable.
-- Research-ingestion foundation exists as a dry-run, artifact-producing path.
-- Benchmark/evaluation scaffolding exists for the first controlled ingestion release.
-- Remaining FE auth/transition polish is either fixed or explicitly accepted with evidence.
+- First controlled research-ingestion candidate release has evidence and a clear go/no-go decision.
+- FE auth polish issues are either fixed and validated or explicitly accepted with evidence.
+- No regression in anonymous funnel or route hygiene.
 
 ## 5. Recommended Agent Sequence
-1. `Back-End Specialist`, `Front-End Specialist`, and `Marketing Content Specialist` start in parallel.
-2. `QA Specialist` starts early on benchmark design and real-browser polish validation, then runs the full Sprint 3 regression gate after FE/BE land.
-3. `Integration Specialist` closes the batch last and confirms ingestion governance, funnel safety, and route hygiene remain intact.
+1. `Back-End Specialist` and `Front-End Specialist` start in parallel.
+2. `QA Specialist` prepares candidate-release execution and real-device revalidation, then runs the full Sprint 4 gate after FE/BE land.
+3. `Integration Specialist` closes the batch last and decides readiness for the first controlled candidate release.
 
 ## 6. Practical Advice
-1. Keep the separate follow-the-build audience distinct from unlock-conversion analytics.
-2. Implement research ingestion as curation-first staging artifacts, not raw runtime reads.
+1. Keep controlled candidate release scope intentionally small.
+2. Preserve the curation-first, artifact-first architecture decisions already approved.
 3. Do not introduce vector or semantic retrieval in this sprint.
 4. Keep anonymous recommendation flow protected as a standing regression gate in every PR.
-5. The internal `/tasks-progress` route may exist during development for execution visibility, but it must remain disabled by default and should still be removed before go-live.
+5. The internal `/tasks-progress` route must remain disabled by default and should still be removed before go-live.
 
 ## 7. Success Criteria
-1. Follow-the-build capture is implemented and measurable as a separate channel.
-2. Research ingestion has a deterministic, auditable foundation.
-3. Recommendation evaluation gates are defined in code or scaffolding, not only on paper.
-4. Anonymous wizard conversion remains strong while growth surfaces are added.
-5. Remaining FE auth/transition polish is reduced before broader promotion.
+1. First controlled candidate release is executed with evidence.
+2. Research-ingestion governance holds under a real release candidate, not just dry-run.
+3. Remaining FE auth polish issues are reduced with fresh validation evidence.
+4. Anonymous wizard conversion and route hygiene remain safe.
 
 ## 8A. Recommendation Data Architecture Result
 Purpose:
@@ -125,24 +107,19 @@ Explicit boundaries:
 
 ## 9. Current Execution Batch (2026-03-14)
 1. `Back-End Specialist`
-   - follow-the-build capture endpoint and source attribution flow
-   - research-ingestion parser, normalizer, and dry-run artifact generation
+   - guarded apply path for approved ingestion artifacts
+   - controlled candidate release backend support
 2. `Front-End Specialist`
-   - landing follow-the-build capture UI
-   - approved follow-the-build and loading-copy updates
-   - iOS Safari zoom and residual result micro-blink fixes
+   - iOS Safari zoom fix
+   - residual result micro-blink fix
 3. `QA Specialist`
-   - recommendation benchmark suite and ingestion gate harness
-   - follow-the-build capture/source attribution validation
-   - anonymous-funnel and auth-polish regression gate
+   - controlled candidate release execution
+   - release-evidence bundle
+   - fresh Safari/device validation
 4. `Integration Specialist`
-   - capture contract reconciliation
-   - ingestion-governance review
-   - Sprint 3 closeout and merge gate
-5. `Marketing Content Specialist`
-   - implementation-ready follow-the-build copy pack
-   - first 30-day content calendar
-   - initial channel-ready launch assets
+   - candidate release decision
+   - FE polish closeout review
+   - Sprint 4 merge gate
 
 ## 10. Pre-Go-Live Internal Tooling Gate
 1. `/tasks-progress` is an internal development helper only.

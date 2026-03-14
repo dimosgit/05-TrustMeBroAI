@@ -1,0 +1,13 @@
+{
+  "release_id": "2026-03-14-sprint4-candidate-002",
+  "baseline_id": "current-runtime-seed",
+  "generated_at": "2026-03-14T16:50:00Z",
+  "summary": {
+    "scenario_count": 0,
+    "primary_change_count": 0,
+    "alternative_change_count": 0,
+    "contract_failure_count": 0,
+    "note": "Scenario-level evaluator command is not yet implemented; this field remains scaffold-level for this first controlled apply cycle."
+  },
+  "changes": []
+}
