@@ -1,0 +1,242 @@
+[
+  {
+    "tool_slug": "anythingllm",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "askyourpdf",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "chatgpt",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "chatpdf",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "claude",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "clickup-brain",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "docling",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "fathom",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "fireflies-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "glean",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "grammarly-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "granola",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "humata-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "lavender-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "llamaparse",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "mem",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "motion",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "n8n",
+    "decision": "approve",
+    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "notebooklm",
+    "decision": "approve",
+    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "notion-ai",
+    "decision": "approve",
+    "rationale": "Approved for controlled candidate-002 subset: required runtime fields present, pricing/scores present, and category mapped to allowed runtime set.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "obsidian",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "otter-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "paperqa2",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "read-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "reclaim-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "rewind",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "sanebox",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "spellbook",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/AI Tools for Document Analysis.md"
+    ]
+  },
+  {
+    "tool_slug": "superhuman-ai",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  },
+  {
+    "tool_slug": "tana",
+    "decision": "review_required",
+    "rationale": "Requires human curation before approval.",
+    "source_files": [
+      "docs/research/ai_productivity_tools_knowledge_workers.md"
+    ]
+  }
+]

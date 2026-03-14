@@ -1,3 +1,5 @@
 *
 !.gitignore
 !README.md
+!candidate_conflicts.json
+!curation_decisions.json

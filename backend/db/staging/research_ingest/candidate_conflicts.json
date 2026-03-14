@@ -1,0 +1,788 @@
+{
+  "total_conflicts": 87,
+  "conflicts": [
+    {
+      "type": "required_field_missing",
+      "tool_slug": "anythingllm",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "anythingllm",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "anythingllm",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "anythingllm",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "anythingllm",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "anythingllm",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "anythingllm",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "askyourpdf",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "askyourpdf",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "chatgpt",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "chatgpt",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatgpt",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatgpt",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatgpt",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatgpt",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatgpt",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "chatpdf",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "chatpdf",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatpdf",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatpdf",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatpdf",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatpdf",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "chatpdf",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "claude",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "claude",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "claude",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "claude",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "claude",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "claude",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "claude",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "clickup-brain",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "docling",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "docling",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "docling",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "docling",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "docling",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "docling",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "docling",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "fathom",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "fireflies-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "glean",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "grammarly-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "granola",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "humata-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "humata-ai",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "humata-ai",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "humata-ai",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "humata-ai",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "humata-ai",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "humata-ai",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "lavender-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "llamaparse",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "llamaparse",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "llamaparse",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "llamaparse",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "llamaparse",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "llamaparse",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "llamaparse",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "mem",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "motion",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "obsidian",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "otter-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "paperqa2",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "paperqa2",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "paperqa2",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "paperqa2",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "paperqa2",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "paperqa2",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "paperqa2",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "read-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "reclaim-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "rewind",
+      "field": "category",
+      "message": "Missing required identity field: category",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "sanebox",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "spellbook",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "required_field_missing",
+      "tool_slug": "spellbook",
+      "field": "website",
+      "message": "Missing required identity field: website",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "spellbook",
+      "field": "ease_of_use",
+      "message": "Field \"ease_of_use\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "spellbook",
+      "field": "pricing",
+      "message": "Field \"pricing\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "spellbook",
+      "field": "pricing_tier",
+      "message": "Field \"pricing_tier\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "spellbook",
+      "field": "quality",
+      "message": "Field \"quality\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "review_required_field",
+      "tool_slug": "spellbook",
+      "field": "speed",
+      "message": "Field \"speed\" must be at least medium confidence",
+      "source_files": [
+        "docs/research/AI Tools for Document Analysis.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "superhuman-ai",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    },
+    {
+      "type": "low_confidence_required_field",
+      "tool_slug": "tana",
+      "field": "category",
+      "message": "Required identity field \"category\" must be high confidence",
+      "source_files": [
+        "docs/research/ai_productivity_tools_knowledge_workers.md"
+      ]
+    }
+  ]
+}
