@@ -4,7 +4,8 @@ const ALLOWED_FUNNEL_EVENTS = new Set([
   "account_created",
   "sign_in_completed",
   "recommendation_unlocked",
-  "try_it_clicked"
+  "try_it_clicked",
+  "follow_the_build_captured"
 ]);
 
 function assertValidEventName(value) {

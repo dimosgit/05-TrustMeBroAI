@@ -516,6 +516,12 @@ export function createInMemoryRepositories() {
   };
 
   const userRepository = {
+    async findUserByEmail(email) {
+      const user = data.users.find(
+        (candidate) => candidate.email.toLowerCase() === email.toLowerCase()
+      );
+      return clone(user || null);
+    },
     async upsertUser({ email, emailConsent, consentTimestamp, signupSource }) {
       const existing = data.users.find(
         (candidate) => candidate.email.toLowerCase() === email.toLowerCase()

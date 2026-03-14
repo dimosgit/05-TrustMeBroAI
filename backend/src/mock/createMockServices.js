@@ -1,6 +1,7 @@
 import { createAuthService } from "../services/authService.js";
 import { createCatalogService } from "../services/catalogService.js";
 import { createLeadCaptureService } from "../services/leadCaptureService.js";
+import { createFollowBuildService } from "../services/followBuildService.js";
 import { createPasskeyAdapter } from "../services/passkeyAdapter.js";
 import { createRecommendationService } from "../services/recommendationService.js";
 import { createResultService } from "../services/resultService.js";
@@ -35,6 +36,9 @@ export function createMockRuntimeDependencies() {
     toolRepository: repositories.toolRepository,
     resultService
   });
+  const followBuildService = createFollowBuildService({
+    userRepository: repositories.userRepository
+  });
 
   const authService = createAuthService({
     authRepository: repositories.authRepository,
@@ -59,6 +63,7 @@ export function createMockRuntimeDependencies() {
     sessionService,
     recommendationService,
     leadCaptureService,
+    followBuildService,
     authService,
     healthCheck: async () => ({ status: "ok", mode: "mock" })
   };

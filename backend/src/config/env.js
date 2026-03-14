@@ -48,6 +48,10 @@ export function loadRuntimeConfig(env = process.env) {
         windowMs: parsePositiveInt(env.RATE_LIMIT_AUTH_ME_WINDOW_MS, 60_000),
         max: parsePositiveInt(env.RATE_LIMIT_AUTH_ME_MAX, 60)
       },
+      followBuildCapture: {
+        windowMs: parsePositiveInt(env.RATE_LIMIT_FOLLOW_BUILD_WINDOW_MS, 60_000),
+        max: parsePositiveInt(env.RATE_LIMIT_FOLLOW_BUILD_MAX, 20)
+      },
       recommendationSession: {
         windowMs: parsePositiveInt(env.RATE_LIMIT_SESSION_WINDOW_MS, 60_000),
         max: parsePositiveInt(env.RATE_LIMIT_SESSION_MAX, 30)

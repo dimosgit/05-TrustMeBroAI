@@ -1,5 +1,16 @@
 export function createUserRepository({ query }) {
   return {
+    async findUserByEmail(email) {
+      const result = await query(
+        `SELECT id, email, email_consent, consent_timestamp, signup_source, plan, subscription_status, created_at, updated_at
+         FROM users
+         WHERE LOWER(email) = LOWER($1)
+         LIMIT 1`,
+        [email]
+      );
+
+      return result.rows[0] || null;
+    },
     async upsertUser({ email, emailConsent, consentTimestamp, signupSource }) {
       const result = await query(
         `INSERT INTO users (email, email_consent, consent_timestamp, signup_source)

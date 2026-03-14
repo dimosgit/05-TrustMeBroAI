@@ -14,6 +14,7 @@ import { createUserRepository } from "./repositories/userRepository.js";
 import { createMetricsRepository } from "./repositories/metricsRepository.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createCatalogRouter } from "./routes/catalogRoutes.js";
+import { createGrowthRouter } from "./routes/growthRoutes.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { createRecommendationRouter } from "./routes/recommendationRoutes.js";
 import { createAuthService } from "./services/authService.js";
@@ -22,6 +23,7 @@ import { createLeadCaptureService } from "./services/leadCaptureService.js";
 import { createMagicLinkProvider } from "./services/magicLinkProvider.js";
 import { createMetricsService } from "./services/metricsService.js";
 import { createPasskeyAdapter } from "./services/passkeyAdapter.js";
+import { createFollowBuildService } from "./services/followBuildService.js";
 import { createRecommendationService } from "./services/recommendationService.js";
 import { createResultService } from "./services/resultService.js";
 import { createSessionService } from "./services/sessionService.js";
@@ -105,6 +107,11 @@ export function createApp(options = {}) {
       toolRepository,
       resultService
     });
+  const followBuildService =
+    options.followBuildService ||
+    createFollowBuildService({
+      userRepository
+    });
   const sessionParser =
     options.sessionParser ||
     createSessionParser({
@@ -148,6 +155,12 @@ export function createApp(options = {}) {
     message: "Too many auth requests"
   });
 
+  const followBuildRateLimiter = createIpRateLimiter({
+    windowMs: config.rateLimits.followBuildCapture?.windowMs || 60_000,
+    max: config.rateLimits.followBuildCapture?.max || 20,
+    message: "Too many follow-the-build capture requests"
+  });
+
   const meRateLimiter = createIpRateLimiter({
     windowMs: config.rateLimits.authMe?.windowMs || 60_000,
     max: config.rateLimits.authMe?.max || 60,
@@ -188,6 +201,14 @@ export function createApp(options = {}) {
     })
   );
   app.use("/api", createCatalogRouter({ catalogService }));
+  app.use(
+    "/api",
+    createGrowthRouter({
+      followBuildService,
+      followBuildRateLimiter,
+      metricsService
+    })
+  );
   app.use(
     "/api",
     createRecommendationRouter({

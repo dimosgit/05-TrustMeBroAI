@@ -2,6 +2,7 @@ import { createApp } from "../../src/app.js";
 import { createAuthService } from "../../src/services/authService.js";
 import { createCatalogService } from "../../src/services/catalogService.js";
 import { createLeadCaptureService } from "../../src/services/leadCaptureService.js";
+import { createFollowBuildService } from "../../src/services/followBuildService.js";
 import { createRecommendationService } from "../../src/services/recommendationService.js";
 import { createResultService } from "../../src/services/resultService.js";
 import { createSessionService } from "../../src/services/sessionService.js";
@@ -47,6 +48,7 @@ export function createTestApp(options = {}) {
         max: options.authRateLimitMax || 1000
       },
       authMe: { windowMs: 60_000, max: 1000 },
+      followBuildCapture: { windowMs: 60_000, max: 1000 },
       recommendationSession: { windowMs: 60_000, max: 1000 },
       recommendationCompute: { windowMs: 60_000, max: 1000 },
       recommendationUnlock: { windowMs: 60_000, max: 1000 },
@@ -80,6 +82,9 @@ export function createTestApp(options = {}) {
     toolRepository: repositories.toolRepository,
     resultService
   });
+  const followBuildService = createFollowBuildService({
+    userRepository: repositories.userRepository
+  });
 
   const baseAppOptions = {
     config,
@@ -88,6 +93,7 @@ export function createTestApp(options = {}) {
     sessionService,
     recommendationService,
     leadCaptureService,
+    followBuildService,
     healthCheck: async () => ({ status: "ok", mode: "test" })
   };
 
@@ -110,6 +116,7 @@ export function createTestApp(options = {}) {
         sessionService,
         recommendationService,
         leadCaptureService,
+        followBuildService,
         authService,
         resultService
       }
@@ -139,6 +146,7 @@ export function createTestApp(options = {}) {
       sessionService,
       recommendationService,
       leadCaptureService,
+      followBuildService,
       authService,
       resultService
     }
