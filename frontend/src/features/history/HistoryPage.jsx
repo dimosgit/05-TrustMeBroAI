@@ -66,6 +66,15 @@ function HistoryCard({ item, onOpenResult }) {
         </p>
       ) : null}
 
+      {item.profileName && item.taskName ? (
+        <p className="mt-1 text-xs text-slate-400">
+          {t("history.contextLabel", {
+            profile: item.profileName,
+            task: item.taskName
+          })}
+        </p>
+      ) : null}
+
       {item.primaryReason ? (
         <p className="mt-2 text-sm text-slate-300">{item.primaryReason}</p>
       ) : null}

@@ -63,6 +63,49 @@ describe("phase2 sprint2 frontend", () => {
     expect(screen.getByRole("button", { name: "Start wizard" })).toBeInTheDocument();
   });
 
+  it("renders history loading state while request is in-flight", async () => {
+    const fetchMock = vi.fn((input, init = {}) => {
+      const url = typeof input === "string" ? input : input.url;
+      const pathname = new URL(url, "http://localhost").pathname;
+      const method = (init.method || "GET").toUpperCase();
+
+      if (method === "GET" && pathname === "/api/auth/me") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              user: {
+                id: 82,
+                email: "member@example.com"
+              }
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        );
+      }
+
+      if (method === "GET" && pathname === "/api/recommendation/history") {
+        return new Promise(() => {});
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ message: `No mock for ${method} ${pathname}` }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderApp(["/history"]);
+
+    expect(await screen.findByTestId("history-loading")).toBeInTheDocument();
+    expect(screen.getByText("Loading history...")).toBeInTheDocument();
+  });
+
   it("renders non-empty history and opens a saved result", async () => {
     const user = userEvent.setup();
 
@@ -86,6 +129,8 @@ describe("phase2 sprint2 frontend", () => {
                 session_id: 41,
                 recommendation_id: 901,
                 selected_priority: "Best quality",
+                profile_name: "Developer",
+                task_name: "Write code",
                 created_at: "2026-03-12T12:00:00.000Z",
                 primary_tool: {
                   tool_name: "ChatGPT",
@@ -107,11 +152,62 @@ describe("phase2 sprint2 frontend", () => {
 
     expect(await screen.findByTestId("history-list")).toBeInTheDocument();
     expect(screen.getByText("ChatGPT")).toBeInTheDocument();
+    expect(screen.getByText("Developer · Write code")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Open result" }));
 
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
     expect(screen.getByText("ChatGPT best matches quality-first coding tasks.")).toBeInTheDocument();
+  });
+
+  it("renders history error state and supports retry", async () => {
+    const user = userEvent.setup();
+    let historyCalls = 0;
+
+    vi.stubGlobal(
+      "fetch",
+      createApiFetchMock({
+        "GET /api/auth/me": {
+          status: 200,
+          body: {
+            user: {
+              id: 83,
+              email: "member@example.com"
+            }
+          }
+        },
+        "GET /api/recommendation/history": () => {
+          historyCalls += 1;
+
+          if (historyCalls === 1) {
+            return {
+              status: 503,
+              body: {
+                message: "History service unavailable."
+              }
+            };
+          }
+
+          return {
+            status: 200,
+            body: {
+              items: []
+            }
+          };
+        }
+      })
+    );
+
+    renderApp(["/history"]);
+
+    expect(await screen.findByText("Could not load history right now.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(historyCalls).toBe(1);
+
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+
+    expect(await screen.findByTestId("history-empty")).toBeInTheDocument();
+    expect(historyCalls).toBe(2);
   });
 
   it("shows passkey enrollment nudge after recovery verify when required", async () => {

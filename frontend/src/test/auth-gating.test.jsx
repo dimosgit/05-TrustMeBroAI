@@ -10,6 +10,7 @@ const WIZARD_SUBMIT_BUTTON_NAME = /See recommendation|Find my match/i;
 const UNLOCK_BUTTON_NAME = /Unlock my best match|Reveal my best match/i;
 const TRY_IT_LINK_NAME = /Try it\s*(->|→)/i;
 const POSITIVE_FEEDBACK_BUTTON_NAME = /Thumbs up|Yes/i;
+const EMAIL_INPUT_LABEL = /Your email|Email to unlock/i;
 
 function setLockedResultInSessionStorage(overrides = {}) {
   window.sessionStorage.setItem(
@@ -102,7 +103,7 @@ describe("phase1 conversion flow", () => {
     expect(screen.queryByText(/score/i)).not.toBeInTheDocument();
   });
 
-  it("keeps primary recommendation section above alternatives in locked and unlocked result states", async () => {
+  it("keeps primary recommendation section above alternatives in locked state", async () => {
     setLockedResultInSessionStorage({ recommendationId: 501, sessionId: 88 });
     vi.stubGlobal(
       "fetch",
@@ -153,11 +154,8 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    const unlockedPrimary = await screen.findByTestId("unlocked-primary");
-    const unlockedAlternatives = await screen.findByTestId("alternatives-section");
-    expect(
-      Boolean(unlockedPrimary.compareDocumentPosition(unlockedAlternatives) & Node.DOCUMENT_POSITION_FOLLOWING)
-    ).toBe(true);
+    expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
+    expect(screen.queryByTestId("alternatives-section")).not.toBeInTheDocument();
   });
 
   it("keeps the primary recommendation section ahead of alternatives", async () => {
@@ -189,14 +187,12 @@ describe("phase1 conversion flow", () => {
       lockedPrimary.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    const unlockedPrimary = await screen.findByTestId("unlocked-primary");
-    expect(
-      unlockedPrimary.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
+    expect(screen.queryByTestId("alternatives-section")).not.toBeInTheDocument();
   });
 
   it("requires consent before unlock request", async () => {
@@ -221,7 +217,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
     expect(
@@ -259,7 +255,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -290,7 +286,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -322,7 +318,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -366,7 +362,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -412,7 +408,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -460,7 +456,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -500,12 +496,12 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
-    expect(await screen.findByText(/Want to save this\?/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
+    expect(await screen.findByText(/Want to come back to this later\?/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Free account — no password needed" })).toHaveAttribute(
       "href",
       "/register?redirect=%2Fresult&email=user%40example.com"
     );
@@ -670,7 +666,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -729,7 +725,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME }));
 
@@ -776,7 +772,7 @@ describe("phase1 conversion flow", () => {
     renderApp(["/result"]);
 
     expect(await screen.findByTestId("unlocked-primary")).toBeInTheDocument();
-    expect(screen.queryByText("Email to unlock")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(EMAIL_INPUT_LABEL)).not.toBeInTheDocument();
     expect(unlockRequestBody).toEqual({
       session_id: 19,
       recommendation_id: 955,
@@ -845,7 +841,7 @@ describe("phase1 conversion flow", () => {
     const unlockButton = await screen.findByRole("button", { name: UNLOCK_BUTTON_NAME });
     expect(unlockButton).toBeEnabled();
 
-    await user.type(screen.getByLabelText("Email to unlock"), "user@example.com");
+    await user.type(screen.getByLabelText(EMAIL_INPUT_LABEL), "user@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(unlockButton);
 
@@ -868,7 +864,7 @@ describe("phase1 conversion flow", () => {
 
     renderApp(["/result"]);
 
-    expect(await screen.findByLabelText("Email to unlock")).toBeInTheDocument();
+    expect(await screen.findByLabelText(EMAIL_INPUT_LABEL)).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("button", { name: UNLOCK_BUTTON_NAME })).toBeEnabled();
     });

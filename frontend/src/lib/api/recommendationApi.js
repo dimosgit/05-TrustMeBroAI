@@ -36,6 +36,7 @@ function normalizePrimaryTool(tool) {
 function normalizeHistoryItem(item) {
   const recommendation = item?.recommendation || item;
   const primaryTool = recommendation?.primary_tool || item?.primary_tool;
+  const lockedFlag = recommendation?.locked ?? item?.locked ?? recommendation?.is_primary_locked ?? item?.is_primary_locked;
 
   return {
     sessionId: recommendation?.session_id || item?.session_id || item?.id || null,
@@ -52,6 +53,8 @@ function normalizeHistoryItem(item) {
       recommendation?.selected_priority ||
       recommendation?.selectedPriority ||
       "",
+    taskName: item?.task_name || item?.taskName || recommendation?.task_name || "",
+    profileName: item?.profile_name || item?.profileName || recommendation?.profile_name || "",
     primaryTool: normalizePrimaryTool(primaryTool),
     primaryReason:
       recommendation?.primary_reason ||
@@ -62,7 +65,7 @@ function normalizeHistoryItem(item) {
       .map(normalizeAlternative)
       .filter((tool) => Boolean(tool.toolName))
       .slice(0, 2),
-    unlocked: recommendation?.is_primary_locked === false || item?.is_primary_locked === false
+    unlocked: lockedFlag === false
   };
 }
 

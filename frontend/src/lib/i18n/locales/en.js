@@ -157,7 +157,8 @@ const en = {
     openResult: "Open result",
     tryIt: "Try it",
     fallbackDate: "Recent",
-    priorityLabel: "Priority"
+    priorityLabel: "Priority",
+    contextLabel: "{profile} · {task}"
   }
 };
 

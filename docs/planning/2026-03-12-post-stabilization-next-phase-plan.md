@@ -28,6 +28,8 @@ This means:
 4. add funnel/account metrics needed to evaluate Phase 2 performance
 5. keep anonymous conversion flow stable throughout
 
+In parallel, close the ownership gap around recommendation-data architecture so research ingestion is designed intentionally instead of being improvised later.
+
 ## 3. Priority Order
 
 ### P0: Passkey Foundation Mitigation Closeout
@@ -88,6 +90,7 @@ Exit gate:
 1. `Back-End Specialist` and `Front-End Specialist` can start in parallel on Sprint 2 scope once history contract boundaries are clear.
 2. `QA Specialist` starts early on mitigation validation and then runs the Sprint 2 regression gate after FE/BE land.
 3. `Integration Specialist` reviews Sprint 2 deliverables before merge and confirms auth remains stable.
+4. `Recommendation Data Architect` runs in parallel as a design workstream and does not block Sprint 2 delivery unless it discovers a major planning contradiction.
 
 ## 6. Practical Advice
 1. Do not fold broad multilingual rollout into this slice; keep it to extraction and English parity only.
@@ -95,6 +98,9 @@ Exit gate:
 3. Treat the passkey mitigations as part of Sprint 2 completion, not optional polish.
 4. Keep anonymous recommendation flow protected as a standing regression gate in every Phase 2 PR.
 5. The internal `/tasks-progress` route may exist during development for execution visibility, but it must be deleted or disabled before go-live.
+6. Keep recommendation-data design separate from advanced retrieval hype:
+   - research ingestion and evaluation design belong in Phase 2
+   - vector or semantic retrieval remains a later decision only if deterministic scoring becomes insufficient
 
 ## 7. Success Criteria
 1. Passkey auth remains credible and modern after mitigation closeout.
@@ -103,7 +109,23 @@ Exit gate:
 4. English copy is extracted and ready for future localization.
 5. Anonymous wizard conversion remains strong while accounts become more robust.
 
-## 8. Current Execution Batch (2026-03-14)
+## 8A. Recommendation Data Architecture Workstream
+Purpose:
+1. Define how the research documents in `docs/research/` should safely feed the live `tools` dataset.
+2. Define curation, normalization, conflict-resolution, and confidence rules.
+3. Define recommendation-quality evaluation before any larger-scale ingestion or retrieval changes.
+
+Owned by:
+1. `Recommendation Data Architect` for design
+2. `Back-End Specialist` for implementation after design approval
+3. `QA Specialist` for ingestion and recommendation-quality validation
+
+Explicit boundaries:
+1. This workstream is not permission to introduce vector search immediately.
+2. This workstream should not change the product promise or UI model.
+3. The first outcome is architecture and evaluation design, not a broad runtime rewrite.
+
+## 9. Current Execution Batch (2026-03-14)
 1. `Back-End Specialist`
    - authenticated recommendation history API
    - account/auth funnel metrics foundation
@@ -124,8 +146,13 @@ Exit gate:
    - current messaging audit
    - build-in-public strategy
    - copy recommendation package
+6. `Recommendation Data Architect`
+   - research-to-dataset ingestion architecture
+   - curation and confidence rules
+   - recommendation evaluation framework
+   - advanced-retrieval decision checkpoint
 
-## 9. Pre-Go-Live Internal Tooling Gate
+## 10. Pre-Go-Live Internal Tooling Gate
 1. `/tasks-progress` is an internal development helper only.
 2. Production release is blocked until `/tasks-progress` is removed or disabled from the shipped app.
 3. QA and Integration must explicitly verify this before go-live signoff.

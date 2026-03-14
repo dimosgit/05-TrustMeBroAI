@@ -10,6 +10,8 @@ import ResultPage from "../features/result/ResultPage";
 import WizardPage from "../features/wizard/WizardPage";
 
 export default function AppRoutes() {
+  const internalRoutesEnabled = import.meta.env.VITE_ENABLE_INTERNAL_ROUTES === "true";
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -19,7 +21,7 @@ export default function AppRoutes() {
       <Route path="/auth/recovery/verify" element={<AuthVerifyPage />} />
       <Route path="/auth/verify" element={<AuthVerifyPage />} />
       <Route path="/history" element={<HistoryPage />} />
-      <Route path="/tasks-progress" element={<TasksProgressPage />} />
+      {internalRoutesEnabled ? <Route path="/tasks-progress" element={<TasksProgressPage />} /> : null}
       <Route path="/wizard" element={<WizardPage />} />
       <Route path="/result" element={<ResultPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

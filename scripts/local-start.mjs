@@ -57,7 +57,11 @@ function emitLines(stream, output, onLine) {
 function startService(name, cwd, options = {}) {
   const child = spawn(npmCommand(), ["run", "dev"], {
     cwd,
-    stdio: ["ignore", "pipe", "pipe"]
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      ...(options.env || {})
+    }
   });
 
   child.on("error", (error) => {
@@ -251,10 +255,14 @@ async function main() {
 
   console.log(`[local:start] Backend health: ${BACKEND_HEALTH_URL}`);
   console.log(`[local:start] Frontend requested URL: ${FRONTEND_DEFAULT_URL}`);
+  console.log("[local:start] Internal routes: enabled for local frontend (VITE_ENABLE_INTERNAL_ROUTES=true)");
 
   let reportedFrontendUrl = FRONTEND_DEFAULT_URL;
 
   const frontendService = startService("frontend", path.join(ROOT, "frontend"), {
+    env: {
+      VITE_ENABLE_INTERNAL_ROUTES: "true"
+    },
     onStdoutLine: (line) => {
       const detectedUrl = detectFrontendUrl(line);
       if (!detectedUrl || detectedUrl === reportedFrontendUrl) {

@@ -86,6 +86,21 @@
 - [~] Build-in-public strategy
 - [~] Copy recommendations for landing, unlock, auth, and follow-the-build capture
 
+## Support Workstream -> Recommendation Data and Research Ingestion
+
+### Goal
+- Define how `docs/research` should safely influence the live tool dataset
+- Design evaluation rules for recommendation quality and curation safety
+- Avoid premature vector-search or retrieval complexity
+
+### Tasks
+- [~] Architect: research-to-dataset ingestion design
+- [~] Architect: curation, conflict-resolution, and confidence rules
+- [~] Architect: recommendation evaluation and quality-check framework
+- [ ] Backend: implement approved research ingestion pipeline
+- [ ] QA: validate ingestion output and recommendation quality gates
+- [ ] Decision checkpoint: confirm whether advanced retrieval is still unnecessary
+
 ## Phase 3 -> Optimization
 
 ### Goal
@@ -132,6 +147,7 @@
 - [x] `docs/prompt/2026-03-14-phase2-sprint2-qa-specialist.md`
 - [x] `docs/prompt/2026-03-14-phase2-sprint2-integration-specialist.md`
 - [x] `docs/prompt/2026-03-14-marketing-content-specialist.md`
+- [x] `docs/prompt/2026-03-14-recommendation-data-architect.md`
 
 ## Manager View
 
@@ -146,6 +162,7 @@
 - [ ] Ship authenticated history
 - [ ] Extract English copy for i18n
 - [ ] Add funnel/account metrics foundation
+- [~] Design recommendation-data and research-ingestion architecture
 
 ## Go-Live Blockers
 
